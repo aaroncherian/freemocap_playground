@@ -25,12 +25,15 @@ elif this_computer_name == 'DESKTOP-F5LCT4Q':
     freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
     #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
 else:
-    freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
-
-
+    #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
+    freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 sessionID = 'session_SER_1_20_22' #name of the sessionID folder
 this_freemocap_session_path = freemocap_validation_data_path / sessionID
 this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
+
+syncedVideoName = sessionID + '_Cam1_synced.mp4'
+
+syncedVideoPath = this_freemocap_session_path/'SyncedVids'/syncedVideoName
 
 totalCOM_data_path = this_freemocap_data_path / 'totalBodyCOM_frame_XYZ.npy'
 segmentedCOM_data_path = this_freemocap_data_path / 'segmentedCOM_frame_joint_XYZ.npy'
@@ -49,6 +52,9 @@ open_file = open(mediapipeSkeleton_file_name, "rb")
 mediapipeSkelcoordinates_frame_segment_joint_XYZ = pickle.load(open_file)
 open_file.close()
 
+
+cap = cv2.VideoCapture(str(syncedVideoPath))
+
 fps = 60
 
 num_pose_joints = 33 #number of pose joints tracked by mediapipe 
@@ -59,7 +65,7 @@ num_frames = len(mediapipe_pose_data)
 #num_frame_range = range(2900,3500)
 num_frame_range = range(num_frames)
 
-num_frame_range = range(9000,10000)
+num_frame_range = range(9900,12200)
 
 skel_x = mediapipe_pose_data[:,:,0]
 skel_y = mediapipe_pose_data[:,:,1]
@@ -76,19 +82,21 @@ mx_com = np.nanmean(totalCOM_frame_XYZ[int(num_frames/2),0])
 my_com = np.nanmean(totalCOM_frame_XYZ[int(num_frames/2),1])
 
 
-figure = plt.figure()
+figure = plt.figure(figsize= (10,10))
 ax_range = 1000
+ax_com_range= 500
 
 
  
 # plt.tight_layout()
-ax = figure.add_subplot(111, projection = '3d')
-ax2 = figure.add_subplot(311)
+ax = figure.add_subplot(222, projection = '3d')
+ax2 = figure.add_subplot(224    )
+ax3 = figure.add_subplot(221)
 
 
 
 
-def animate(frame,num_frames):
+def animate(frame,num_frames, cap):
 
     if frame % 100 == 0:
         print("Currently on frame: {}".format(frame))
@@ -123,8 +131,8 @@ def animate(frame,num_frames):
     plot_frame_bones_XYZ = mediapipeSkelcoordinates_frame_segment_joint_XYZ[frame]
     ax.clear()
     #ax2.clear()
-    ax2.set_xlim([mx_com-ax_range, mx_com+ax_range])
-    ax2.set_ylim([my_com-ax_range, my_com+ax_range])
+    ax2.set_xlim([mx_com-ax_com_range, mx_com+ax_range])
+    ax2.set_ylim([my_com-ax_com_range, my_com+ax_range])
 
 
     ax.set_xlim([mx-ax_range, mx+ax_range])
@@ -154,8 +162,13 @@ def animate(frame,num_frames):
     ax2.plot(left_foot_x,left_foot_z, color = 'blue')
     ax2.plot(right_foot_x,right_foot_z, color = 'red')
 
+    cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
+    success, frame = cap.read()
+    if success:
+        ax3.imshow(frame)
+    f=2
 
-ani = FuncAnimation(figure, animate, frames= num_frame_range, interval=(1/fps)*100, repeat=False, fargs = (num_frames,))
+ani = FuncAnimation(figure, animate, frames= num_frame_range, interval=(1/fps)*100, repeat=False, fargs = (num_frames,cap,))
 
 writervideo = animation.FFMpegWriter(fps=fps)
 ani.save(this_freemocap_session_path/'test_with_trajectory_rotated_2.mp4', writer=writervideo)
