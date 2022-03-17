@@ -13,6 +13,8 @@ import sys
 from io import BytesIO
 
 
+#you can skip every 10th frame 
+
 this_computer_name = socket.gethostname()
 print(this_computer_name)
 
@@ -32,7 +34,8 @@ this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
 
 totalCOM_data_path = this_freemocap_data_path / 'totalBodyCOM_frame_XYZ.npy'
 segmentedCOM_data_path = this_freemocap_data_path / 'segmentedCOM_frame_joint_XYZ.npy'
-mediapipe_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
+#mediapipe_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
+mediapipe_data_path = this_freemocap_data_path/'rotated_mediaPipeSkel_3d_smoothed.npy'
 mediapipeSkeleton_file_name = this_freemocap_data_path/'mediapipeSkelcoordinates_frame_segment_joint_XYZ.pkl'
 
 
@@ -46,36 +49,41 @@ open_file = open(mediapipeSkeleton_file_name, "rb")
 mediapipeSkelcoordinates_frame_segment_joint_XYZ = pickle.load(open_file)
 open_file.close()
 
+fps = 60
+
 num_pose_joints = 33 #number of pose joints tracked by mediapipe 
-
-
-
-
 pose_joint_range = range(num_pose_joints)
 #frame_range = range(first_frame,last_frame)
-
 mediapipe_pose_data = mediapipeSkel_fr_mar_dim[:,0:num_pose_joints,:] #load just the pose joints into a data array, removing hands and face data 
-
 num_frames = len(mediapipe_pose_data)
+#num_frame_range = range(2900,3500)
+num_frame_range = range(num_frames)
 
-#num_frame_range = range(num_frames)
-
-num_frame_range = range(2900,3500)
+num_frame_range = range(9000,10000)
 
 skel_x = mediapipe_pose_data[:,:,0]
 skel_y = mediapipe_pose_data[:,:,1]
 skel_z = mediapipe_pose_data[:,:,2]
 
+
+
 mx = np.nanmean(skel_x[int(num_frames/2),:])
 my = np.nanmean(skel_y[int(num_frames/2),:])
 mz = np.nanmean(skel_z[int(num_frames/2),:])
 
+
+mx_com = np.nanmean(totalCOM_frame_XYZ[int(num_frames/2),0])
+my_com = np.nanmean(totalCOM_frame_XYZ[int(num_frames/2),1])
+
+
 figure = plt.figure()
 ax_range = 1000
+
+
  
 # plt.tight_layout()
 ax = figure.add_subplot(111, projection = '3d')
-# ax2 = figure.add_subplot(211)
+ax2 = figure.add_subplot(311)
 
 
 
@@ -89,20 +97,20 @@ def animate(frame,num_frames):
     goodframe_y = skel_y[frame,:]
     goodframe_z = skel_z[frame,:]
 
-    # left_heel_x = goodframe_x[30]
-    # left_heel_z = goodframe_z[30]
+    left_heel_x = goodframe_x[30]
+    left_heel_z = goodframe_y[30]
 
-    # left_toe_x = goodframe_x[32]
-    # left_toe_z = goodframe_z[32]
+    left_toe_x = goodframe_x[32]
+    left_toe_z = goodframe_y[32]
 
-    # right_heel_x = goodframe_x[29]
-    # right_heel_z = goodframe_z[29]
+    right_heel_x = goodframe_x[29]
+    right_heel_z = goodframe_y[29]
 
-    # right_toe_x = goodframe_x[31]
-    # right_toe_z = goodframe_z[31]
+    right_toe_x = goodframe_x[31]
+    right_toe_z = goodframe_y[31]
 
-    # left_foot_x,left_foot_z = [left_heel_x,left_toe_x], [left_heel_z,left_toe_z]
-    # right_foot_x,right_foot_z = [right_heel_x,right_toe_x], [right_heel_z,right_toe_z]
+    left_foot_x,left_foot_z = [left_heel_x,left_toe_x], [left_heel_z,left_toe_z]
+    right_foot_x,right_foot_z = [right_heel_x,right_toe_x], [right_heel_z,right_toe_z]
 
     segment_COM_x = segmentedCOM_frame_joint_XYZ[frame,:,0]
     segment_COM_y = segmentedCOM_frame_joint_XYZ[frame,:,1]
@@ -115,13 +123,15 @@ def animate(frame,num_frames):
     plot_frame_bones_XYZ = mediapipeSkelcoordinates_frame_segment_joint_XYZ[frame]
     ax.clear()
     #ax2.clear()
-    #ax2.set_xlim([mx-ax_range, mx+ax_range])
-    #ax2.set_ylim([mz-ax_range, mz+ax_range])
+    ax2.set_xlim([mx_com-ax_range, mx_com+ax_range])
+    ax2.set_ylim([my_com-ax_range, my_com+ax_range])
+
+
     ax.set_xlim([mx-ax_range, mx+ax_range])
     ax.set_ylim([my-ax_range, my+ax_range])
     ax.set_zlim([mz-ax_range, mz+ax_range])
-    ax.view_init(elev=-70., azim=-60)
-
+    #ax.view_init(elev=-70., azim=-60)
+    ax.view_init(elev = 0, azim =-70)
     for segment in plot_frame_bones_XYZ.keys():
         prox_joint = plot_frame_bones_XYZ[segment][0] 
         dist_joint = plot_frame_bones_XYZ[segment][1]
@@ -137,15 +147,18 @@ def animate(frame,num_frames):
 
     ax.scatter(goodframe_x, goodframe_y,goodframe_z)
 
-    #ax2.scatter(total_COM_x,total_COM_z, marker = '.', color = 'black', s = 5)
-    #ax2.plot(left_foot_x,left_foot_z, color = 'red')
-    #ax2.plot(right_foot_x,right_foot_z, color = 'blue')
+    #plt.show()
+    #plt.pause()
+
+    ax2.scatter(total_COM_x,total_COM_y, marker = '.', color = 'black', s = 5)
+    ax2.plot(left_foot_x,left_foot_z, color = 'blue')
+    ax2.plot(right_foot_x,right_foot_z, color = 'red')
 
 
-ani = FuncAnimation(figure, animate, frames= num_frame_range, interval=(1/30)*100, repeat=False, fargs = (num_frames,))
+ani = FuncAnimation(figure, animate, frames= num_frame_range, interval=(1/fps)*100, repeat=False, fargs = (num_frames,))
 
-writervideo = animation.FFMpegWriter(fps=30)
-ani.save(this_freemocap_session_path/'test_with_trajectory.mp4', writer=writervideo)
+writervideo = animation.FFMpegWriter(fps=fps)
+ani.save(this_freemocap_session_path/'test_with_trajectory_rotated_2.mp4', writer=writervideo)
 
 #plt.show()
 
