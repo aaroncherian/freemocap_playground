@@ -33,7 +33,7 @@ this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
 
 syncedVideoName = sessionID + '_Cam1_synced.mp4'
 
-syncedVideoPath = this_freemocap_session_path/'SyncedVids'/syncedVideoName
+syncedVideoPath = this_freemocap_session_path/'SyncedVideos'/syncedVideoName
 
 totalCOM_data_path = this_freemocap_data_path / 'totalBodyCOM_frame_XYZ.npy'
 segmentedCOM_data_path = this_freemocap_data_path / 'segmentedCOM_frame_joint_XYZ.npy'
@@ -96,10 +96,10 @@ ax3 = figure.add_subplot(221)
 
 
 
-def animate(frame,num_frames, cap):
+def animate(frame,num_frames, video_frames_to_plot):
 
-    if frame % 100 == 0:
-        print("Currently on frame: {}".format(frame))
+    #if frame % 100 == 0:
+    print("Currently on frame: {}".format(frame))
 
     goodframe_x = skel_x[frame,:]
     goodframe_y = skel_y[frame,:]
@@ -162,16 +162,25 @@ def animate(frame,num_frames, cap):
     ax2.plot(left_foot_x,left_foot_z, color = 'blue')
     ax2.plot(right_foot_x,right_foot_z, color = 'red')
 
-    cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
-    success, frame = cap.read()
-    if success:
-        ax3.imshow(frame)
-    f=2
+    # cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
+    # success, frame = cap.read()
+    # if success:
+    #     ax3.imshow(frame)
+    # f=2
 
-ani = FuncAnimation(figure, animate, frames= num_frame_range, interval=(1/fps)*100, repeat=False, fargs = (num_frames,cap,))
+video_frames_to_plot = []
+for frame_array in tqdm(num_frame_range):
+    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_array)
+    success, frame = cap.read()
+
+    video_frames_to_plot.append(frame)
+
+cap.release()
+
+ani = FuncAnimation(figure, animate, frames= num_frame_range, interval=(1/fps)*100, repeat=False, fargs = (num_frames,video_frames_to_plot,))
 
 writervideo = animation.FFMpegWriter(fps=fps)
-ani.save(this_freemocap_session_path/'test_with_trajectory_rotated_2.mp4', writer=writervideo)
+ani.save(this_freemocap_session_path/'ytest_with_trajectory_rotated_2.mp4', writer=writervideo)
 
 #plt.show()
 
