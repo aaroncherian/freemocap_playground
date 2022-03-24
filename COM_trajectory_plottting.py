@@ -33,7 +33,7 @@ this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
 totalCOM_data_path = this_freemocap_data_path / 'totalBodyCOM_frame_XYZ.npy'
 
 #mediapipe_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
-mediapipe_data_path = this_freemocap_data_path/'rotated_mediaPipeSkel_3d_smoothed.npy'
+mediapipe_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
 
 
 
@@ -48,8 +48,8 @@ num_frame_range = range(9900,12000)
 
 this_range_mediapipeSkel = mediapipe_pose_data[num_frame_range,:,:]
 
-left_heel_index = 30
-left_toe_index = 32
+left_heel_index = 22
+left_toe_index = 16
 
 right_heel_index = 29
 right_toe_index = 31
@@ -88,8 +88,8 @@ figure = plt.figure()
 ax = figure.add_subplot(111)
 ax.scatter(this_range_totalCOM[:,0],this_range_totalCOM[:,1])
 #ax.plot(mean_left_foot[:,0],mean_left_foot[:,1])
-ax.plot(left_foot_x,left_foot_z, color = 'red')
-ax.plot(right_foot_x,right_foot_z, color = 'blue')
+ax.plot(left_foot_x,left_foot_z, color = 'blue')
+ax.plot(right_foot_x,right_foot_z, color = 'red')
 plt.show()
 
 

@@ -22,7 +22,7 @@ print(this_computer_name)
 if this_computer_name == 'DESKTOP-V3D343U':
     freemocap_validation_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
 elif this_computer_name == 'DESKTOP-F5LCT4Q':
-    freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+    vfreemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
     #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
 else:
     #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
@@ -35,10 +35,10 @@ syncedVideoName = sessionID + '_Cam1_synced.mp4'
 
 syncedVideoPath = this_freemocap_session_path/'SyncedVideos'/syncedVideoName
 
-totalCOM_data_path = this_freemocap_data_path / 'totalBodyCOM_frame_XYZ.npy'
-segmentedCOM_data_path = this_freemocap_data_path / 'segmentedCOM_frame_joint_XYZ.npy'
+t#otalCOM_data_path = this_freemocap_data_path / 'totalBodyCOM_frame_XYZ.npy'
+s#egmentedCOM_data_path = this_freemocap_data_path / 'segmentedCOM_frame_joint_XYZ.npy'
 #mediapipe_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
-mediapipe_data_path = this_freemocap_data_path/'rotated_mediaPipeSkel_3d_smoothed.npy'
+mediapipe_data_path = this_freemocap_data_path/'mediaPipeSkel_3d.npy'
 mediapipeSkeleton_file_name = this_freemocap_data_path/'mediapipeSkelcoordinates_frame_segment_joint_XYZ.pkl'
 
 
@@ -90,6 +90,13 @@ ax_com_range= 500
  
 # plt.tight_layout()
 ax = figure.add_subplot(222, projection = '3d')
+
+ax.scatter(skel_x[3000],skel_y[3000],skel_z[3000])
+ax.scatter(skel_x[3000,32],skel_y[3000,32],skel_z[3000,32], color = 'blue')
+ax.scatter(skel_x[3000,31],skel_y[3000,31],skel_z[3000,31], color = 'red')
+
+plt.show()
+
 ax2 = figure.add_subplot(224    )
 ax3 = figure.add_subplot(221)
 

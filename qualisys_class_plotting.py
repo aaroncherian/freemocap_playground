@@ -10,29 +10,32 @@ from matplotlib.animation import FuncAnimation
 import matplotlib.animation as animation
 import sys 
 from datetime import datetime
+import scipy.io as sio
 
 from io import BytesIO
 
 
 #you can skip every 10th frame 
 class animateSkeleton:
-    def __init__(self, freemocap_validation_data_path, sessionID, num_frame_range):
+    def __init__(self, freemocap_validation_data_path, sessionID, num_frame_range, step_interval):
         self.num_frame_range = num_frame_range
 
         self.sessionID = sessionID
 
         self.validation_data_path = freemocap_validation_data_path
 
+        self.step_interval = step_interval
+
     def create_paths_to_data_files(self, validation_data_path, sessionID):
         
         this_freemocap_session_path = validation_data_path / sessionID
         this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
 
-        totalCOM_data_path = this_freemocap_data_path / 'totalBodyCOM_frame_XYZ.npy'
-        segmentedCOM_data_path = this_freemocap_data_path / 'segmentedCOM_frame_joint_XYZ.npy'
+        totalCOM_data_path = this_freemocap_data_path / 'qualisys_totalBodyCOM_frame_XYZ.npy'
+        segmentedCOM_data_path = this_freemocap_data_path / 'qualisys_segmentedCOM_frame_joint_XYZ.npy'
         #mediapipe_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
-        mediapipe_data_path = this_freemocap_data_path/'rotated_mediaPipeSkel_3d_smoothed.npy'
-        mediapipeSkeleton_file_name = this_freemocap_data_path/'mediapipeSkelcoordinates_frame_segment_joint_XYZ.pkl'
+        mediapipe_data_path = this_freemocap_data_path/'qualisysData_3d.mat'
+        mediapipeSkeleton_file_name = this_freemocap_data_path/'qualisysSkelcoordinates_frame_segment_joint_XYZ.pkl'
 
         syncedVideoName = sessionID + '_Cam1_synced.mp4'
 
@@ -49,13 +52,14 @@ class animateSkeleton:
 
         segmentedCOM_frame_joint_XYZ = np.load(segmentedCOM_data_path)
 
-        mediapipeSkel_fr_mar_dim = np.load(mediapipe_data_path) #loads in the data as a numpy array
+        qualysis_mat_file = sio.loadmat(mediapipe_data_path)
+        mediapipe_pose_data = qualysis_mat_file['skeleton_fr_mar_dim_reorg']
 
         open_file = open(mediapipeSkeleton_file_name, "rb")
         mediapipeSkelcoordinates_frame_segment_joint_XYZ = pickle.load(open_file)
         open_file.close()
 
-        return mediapipeSkel_fr_mar_dim, mediapipeSkelcoordinates_frame_segment_joint_XYZ, segmentedCOM_frame_joint_XYZ, totalCOM_frame_XYZ
+        return mediapipe_pose_data, mediapipeSkelcoordinates_frame_segment_joint_XYZ, segmentedCOM_frame_joint_XYZ, totalCOM_frame_XYZ
 
     def get_mediapipe_pose_data(self,  mediapipeSkel_fr_mar_dim):
 
@@ -70,15 +74,15 @@ class animateSkeleton:
             
         start_frame = num_frame_range[0]
         end_frame = num_frame_range[-1]
-
         
-        this_range_mp_pose_XYZ = mediapipe_pose_data[start_frame:end_frame,:,:]
+        
+        this_range_mp_pose_XYZ = mediapipe_pose_data[start_frame:end_frame:self.step_interval,:,:]
 
-        this_range_mp_skeleton_segment_XYZ = mediapipeSkelcoordinates_frame_segment_joint_XYZ[start_frame:end_frame]
+        this_range_mp_skeleton_segment_XYZ = mediapipeSkelcoordinates_frame_segment_joint_XYZ[start_frame:end_frame:self.step_interval]
 
-        this_range_segmentCOM_fr_joint_XYZ = segmentedCOM_frame_joint_XYZ[start_frame:end_frame,:,:]
+        this_range_segmentCOM_fr_joint_XYZ = segmentedCOM_frame_joint_XYZ[start_frame:end_frame:self.step_interval,:,:]
 
-        this_range_totalCOM_frame_XYZ = totalCOM_frame_XYZ[start_frame:end_frame,:]
+        this_range_totalCOM_frame_XYZ = totalCOM_frame_XYZ[start_frame:end_frame:self.step_interval,:]
 
         return this_range_mp_pose_XYZ,this_range_mp_skeleton_segment_XYZ,this_range_segmentCOM_fr_joint_XYZ,this_range_totalCOM_frame_XYZ
 
@@ -89,6 +93,33 @@ class animateSkeleton:
         return cap
 
     def get_video_frames_to_plot(self,cap,num_frame_range):
+
+        video_frames_to_plot = []
+
+        # for frame in track(num_frame_range):
+        #         cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
+        #         success, image = cap.read()
+        #         video_frames_to_plot.append(image)
+        # cap.release()
+        start_frame = num_frame_range[0]
+        end_frame = num_frame_range[-1]
+        current_frame = start_frame
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+        while current_frame < end_frame:
+            success, image = cap.read()
+            video_frames_to_plot.append(image)
+            current_frame += 1
+
+        # for frame in track(num_frame_range):
+        #         cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
+        #         success, image = cap.read()
+        #         video_frames_to_plot.append(image)
+        cap.release()
+        #print('finished getting video frames')
+        return video_frames_to_plot
+
+   
+    def animate(self,frame,video_frames_to_plot):
 
         video_frames_to_plot = []
 
@@ -138,17 +169,17 @@ class animateSkeleton:
         goodframe_y = self.skel_y[frame,:]
         goodframe_z = self.skel_z[frame,:]
 
-        left_heel_x = goodframe_x[29]
-        left_heel_z = goodframe_y[29]
+        left_heel_x = goodframe_x[18]
+        left_heel_z = goodframe_y[18]
 
-        left_toe_x = goodframe_x[31]
-        left_toe_z = goodframe_y[31]
+        left_toe_x = goodframe_x[19]
+        left_toe_z = goodframe_y[19]
 
-        right_heel_x = goodframe_x[30]
-        right_heel_z = goodframe_y[30]
+        right_heel_x = goodframe_x[22]
+        right_heel_z = goodframe_y[22]
 
-        right_toe_x = goodframe_x[32]
-        right_toe_z = goodframe_y[32]
+        right_toe_x = goodframe_x[23]
+        right_toe_z = goodframe_y[23]
 
         left_foot_x,left_foot_z = [left_heel_x,left_toe_x], [left_heel_z,left_toe_z]
         right_foot_x,right_foot_z = [right_heel_x,right_toe_x], [right_heel_z,right_toe_z]
@@ -189,10 +220,15 @@ class animateSkeleton:
         #ax.view_init(elev=-70., azim=-60)
         ax.view_init(elev = 0, azim =-70)
         for segment in plot_frame_bones_XYZ.keys():
-            prox_joint = plot_frame_bones_XYZ[segment][0] 
-            dist_joint = plot_frame_bones_XYZ[segment][1]
-            
-            bone_x,bone_y,bone_z = [prox_joint[0],dist_joint[0]],[prox_joint[1],dist_joint[1]],[prox_joint[2],dist_joint[2]] 
+            if segment == 'head':
+                head_point = plot_frame_bones_XYZ[segment][0]
+                bone_x,bone_y,bone_z = [head_point[0],head_point[1],head_point[2]]
+            else:
+                prox_joint = plot_frame_bones_XYZ[segment][0] 
+                dist_joint = plot_frame_bones_XYZ[segment][1]
+   
+                dist_joint = plot_frame_bones_XYZ[segment][1]              
+                bone_x,bone_y,bone_z = [prox_joint[0],dist_joint[0]],[prox_joint[1],dist_joint[1]],[prox_joint[2],dist_joint[2]] 
 
             ax.plot(bone_x,bone_y,bone_z,color = 'black')
             ax2.plot(bone_x,bone_y, color = 'grey', alpha = .4)
@@ -221,14 +257,14 @@ class animateSkeleton:
         ax2.plot(right_foot_x,right_foot_z, color = 'red')
       
 
-        video_frame = video_frames_to_plot[frame]
+        #ideo_frame = video_frames_to_plot[frame]
 
-        if self.img_artist is None:
+        # if self.img_artist is None:
 
-            self.img_artist = ax3.imshow(video_frame)
+        #     self.img_artist = ax3.imshow(video_frame)
         
-        else:
-            self.img_artist.set_data(video_frame)
+        # else:
+        #     self.img_artist.set_data(video_frame)
 
 
     
@@ -243,20 +279,18 @@ class animateSkeleton:
         ax5.plot(self.time_array[frame],total_COM_x, 'o', color = 'blue', ms = 1.5)
         ax5.plot(self.time_array[0:frame],self.this_range_totalCOM_frame_XYZ[0:frame,0], color = 'grey')
   
-        #ax4.plot()
-
 
     def set_up_data(self):
 
         print('Loading skeleton and COM data from file paths')
         mediapipe_data_path,mediapipeSkeleton_file_name,totalCOM_data_path, segmentedCOM_data_path, syncedVideoPath =  self.create_paths_to_data_files(self.validation_data_path,self.sessionID)
 
-        mediapipeSkel_fr_mar_dim, mediapipeSkelcoordinates_frame_segment_joint_XYZ, segmentedCOM_frame_joint_XYZ, totalCOM_frame_XYZ = self.load_data_from_paths(mediapipe_data_path,mediapipeSkeleton_file_name,totalCOM_data_path, segmentedCOM_data_path)
+        mediapipe_pose_data, mediapipeSkelcoordinates_frame_segment_joint_XYZ, segmentedCOM_frame_joint_XYZ, totalCOM_frame_XYZ = self.load_data_from_paths(mediapipe_data_path,mediapipeSkeleton_file_name,totalCOM_data_path, segmentedCOM_data_path)
 
-        mediapipe_pose_data = self.get_mediapipe_pose_data(mediapipeSkel_fr_mar_dim)
+        #mediapipe_pose_data = self.get_mediapipe_pose_data(mediapipeSkel_fr_mar_dim)
 
         if self.num_frame_range == 0:
-            self.num_frame_range = range(mediapipe_pose_data.shape[0]) #if no range was specified, use the whole video 
+            self.num_frame_range = range(0,mediapipe_pose_data.shape[0], self.step_interval) #if no range was specified, use the whole video 
 
         print('Slicing skeleton and COM data from frames {} to {}'.format(self.num_frame_range[0],self.num_frame_range[-1]))
         this_range_mp_pose_XYZ,this_range_mp_skeleton_segment_XYZ,this_range_segmentCOM_fr_joint_XYZ,this_range_totalCOM_frame_XYZ = self.slice_data_arrays_by_range(
@@ -264,10 +298,11 @@ class animateSkeleton:
 
 
 
-        print('Loading video frames to plot from {}'.format(syncedVideoPath))
-        cap = self.load_video_capture_object(syncedVideoPath)
+        #print('Loading video frames to plot from {}'.format(syncedVideoPath))
+        #cap = self.load_video_capture_object(syncedVideoPath)
 
-        video_frames_to_plot = self.get_video_frames_to_plot(cap,self.num_frame_range)
+        #video_frames_to_plot = self.get_video_frames_to_plot(cap,self.num_frame_range)
+        video_frames_to_plot = []
 
         print('Video frames loaded')
         return this_range_mp_pose_XYZ,this_range_mp_skeleton_segment_XYZ,this_range_segmentCOM_fr_joint_XYZ,this_range_totalCOM_frame_XYZ, video_frames_to_plot
@@ -312,8 +347,9 @@ class animateSkeleton:
         skel_y = this_range_mp_pose_XYZ[:,:,1]
         skel_z = this_range_mp_pose_XYZ[:,:,2]
 
-        num_frames_to_plot = range(self.num_frame_range[-1] - self.num_frame_range[0])
-        num_frame_length = len(num_frames_to_plot) 
+        num_frames_to_plot = int(np.ceil(((self.num_frame_range[-1] - self.num_frame_range[0])/self.step_interval)))
+        num_frames_to_plot = range(num_frames_to_plot) #create a range for the number of frames to plot based on the interval (and round up)
+        num_frame_length = (len(num_frames_to_plot)/5)-1 #5 because this is the interval to make the 300fps qualisys system = to our 60fps go pros
         self.mx = np.nanmean(skel_x[int(num_frame_length/2),:])
         self.my = np.nanmean(skel_y[int(num_frame_length/2),:])
         self.mz = np.nanmean(skel_z[int(num_frame_length/2),:])
@@ -323,6 +359,7 @@ class animateSkeleton:
         self.my_com = np.nanmean(this_range_totalCOM_frame_XYZ[int(num_frame_length/2),1])
 
 
+        
         self.skel_x = skel_x
         self.skel_y = skel_y
         self.skel_z = skel_z
@@ -336,14 +373,14 @@ class animateSkeleton:
 
         time_array = []
         for frame_num in self.num_frame_range:
-            time_array.append(frame_num/fps)
+            time_array.append(frame_num/300) #I think? have to figure out qualisys time conversion
         self.time_array = time_array
 
 
         print('Starting Frame Animation') 
         ani = FuncAnimation(figure, self.animate, frames= num_frames_to_plot, interval=(1/fps)*100, repeat=False, fargs = (video_frames_to_plot,))
         writervideo = animation.FFMpegWriter(fps=fps)
-        ani.save(self.this_freemocap_session_path/'rotated_mediapipe.mp4', writer=writervideo)
+        ani.save(self.this_freemocap_session_path/'qualysis_test_plots.mp4', writer=writervideo)
         print('Animation has been saved to {}'.format(self.this_freemocap_session_path))
         f=2
 
@@ -361,10 +398,12 @@ else:
     freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 sessionID = 'session_SER_1_20_22' #name of the sessionID folder
 
-num_frame_range = range(9900,12200)
-#num_frame_range = 0
+step_interval = 5
+#num_frame_range = range(65000,78000, step_interval)
+#num_frame_range = range(65000,78000, step_interval)
+num_frame_range = 0
 
-COM_plot = animateSkeleton(freemocap_validation_data_path,sessionID,num_frame_range)
+COM_plot = animateSkeleton(freemocap_validation_data_path,sessionID,num_frame_range, step_interval)
 
 this_range_mp_pose_XYZ,this_range_mp_skeleton_segment_XYZ,this_range_segmentCOM_fr_joint_XYZ,this_range_totalCOM_frame_XYZ, video_frames_to_plot = COM_plot.set_up_data()
 COM_plot.generate_plot(this_range_mp_pose_XYZ,this_range_mp_skeleton_segment_XYZ,this_range_segmentCOM_fr_joint_XYZ,this_range_totalCOM_frame_XYZ, video_frames_to_plot)
