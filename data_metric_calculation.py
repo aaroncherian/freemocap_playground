@@ -35,11 +35,11 @@ qualisys_COM_data = np.load(this_freemocap_data_path/'qualisys_totalBodyCOM_fram
 
 #calculate stdev of X,Y,Z for mediapipe and qualisys data
 
-med_start_frame = 2600
-med_end_frame = 17400
+med_start_frame = 16680
+med_end_frame = 17740
 
-qual_start_frame = 24400
-qual_end_frame = 103000
+qual_start_frame = 94290
+qual_end_frame = 99685
 
 
 mediapipe_COM_XYZ = mediapipe_COM_data[med_start_frame:med_end_frame,:]
@@ -73,7 +73,7 @@ ax1.set_title('Mediapipe COM Y')
 ax2.plot(qualisys_COM_data_x)
 ax2.set_title('Qualisys COM Y')
 
-#plt.show()
+plt.show()
 
 
 def calculate_path_length(data):
