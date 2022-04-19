@@ -40,9 +40,9 @@ save_path = Path(r'C:\Users\aaron\Documents\HumonLab\RMASBM\comparison_graphics'
 
 
 
-run_type = 'qualisys'
+run_type = 'freemocap'
 # run_type = 'freemocap'
-stance = 'left_leg'
+stance = 'natural'
 
 name = '{}_{}_sway.png'.format(run_type, stance)
 save_image = save_path/name
@@ -79,7 +79,7 @@ if run_type == 'freemocap':
 
 
     camera_fps = 60
-    COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length, static_plot=True)
+    COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length, stance = 'natural', static_plot=True)
     title_text = 'FreeMoCap/MediaPipe Right Leg Stance Sway'
 
     left_heel_index = 29
@@ -280,7 +280,7 @@ elif stance == 'right_leg':
 
 
 
-figure.savefig(save_image, transparent = 'True')
+#figure.savefig(save_image, transparent = 'True')
 plt.show()
 
 f=2

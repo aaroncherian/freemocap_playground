@@ -46,7 +46,7 @@ tail_length = 120 #number of frames to keep the COM trajectory tail
 frame_to_plot = 15546
 
 
-COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length,static_plot=True)
+COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length, stance = 'natural',static_plot=True)
 
 this_range_mp_pose_XYZ,this_range_mp_skeleton_segment_XYZ,this_range_segmentCOM_fr_joint_XYZ,this_range_totalCOM_frame_XYZ, video_frames_to_plot = COM_plot.set_up_data()
 
@@ -192,7 +192,7 @@ ax.plot(-1*np.array(hip_connection_x), -1*np.array(hip_connection_y), hip_connec
 
 ax.scatter(this_frame_segment_COM_x,this_frame_segment_COM_y,this_frame_segment_COM_z, color = 'orange', label = 'Segment Center of Mass')    
 ax.scatter(this_frame_total_COM_x,this_frame_total_COM_y,this_frame_total_COM_z, color = 'magenta', label = 'Total Body Center of Mass', marker = '*', s = 70, edgecolor = 'purple')
-ax.scatter(this_frame_skel_x, this_frame_skel_y,this_frame_skel_z, color = 'grey', alpha = .4)
+ax.scatter(this_frame_skel_x, this_frame_skel_y,this_frame_skel_z, color = 'grey', alpha = .3)
 
 #ax.plot(left_foot_x,left_foot_y,left_foot_z, color = 'blue')
 #ax.plot(right_foot_x,right_foot_y,right_foot_z, color = 'red')
@@ -220,7 +220,7 @@ ax.plot(this_frame_right_foot_x,this_frame_right_foot_y,this_frame_right_foot_z,
 # ax.plot(xx[0:current_frame],-1*this_range_totalCOM_frame_XYZ[frame_range_for_trajectory[0]:frame_to_plot,1]+distance_raised,mx-ax_range,zdir ='x', color = 'black',alpha = .8)
 # ax.scatter(xx[current_frame],-1*this_range_totalCOM_frame_XYZ[frame_to_plot,1]+distance_raised,mx-ax_range,zdir ='x', color = 'magenta',alpha = .8,marker = '*', edgecolor = 'purple', s = 40)
 
-figure.savefig('path/to/save/image/to.png')
+#figure.savefig('path/to/save/image/to.png')
 plt.show()
 
 f = 2
