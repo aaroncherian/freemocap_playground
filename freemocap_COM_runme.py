@@ -15,6 +15,7 @@ from COM_calculator import calculate_segment_COM, reformat_segment_COM, calculat
 this_computer_name = socket.gethostname()
 print(this_computer_name)
 
+#set the path to your FreeMoCap data 
 if this_computer_name == 'DESKTOP-V3D343U':
     freemocap_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
 elif this_computer_name == 'DESKTOP-F5LCT4Q':
@@ -23,12 +24,10 @@ elif this_computer_name == 'DESKTOP-F5LCT4Q':
 else:
     freemocap_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
 
-
 #parameters to adjust 
-sessionID = 'sesh_2022-03-11_12_06_30' #name of the sessionID folder
+sessionID = 'sesh_2022-02-25_17_57_39' #name of the sessionID folder
 data_array_name = 'mediaPipeSkel_3d_smoothed.npy'
 num_pose_joints = 33 #number of pose joints tracked by mediapipe 
-
 
 #creating paths to the session and data
 this_freemocap_session_path = freemocap_data_path / sessionID
@@ -65,7 +64,6 @@ pickle.dump(skelcoordinates_frame_segment_joint_XYZ, open_file)
 open_file.close()
 
 np.save(segmentCOM_data_path,segment_COM_frame_imgPoint_XYZ)
-
 np.save(totalBodyCOM_data_path,totalBodyCOM_frame_XYZ,num_frame_range)
 
 f = 2
