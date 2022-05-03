@@ -40,12 +40,12 @@ class skeleton_COM_Plot:
         this_freemocap_session_path = validation_data_path / sessionID
         this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
 
-        totalCOM_data_path = this_freemocap_data_path / 'totalBodyCOM_frame_XYZ.npy'
-        segmentedCOM_data_path = this_freemocap_data_path / 'segmentedCOM_frame_joint_XYZ.npy'
+        totalCOM_data_path = this_freemocap_data_path / 'openPose_totalBodyCOM_frame_XYZ.npy'
+        segmentedCOM_data_path = this_freemocap_data_path / 'openPose_segmentedCOM_frame_joint_XYZ.npy'
         #mediapipe_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
         #mediapipe_data_path = this_freemocap_data_path/'rotated_mediaPipeSkel_3d_smoothed.npy'
-        mediapipe_data_path = this_freemocap_data_path/'mediapipe_origin_corrected_and_rotated.npy'
-        mediapipeSkeleton_file_name = this_freemocap_data_path/'mediapipeSkelcoordinates_frame_segment_joint_XYZ.pkl'
+        mediapipe_data_path = this_freemocap_data_path/'openPoseSkel_3d_smoothed.npy'
+        mediapipeSkeleton_file_name = this_freemocap_data_path/'openPose_Skelcoordinates_frame_segment_joint_XYZ.pkl'
 
         #syncedVideoName = sessionID + '_Cam1_synced.mp4'
         syncedVideoName = sessionID + '_mediapipe_overlayed_video.mp4'

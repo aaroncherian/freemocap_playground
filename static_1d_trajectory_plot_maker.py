@@ -40,7 +40,11 @@ save_path = Path(r'C:\Users\aaron\Documents\HumonLab\RMASBM\comparison_graphics'
 
 
 
+<<<<<<< Updated upstream
 run_type = 'qualisys'
+=======
+run_type = 'openpose'
+>>>>>>> Stashed changes
 # run_type = 'freemocap'
 stance = 'left_leg'
 
@@ -57,7 +61,7 @@ ax_range = 300
 
 
 
-if run_type == 'freemocap':
+if run_type == 'openpose':
     from plot_with_classes import skeleton_COM_Plot
 
     if stance == 'natural':
