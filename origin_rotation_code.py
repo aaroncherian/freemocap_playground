@@ -30,6 +30,9 @@ this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
 skeleton_to_plot = 'mediapipe'
 rotation_base_frame = 3000
 
+save_file = this_freemocap_data_path/'{}_origin_aligned_skeleton_3D.npy'.format(skeleton_to_plot)
+
+
 if skeleton_to_plot == 'mediapipe':
     skeleton_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
     right_heel_index = 30
@@ -111,7 +114,7 @@ def rotate_point(point,rotation_matrix):
     rotated_point = np.dot(rotation_matrix,point)
     return rotated_point
 
-def rotate_skeleton_frame(this_frame_skeleton_data):
+def rotate_skeleton_frame(this_frame_skeleton_data, rotation_matrix):
 
     this_frame_rotated_skeleton = np.zeros(this_frame_skeleton_data.shape)
 
@@ -125,7 +128,7 @@ rotated_skeleton_data = np.zeros(skeleton_data.shape)
 num_frames = skeleton_data.shape[0]
 
 for frame in track(range(num_frames)):
-    rotated_skeleton_data[frame,:,:] = rotate_skeleton_frame(skeleton_data[frame,:,:])
+    rotated_skeleton_data[frame,:,:] = rotate_skeleton_frame(skeleton_data[frame,:,:],rotation_matrix)
 
 
 def calculate_translation_distance(skeleton_right_heel):
@@ -143,8 +146,21 @@ def translate_skeleton_frame(rotated_skeleton_data_frame, translation_distance):
 
 translated_and_rotated_skeleton_data = np.zeros(rotated_skeleton_data.shape)
 
+
 for frame in track(range(num_frames)):
-    translated_and_rotated_skeleton_data[frame,:,:] = translate_skeleton_frame(rotated_skeleton_data[frame,:,:],translation_distance)
+   translated_and_rotated_skeleton_data[frame,:,:] = translate_skeleton_frame(rotated_skeleton_data[frame,:,:],translation_distance)
 
 
+
+translated_and_rotated_right_foot_vector = create_vector(translated_and_rotated_skeleton_data[rotation_base_frame,right_heel_index,:],translated_and_rotated_skeleton_data[rotation_base_frame,right_toe_index,:])
+translated_and_rotated_right_foot_unit_vector = create_unit_vector(translated_and_rotated_right_foot_vector)
+
+rotation_matrix_to_align_skeleton_with_positive_y = calculate_rotation_matrix(translated_and_rotated_right_foot_unit_vector,y_vector)
+
+origin_aligned_skeleton_data = np.zeros(skeleton_data.shape)
+
+for frame in track(range(num_frames)):
+   origin_aligned_skeleton_data[frame,:,:] = rotate_skeleton_frame(translated_and_rotated_skeleton_data[frame,:,:],rotation_matrix_to_align_skeleton_with_positive_y)
+
+np.save(save_file,origin_aligned_skeleton_data)
 f = 2

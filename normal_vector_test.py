@@ -119,6 +119,9 @@ XYV,YYV,ZYV = zip(y_vector*1000)
 X0,Y0,Z0 = zip(origin)
 U0,V0,W0 = zip(origin_normal_unit*1000)
 
+
+UY,VY,WY = zip(y_vector*1000)
+
 X, Y, Z = zip(right_foot_origin) 
 U,V,W = zip(right_foot_vector)
 
@@ -173,7 +176,7 @@ def rotate_point(point,rotation_matrix):
 
     return rotated_point
 
-def rotate_skeleton(skeleton_data):
+def rotate_skeleton(skeleton_data, rotation_matrix):
 
     rotated_skeleton = np.zeros((skeleton_data.shape))
 
@@ -186,7 +189,7 @@ def rotate_skeleton(skeleton_data):
 
 
 
-mediapipe_rotated_skeleton = rotate_skeleton(this_mediapipe_test)
+mediapipe_rotated_skeleton = rotate_skeleton(this_mediapipe_test,rotation_matrix)
 
 rotated_right_heel = mediapipe_rotated_skeleton[right_heel,:]
 
@@ -212,57 +215,73 @@ elif system_to_plot == 'mediapipe':
 
 
 
+translated_right_foot_vector = create_vector(mediapipe_translated_skeleton[30,:],mediapipe_translated_skeleton[32,:])
+
+translated_right_foot_unit_vector = create_unit_vector(translated_right_foot_vector)
+
+rotation_matrix_to_align_with_positive_y = calculate_rotation_matrix(translated_right_foot_unit_vector,y_vector)
+
+origin_aligned_skeleton = rotate_skeleton(mediapipe_translated_skeleton,rotation_matrix_to_align_with_positive_y)
+
 if debug:
     figure = plt.figure()
     ax = figure.add_subplot( projection = '3d')
 
 
-    ax_range = 800
+    # ax_range = 800
     # mx = np.nanmean(mediapipe_translated_skeleton[0,:])
     # my = np.nanmean(mediapipe_translated_skeleton[1,:])
     # mz = np.nanmean(mediapipe_translated_skeleton[2,:])
 
-    mx = np.nanmean(mediapipe_data[0,:])
-    my = np.nanmean(mediapipe_data[1,:])
-    mz = np.nanmean(mediapipe_data[2,:])
+    # mx = np.nanmean(mediapipe_data[0,:])
+    # my = np.nanmean(mediapipe_data[1,:])
+    # mz = np.nanmean(mediapipe_data[2,:])
 
+    ax_range = 800
+    mx = np.nanmean(origin_aligned_skeleton[0,:])
+    my = np.nanmean(origin_aligned_skeleton[1,:])
+    mz = np.nanmean(origin_aligned_skeleton[2,:])
+
+
+  
     #ax.set_box_aspect([1,1,1])
-    # ax.set_xlim([mx-ax_range, mx+ax_range]) #maybe set ax limits before the function? if we're using cla() they probably don't need to be redefined every time 
-    # ax.set_ylim([my-ax_range, my+ax_range])
-    # ax.set_zlim([mz-ax_range, mz+ax_range])
-
-    xx, yy = np.meshgrid(range(1000), range(1000))
-    zz = xx*0
+    ax.set_xlim([mx-ax_range, mx+ax_range]) #maybe set ax limits before the function? if we're using cla() they probably don't need to be redefined every time 
+    ax.set_ylim([my-ax_range, my+ax_range])
+    ax.set_zlim([mz-ax_range, mz+ax_range])
+    ax.scatter(origin_aligned_skeleton[:,0], origin_aligned_skeleton[:,1], origin_aligned_skeleton[:,2], c='orange', marker='.')
+    # xx, yy = np.meshgrid(range(1000), range(1000))
+    # zz = xx*0
 
     
-    ax.plot_surface(xx, yy, zz)
+    # ax.plot_surface(xx, yy, zz)
 
-    ax.scatter(this_frame_skel_x, this_frame_skel_y, this_frame_skel_z, c='r', marker='.')
-    #ax.scatter(rotated_right_heel[0], rotated_right_heel[1], rotated_right_heel[2], c='b', marker='.')
+    # ax.scatter(this_frame_skel_x, this_frame_skel_y, this_frame_skel_z, c='r', marker='.')
+    # #ax.scatter(rotated_right_heel[0], rotated_right_heel[1], rotated_right_heel[2], c='b', marker='.')
 
-    ax.scatter(mediapipe_rotated_skeleton[:,0], mediapipe_rotated_skeleton[:,1], mediapipe_rotated_skeleton[:,2], c='g', marker='.')
+    # ax.scatter(mediapipe_rotated_skeleton[:,0], mediapipe_rotated_skeleton[:,1], mediapipe_rotated_skeleton[:,2], c='g', marker='.')
     ax.scatter(mediapipe_translated_skeleton[:,0], mediapipe_translated_skeleton[:,1], mediapipe_translated_skeleton[:,2], c='b', marker='.')
+    # ax.scatter(origin_aligned_skeleton[:,0], mediapipe_translated_skeleton[:,1], mediapipe_translated_skeleton[:,2], c='orange', marker='.')
 
-    ax.plot([hip_center[0], shoulder_center[0]], [hip_center[1], shoulder_center[1]], [hip_center[2], shoulder_center[2]], c='k')
-    # ax.scatter(this_mediapipe_test[19,0], this_mediapipe_test[19,1],this_mediapipe_test[19,2], c='b', marker='o')
-    # ax.scatter(this_mediapipe_test[31,0], this_mediapipe_test[31,1],this_mediapipe_test[31,2], c='b', marker='.')
+    # ax.plot([hip_center[0], shoulder_center[0]], [hip_center[1], shoulder_center[1]], [hip_center[2], shoulder_center[2]], c='k')
+    # # ax.scatter(this_mediapipe_test[19,0], this_mediapipe_test[19,1],this_mediapipe_test[19,2], c='b', marker='o')
+    # # ax.scatter(this_mediapipe_test[31,0], this_mediapipe_test[31,1],this_mediapipe_test[31,2], c='b', marker='.')
 
-    #ax.plot([0,this_frame_skel_x[32]], [0,this_frame_skel_y[32]], [0,this_frame_skel_z[32]], c='b')
+    # #ax.plot([0,this_frame_skel_x[32]], [0,this_frame_skel_y[32]], [0,this_frame_skel_z[32]], c='b')
 
-    ax.quiver(X,Y,Z,U,V,W,arrow_length_ratio=0.1)
+    # ax.quiver(X,Y,Z,U,V,W,arrow_length_ratio=0.1)
 
-    ax.quiver(X1,Y1,Z1,U1,V1,W1,arrow_length_ratio=0.1)
-    ax.quiver(X,Y,Z,U2,V2,W2,arrow_length_ratio=0.1)
+    # ax.quiver(X1,Y1,Z1,U1,V1,W1,arrow_length_ratio=0.1)
+    # ax.quiver(X,Y,Z,U2,V2,W2,arrow_length_ratio=0.1)
 
-    ax.quiver(X,Y,Z,U3,V3,W3,arrow_length_ratio=0.1, color = 'g')
-    ax.quiver(X0,Y0,Z0,U0,V0,W0,arrow_length_ratio=0.1, color = 'r')
+    # ax.quiver(X,Y,Z,U3,V3,W3,arrow_length_ratio=0.1, color = 'g')
+    # ax.quiver(X0,Y0,Z0,U0,V0,W0,arrow_length_ratio=0.1, color = 'r')
 
-    ax.quiver(X0,Y0,Z0,A,B,C,arrow_length_ratio=0.1, alpha = .5, color = 'g')
+    # ax.quiver(X0,Y0,Z0,A,B,C,arrow_length_ratio=0.1, alpha = .5, color = 'g')
 
-    #ax.quiver(X0,Y0,Z0,XXV,XYV,ZXV,arrow_length_ratio=0.1)
-    #ax.quiver(X0,Y0,Z0,YXV,YYV,ZYV,arrow_length_ratio=0.1)
+    # #ax.quiver(X0,Y0,Z0,XXV,XYV,ZXV,arrow_length_ratio=0.1)
+    # #ax.quiver(X0,Y0,Z0,YXV,YYV,ZYV,arrow_length_ratio=0.1)
 
-    #plt.show()
+    plt.show()
 
 
 mediapipe_translated_skeleton[30,2]
@@ -272,6 +291,8 @@ mediapipe_translated_skeleton[31,2]
 mediapipe_translated_skeleton[29,2]
 mediapipe_translated_skeleton[31,2]
 
+
+rotation_matrix_to_align_with_positive_y = calculate_rotation_matrix(right_foot_unit_vector,y_vector)
 
 def calculate_distance(point1, point2):
 
