@@ -152,7 +152,7 @@ for frame in track(range(num_frames)):
 
 
 
-translated_and_rotated_right_foot_vector = create_vector(translated_and_rotated_skeleton_data[rotation_base_frame,right_heel_index,:],translated_and_rotated_skeleton_data[rotation_base_frame,right_toe_index,:])
+translated_and_rotated_right_foot_vector = create_vector(translated_and_rotated_skeleton_data[rotation_base_frame,left_heel_index,:],translated_and_rotated_skeleton_data[rotation_base_frame,right_heel_index,:])
 translated_and_rotated_right_foot_unit_vector = create_unit_vector(translated_and_rotated_right_foot_vector)
 
 rotation_matrix_to_align_skeleton_with_positive_y = calculate_rotation_matrix(translated_and_rotated_right_foot_unit_vector,x_vector)

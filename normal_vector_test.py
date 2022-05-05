@@ -215,11 +215,11 @@ elif system_to_plot == 'mediapipe':
 
 
 
-translated_right_foot_vector = create_vector(mediapipe_translated_skeleton[30,:],mediapipe_translated_skeleton[32,:])
+translated_right_foot_vector = create_vector(mediapipe_translated_skeleton[29,:],mediapipe_translated_skeleton[30,:])
 
 translated_right_foot_unit_vector = create_unit_vector(translated_right_foot_vector)
 
-rotation_matrix_to_align_with_positive_y = calculate_rotation_matrix(translated_right_foot_unit_vector,y_vector)
+rotation_matrix_to_align_with_positive_y = calculate_rotation_matrix(translated_right_foot_unit_vector,x_vector)
 
 origin_aligned_skeleton = rotate_skeleton(mediapipe_translated_skeleton,rotation_matrix_to_align_with_positive_y)
 
@@ -242,7 +242,8 @@ if debug:
     my = np.nanmean(origin_aligned_skeleton[1,:])
     mz = np.nanmean(origin_aligned_skeleton[2,:])
 
-
+    ax.x_label = 'X'
+    ax.y_label = 'Y'
   
     #ax.set_box_aspect([1,1,1])
     ax.set_xlim([mx-ax_range, mx+ax_range]) #maybe set ax limits before the function? if we're using cla() they probably don't need to be redefined every time 
