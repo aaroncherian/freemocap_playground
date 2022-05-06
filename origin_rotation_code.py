@@ -1,3 +1,4 @@
+from distutils.log import debug
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -27,7 +28,7 @@ else:
 sessionID = 'session_SER_1_20_22' #name of the sessionID folder
 skeleton_to_plot = 'mediapipe' #for a future situation where we want to rotate openpose/dlc skeletons 
 rotation_base_frame = 3000
-
+debug = True
 
 
 this_freemocap_session_path = freemocap_validation_data_path / sessionID
@@ -177,6 +178,62 @@ origin_aligned_skeleton_data = np.zeros(skeleton_data.shape)
 for frame in track(range(num_frames)):
    origin_aligned_skeleton_data[frame,:,:] = rotate_skeleton_frame(translated_and_rotated_skeleton_data[frame,:,:],rotation_matrix_to_align_skeleton_with_positive_y)
 
+
+if debug:
+    figure = plt.figure()
+    ax = figure.add_subplot( projection = '3d')
+
+    this_frame_skeleton_data = origin_aligned_skeleton_data[rotation_base_frame,:,:]
+
+    ax_range = 800
+    mx = np.nanmean(this_frame_skeleton_data[:,0])
+    my = np.nanmean(this_frame_skeleton_data[:,1])
+    mz = np.nanmean(this_frame_skeleton_data[:,2])
+
+    ax.set_xlim([mx-ax_range, mx+ax_range]) #maybe set ax limits before the function? if we're using cla() they probably don't need to be redefined every time 
+    ax.set_ylim([my-ax_range, my+ax_range])
+    ax.set_zlim([mz-ax_range, mz+ax_range])
+
+
+    ax.scatter(this_frame_skeleton_data[:,0],this_frame_skeleton_data[:,1],this_frame_skeleton_data[:,2],c='r')
+
+
+    
+    this_frame_right_foot_vector = create_vector(this_frame_skeleton_data[right_heel_index,:] ,this_frame_skeleton_data[right_toe_index,:])
+    this_frame_heel_vector = create_vector(this_frame_skeleton_data[right_heel_index,:] ,this_frame_skeleton_data[left_heel_index,:]) #this is the heel vector for aligning the right heel with the origin
+    this_frame_x_alignment_heel_vector = create_vector(this_frame_skeleton_data[left_heel_index,:] ,this_frame_skeleton_data[right_heel_index,:]) #this is the heel vector for aligning the skeleton to face positive y
+#NOTE - maybe use the left heel as the origin for the rotation as well 
+
+    this_frame_heel_unit_vector = create_unit_vector(this_frame_heel_vector)
+    this_frame_heel_alignment_unit_vector = create_unit_vector(this_frame_x_alignment_heel_vector)
+
+    this_frame_foot_normal_vector = create_normal_vector(this_frame_right_foot_vector,this_frame_heel_vector)
+    this_frame_foot_normal_unit_vector = create_unit_vector(this_frame_foot_normal_vector)
+
+    #W,U,V = zip(this_frame_foot_unit_vector)
+
+    Zvector_X,Zvector_Y,Zvector_Z = zip(origin_normal_unit_vector*800)
+    Xvector_X,Xvector_Y,Xvector_Z = zip(x_vector*800)
+    Yvector_X,Yvector_Y,Yvector_Z = zip(y_vector*800)
+
+    Origin_X,Origin_Y,Origin_Z = zip(origin)
+
+    Rightheel_X, Rightheel_Y, Rightheel_Z = zip(this_frame_skeleton_data[right_heel_index,:]) 
+    Footnormal_X,Footnormal_Y,Footnormal_Z = zip(this_frame_foot_normal_unit_vector*500)
+    Heel_X, Heel_Y, Heel_Z = zip(this_frame_heel_unit_vector*500)
+    Heel_alignment_X, Heel_alignment_Y, Heel_alignment_Z = zip(this_frame_heel_alignment_unit_vector*500)
+
+    ax.quiver(Origin_X,Origin_Y,Origin_Z,Zvector_X,Zvector_Y,Zvector_Z,arrow_length_ratio=0.1,color='b', label = 'Z-axis')
+    ax.quiver(Origin_X,Origin_Y,Origin_Z,Xvector_X,Xvector_Y,Xvector_Z,arrow_length_ratio=0.1,color='cyan', label = 'X-axis')
+    ax.quiver(Origin_X,Origin_Y,Origin_Z,Yvector_X,Yvector_Y,Yvector_Z,arrow_length_ratio=0.1,color='purple', label = 'Y-axis')
+
+    ax.quiver(Rightheel_X,Rightheel_Y,Rightheel_Z,Footnormal_X,Footnormal_Y,Footnormal_Z,arrow_length_ratio=0.1,color='r')
+    ax.quiver(Rightheel_X,Rightheel_Y,Rightheel_Z,Heel_alignment_X,Heel_alignment_Y,Heel_alignment_Z,arrow_length_ratio=0.1,color='g') 
+
+    ax.legend()
+
+    plt.show()
+    
 #save the aligned skeleton data to a new file
 np.save(save_file,origin_aligned_skeleton_data)
 f = 2
