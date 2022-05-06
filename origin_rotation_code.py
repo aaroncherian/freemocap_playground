@@ -180,6 +180,11 @@ for frame in track(range(num_frames)):
 
 
 if debug:
+
+    #debug plot shows the X,Y,Z vectors pointing out from the origin - the right heel should be at 0,0,0. 
+    #the z-vector should align with the normal vector between the right foot vector and heel vector
+    #the x-vector should align with the vector between the left heel and right heel 
+    
     figure = plt.figure()
     ax = figure.add_subplot( projection = '3d')
 
@@ -233,7 +238,7 @@ if debug:
     ax.legend()
 
     plt.show()
-    
+
 #save the aligned skeleton data to a new file
 np.save(save_file,origin_aligned_skeleton_data)
 f = 2
