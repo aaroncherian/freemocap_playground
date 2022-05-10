@@ -284,6 +284,11 @@ if debug:
     ax3 = figure.add_subplot(223,projection = '3d')
     ax4 = figure.add_subplot(224,projection = '3d')
 
+    ax1.set_title('Original Skeleton')
+    ax2.set_title('Skeleton Translated to Origin')
+    ax3.set_title('Skeleton Rotated to Make +Z Up')
+    ax4.set_title('Skeleton Rotated to Make +Y Forwards')
+
     this_frame_original_skeleton_data = skeleton_data[rotation_base_frame,:,:]
     this_frame_translated_skeleton_data = translated_skeleton_data[rotation_base_frame,:,:]
     this_frame_z_rotated_skeleton_data = translated_and_rotated_skeleton_data[rotation_base_frame,:,:]
@@ -367,7 +372,7 @@ if debug:
     ax4.scatter(origin_aligned_COM_XYZ_ground_projection[0],origin_aligned_COM_XYZ_ground_projection[1],origin_aligned_COM_XYZ_ground_projection[2],c='b')
     ax4.plot([origin_aligned_COM_XYZ[0],origin_aligned_COM_XYZ_ground_projection[0]],[origin_aligned_COM_XYZ[1],origin_aligned_COM_XYZ_ground_projection[1]],[origin_aligned_COM_XYZ[2],origin_aligned_COM_XYZ_ground_projection[2]],c='b', alpha = .5)
     ax4.quiver(origin_aligned_right_heel_x,origin_aligned_right_heel_y,origin_aligned_right_heel_z,origin_aligned_left_heel_x,origin_aligned_left_heel_y,origin_aligned_left_heel_z,arrow_length_ratio=0.1,color='pink')
-    ax4.quiver(origin_aligned_right_heel_x,origin_aligned_right_heel_y,origin_aligned_right_heel_z,origin_aligned_foot_x,origin_aligned_foot_y,origin_aligned_foot_z,arrow_length_ratio=0.1,color='pink')
+    
 
     ax1.legend()
     ax2.legend()
