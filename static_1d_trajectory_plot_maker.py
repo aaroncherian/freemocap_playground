@@ -40,7 +40,9 @@ save_path = Path(r'C:\Users\aaron\Documents\HumonLab\RMASBM\comparison_graphics'
 
 
 
+
 run_type = 'freemocap'
+
 # run_type = 'freemocap'
 stance = 'natural'
 
@@ -57,7 +59,7 @@ ax_range = 300
 
 
 
-if run_type == 'freemocap':
+if run_type == 'openpose':
     from plot_with_classes import skeleton_COM_Plot
 
     if stance == 'natural':

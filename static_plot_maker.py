@@ -199,8 +199,8 @@ ax.scatter(this_frame_skel_x, this_frame_skel_y,this_frame_skel_z, color = 'grey
 ax.plot(this_frame_left_foot_x,this_frame_left_foot_y,this_frame_left_foot_z, color = 'blue')
 ax.plot(this_frame_right_foot_x,this_frame_right_foot_y,this_frame_right_foot_z, color = 'red')
 
-# ax.scatter(this_frame_total_COM_x,this_frame_total_COM_y,0, color = 'magenta', marker = '*', s = 70, edgecolor = 'purple', alpha = .5)
-# ax.plot([this_frame_total_COM_x,this_frame_total_COM_x],[this_frame_total_COM_y,this_frame_total_COM_y],[0,this_frame_total_COM_z], color = 'grey', linestyle = '--',alpha = .5)
+ax.scatter(this_frame_total_COM_x,this_frame_total_COM_y,0, color = 'magenta', marker = '*', s = 70, edgecolor = 'purple', alpha = .5)
+ax.plot([this_frame_total_COM_x,this_frame_total_COM_x],[this_frame_total_COM_y,this_frame_total_COM_y],[0,this_frame_total_COM_z], color = 'grey', linestyle = '--',alpha = .5)
 # # ax.legend(bbox_to_anchor=(.5, 0.14))
 
 # ax.plot([this_frame_left_foot_x[0],this_frame_right_foot_x[0]],[this_frame_left_foot_y[0],this_frame_right_foot_y[0]],[this_frame_left_foot_z[0],this_frame_right_foot_z[0]], color = 'coral', linestyle = '--',alpha = .5)
