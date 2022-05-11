@@ -46,10 +46,11 @@ class skeleton_COM_Plot:
         #mediapipe_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
         #mediapipe_data_path = this_freemocap_data_path/'rotated_mediaPipeSkel_3d_smoothed.npy'
         mediapipe_data_path = this_freemocap_data_path/'mediapipe_origin_aligned_skeleton_3D.npy'
+        #mediapipe_data_path = this_freemocap_data_path/'mediapipe_origin_corrected_and_rotated.npy' 
         mediapipeSkeleton_file_name = this_freemocap_data_path/'origin_aligned_mediapipeSkelcoordinates_frame_segment_joint_XYZ.pkl'
 
-        #syncedVideoName = sessionID + '_Cam1_synced.mp4'
-        syncedVideoName = sessionID + '_mediapipe_overlayed_video.mp4'
+        syncedVideoName = sessionID + '_synced_Cam1.mp4'
+        #syncedVideoName = sessionID + '_mediapipe_overlayed_video.mp4'
 
 
         syncedVideoPath = this_freemocap_session_path/'SyncedVideos'/syncedVideoName
@@ -559,8 +560,8 @@ class skeleton_COM_Plot:
             #ax5.legend(bbox_to_anchor=(1.12, -.65), ncol = 2)
 
             
-            ax4.set_ylim([-460,140])
-            ax5.set_ylim([-340,260])
+            # ax4.set_ylim([-460,140])
+            # ax5.set_ylim([-340,260])
 
         elif self.stance == 'left_leg':
             #Left Leg Stance Plot-----------------------------------------------------------------------------------------------------------
@@ -608,8 +609,8 @@ class skeleton_COM_Plot:
             ax5.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,1], color = 'grey')
 
             
-            ax4.set_ylim([-899, 401])
-            ax5.set_ylim([-739, 561])
+            #ax4.set_ylim([-899, 401])
+            #ax5.set_ylim([-739, 561])
             
     def animate2(self,frame,video_frames_to_plot):
 
@@ -976,19 +977,19 @@ if __name__ == '__main__':
     if this_computer_name == 'DESKTOP-V3D343U':
         freemocap_validation_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
     elif this_computer_name == 'DESKTOP-F5LCT4Q':
-        freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
-        #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+        #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+        freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
     else:
         #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
         freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
-    sessionID = 'session_SER_1_20_22' #name of the sessionID folder
+    sessionID = 'sesh_2022-05-09_15_40_59' #name of the sessionID folder
 
 
     stance = 'natural'
 
     if stance == 'natural':
         num_frame_range = range(9500,12000)
-
+        num_frame_range = 0
     elif stance == 'left_leg':
         num_frame_range = range(13000,15180)
 
@@ -998,12 +999,12 @@ if __name__ == '__main__':
     #num_frame_range = range(10000,10100)
 
     #num_frame_range = range(16680,17740)
-    camera_fps = 60
-    output_video_fps = 60
+    camera_fps = 30
+    output_video_fps = 30
     tail_length = 120 #number of frames to keep the COM trajectory tail 
     #num_frame_range = 0
 
-    COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length,stance)
+    COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length,stance,static_plot=False)
 
     this_range_mp_pose_XYZ,this_range_mp_skeleton_segment_XYZ,this_range_segmentCOM_fr_joint_XYZ,this_range_totalCOM_frame_XYZ, video_frames_to_plot = COM_plot.set_up_data()
     COM_plot.generate_plot(this_range_mp_pose_XYZ,this_range_mp_skeleton_segment_XYZ,this_range_segmentCOM_fr_joint_XYZ,this_range_totalCOM_frame_XYZ, video_frames_to_plot)
