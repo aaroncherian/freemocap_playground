@@ -18,7 +18,7 @@ from io import BytesIO
 
 #you can skip every 10th frame 
 class skeleton_COM_Plot:
-    def __init__(self, freemocap_validation_data_path, sessionID, num_frame_range, camera_fps, output_video_fps, tail_length, step_interval = 1):
+    def __init__(self, freemocap_validation_data_path, sessionID, num_frame_range, camera_fps, output_video_fps, tail_length, stance, step_interval = 1):
         self.num_frame_range = num_frame_range
 
         self.sessionID = sessionID
@@ -33,6 +33,8 @@ class skeleton_COM_Plot:
         self.output_video_fps = output_video_fps
 
         self.tail_length = tail_length
+
+        self.stance = stance 
 
     def create_paths_to_data_files(self, validation_data_path, sessionID):
         
@@ -406,70 +408,145 @@ class skeleton_COM_Plot:
         
         ax2.plot(this_frame_total_COM_x,this_frame_total_COM_y, marker = '*', color = 'magenta', markeredgecolor = 'purple', ms = 8)
 
-        ax2.plot(this_frame_left_foot_x,this_frame_left_foot_y, color = 'blue', label= 'Max Lateral Bound (Left Foot)')
-        ax2.plot(this_frame_right_foot_x,this_frame_right_foot_y, color = 'red', label = 'Min Lateral Bound (Right Foot)')
-        
-        ax2.plot(this_frame_left_foot_avg_x, this_frame_left_foot_avg_y, color = 'blue', ms = 3, marker = 'o')
-        ax2.plot(this_frame_right_foot_avg_x, this_frame_right_foot_avg_y, color = 'red', ms = 3, marker = 'o')
-        
-        ax2.plot(this_frame_back_foot_avg_x,this_frame_back_foot_avg_y, color = 'coral', marker = 'o', ms = 3, alpha = .3)
-        ax2.plot(this_frame_front_foot_avg_x,this_frame_front_foot_avg_y, color = 'forestgreen', marker = 'o', ms = 3, alpha = .3)
 
-        #plot the a line between the heels, and then a line between the toes
-        ax2.plot([this_frame_left_foot_x[0],this_frame_right_foot_x[0]],[this_frame_left_foot_y[0],this_frame_right_foot_y[0]], color = 'coral', label = 'Posterior Bound', alpha = .3, linestyle = '--')
-        ax2.plot([this_frame_left_foot_x[1],this_frame_right_foot_x[1]],[this_frame_left_foot_y[1],this_frame_right_foot_y[1]], color = 'forestgreen', label = 'Anterior Bound', alpha = .3, linestyle = '--')
+        if self.stance == 'natural':
+            ax2.plot(this_frame_left_foot_x,this_frame_left_foot_y, color = 'blue', label= 'Max Lateral Bound (Left Foot)')
+            ax2.plot(this_frame_right_foot_x,this_frame_right_foot_y, color = 'red', label = 'Min Lateral Bound (Right Foot)')
+            
+            ax2.plot(this_frame_left_foot_avg_x, this_frame_left_foot_avg_y, color = 'blue', ms = 3, marker = 'o')
+            ax2.plot(this_frame_right_foot_avg_x, this_frame_right_foot_avg_y, color = 'red', ms = 3, marker = 'o')
+            
+            ax2.plot(this_frame_back_foot_avg_x,this_frame_back_foot_avg_y, color = 'coral', marker = 'o', ms = 3, alpha = .3)
+            ax2.plot(this_frame_front_foot_avg_x,this_frame_front_foot_avg_y, color = 'forestgreen', marker = 'o', ms = 3, alpha = .3)
 
-        # ax2.plot(left_toe_x,left_toe_y, color = 'coral', marker = 'o', ms = 4, alpha = .7, label = 'Anterior Bound') #left leg one leg stance plotting
-        # ax2.plot(left_heel_x,left_heel_y, color = 'forestgreen', marker = 'o', ms = 4, alpha = .7, label = 'Posterior Bound') #left leg one leg stance plotting
+            #plot the a line between the heels, and then a line between the toes
+            ax2.plot([this_frame_left_foot_x[0],this_frame_right_foot_x[0]],[this_frame_left_foot_y[0],this_frame_right_foot_y[0]], color = 'coral', label = 'Posterior Bound', alpha = .3, linestyle = '--')
+            ax2.plot([this_frame_left_foot_x[1],this_frame_right_foot_x[1]],[this_frame_left_foot_y[1],this_frame_right_foot_y[1]], color = 'forestgreen', label = 'Anterior Bound', alpha = .3, linestyle = '--')
+        
+        elif self.stance == 'left_leg':
+            ax2.plot(this_frame_left_foot_x,this_frame_left_foot_y, color = 'blue', label= 'Max Lateral Bound (Left Foot)')
+            # ax2.plot(this_frame_right_foot_x,this_frame_right_foot_y, color = 'red', label = 'Min Lateral Bound (Right Foot)')
+            
+            ax2.plot(this_frame_left_foot_avg_x, this_frame_left_foot_avg_y, color = 'blue', ms = 3, marker = 'o')
+            # ax2.plot(this_frame_right_foot_avg_x, this_frame_right_foot_avg_y, color = 'red', ms = 3, marker = 'o')
+            
+
+            ax2.plot(this_frame_left_foot_x[0],this_frame_left_foot_y[0], color = 'coral', marker = 'o', ms = 4, alpha = .7, label = 'Posterior Bound') #left leg one leg stance plotting
+            ax2.plot(this_frame_left_foot_x[1],this_frame_left_foot_y[1], color = 'forestgreen', marker = 'o', ms = 4, alpha = .7, label = 'Anterior Bound') #left leg one leg stance plotting
+
+        elif self.stance == 'right_leg':
+            # ax2.plot(this_frame_left_foot_x,this_frame_left_foot_y, color = 'blue', label= 'Max Lateral Bound (Left Foot)')
+            ax2.plot(this_frame_right_foot_x,this_frame_right_foot_y, color = 'red', label = 'Min Lateral Bound (Right Foot)')
+            
+            # ax2.plot(this_frame_left_foot_avg_x, this_frame_left_foot_avg_y, color = 'blue', ms = 3, marker = 'o')
+            ax2.plot(this_frame_right_foot_avg_x, this_frame_right_foot_avg_y, color = 'red', ms = 3, marker = 'o')
+            
+
+            ax2.plot(this_frame_right_foot_x[0],this_frame_right_foot_y[0], color = 'coral', marker = 'o', ms = 4, alpha = .7, label = 'Posterior Bound') #left leg one leg stance plotting
+            ax2.plot(this_frame_right_foot_x[1],this_frame_right_foot_y[1], color = 'forestgreen', marker = 'o', ms = 4, alpha = .7, label = 'Anterior Bound') #left leg one leg stance plotting
 
         ax2.legend(fontsize = 10, bbox_to_anchor=(1.15, -.5),ncol = 2)
 
         ax4.set_ylabel('X Position (mm)')
 
-  
-        # ax4.axhline(left_foot_average_position_x, color = 'blue', alpha = .5, label = 'Mean Left Foot Position')
-        # ax4.axhline(right_foot_average_position_x, color = 'red', alpha = .5, label =  'Mean Right Foot Position')
+        if self.stance == 'natural':
+            # Natural Stance Plot---------------------------------------------------------------------------------------
+            #future points
+            ax4.plot(self.time_array,-1*self.this_range_totalCOM_frame_XYZ[:,0], color = 'lightgrey')
+            ax4.plot(self.time_array, left_foot_avg_x, color = 'paleturquoise')
+            ax4.plot(self.time_array, right_foot_avg_x, color = 'lightpink')
 
-        #future points
-        ax4.plot(self.time_array,-1*self.this_range_totalCOM_frame_XYZ[:,0], color = 'lightgrey')
-        ax4.plot(self.time_array, left_foot_avg_x, color = 'paleturquoise')
-        ax4.plot(self.time_array, right_foot_avg_x, color = 'lightpink')
+            #current points
+            ax4.axvline(self.time_array[frame], color = 'black')
 
-        #current points
-        ax4.axvline(self.time_array[frame], color = 'black')
-        ax4.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,0], color = 'grey')
-        ax4.plot(self.time_array[0:frame+1],left_foot_avg_x[0:frame+1], color = 'blue', alpha = .5)
-        ax4.plot(self.time_array[0:frame+1],right_foot_avg_x[0:frame+1], color = 'red', alpha = .5)
+            ax4.plot(self.time_array[0:frame+1],left_foot_avg_x[0:frame+1], color = 'blue', alpha = .5)
+            ax4.plot(self.time_array[0:frame+1],right_foot_avg_x[0:frame+1], color = 'red', alpha = .5)
+
+            ax4.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,0], color = 'grey')
+            
         
-    
-        ax4.plot(self.time_array[frame],this_frame_total_COM_x, '*', color = 'magenta', ms = 8, markeredgecolor = 'purple')
+            ax4.plot(self.time_array[frame],this_frame_total_COM_x, '*', color = 'magenta', ms = 8, markeredgecolor = 'purple')
 
+            
+            #ax4.legend(bbox_to_anchor=(1.1, -1.85), ncol= 2)
+
+            #ax5.axhline(back_foot_average_position_y, color = 'forestgreen', alpha = .5, label = 'Mean Back Foot Position')
+            #ax5.axhline(front_foot_average_position_y, color = 'coral', alpha = .5, label = 'Mean Front Foot Position')
+
+            #future points
+
+            ax5.plot(self.time_array, front_foot_avg_y, color = 'palegreen', alpha = .3)
+            ax5.plot(self.time_array, back_foot_avg_y, color = 'lightcoral', alpha = .3)
+
+            ax5.plot(self.time_array,-1*self.this_range_totalCOM_frame_XYZ[:,1], color = 'lightgrey')
+
+            ax5.axvline(self.time_array[frame], color = 'black')
+            ax5.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,1], color = 'grey')
+            ax5.plot(self.time_array[0:frame+1],front_foot_avg_y[0:frame+1], color = 'forestgreen', alpha = .5)
+            ax5.plot(self.time_array[0:frame+1],back_foot_avg_y[0:frame+1], color = 'coral', alpha = .5)
+            
+            # ax5.plot(self.time_array[0:frame+1],self.anterior_bound_array, color = 'forestgreen', alpha = .5)
+            # ax5.plot(self.time_array[0:frame+1],self.posterior_bound_array, color = 'coral', alpha = .5)
+
+            ax5.plot(self.time_array[frame],this_frame_total_COM_y,'*', color = 'magenta', ms = 8, markeredgecolor = 'purple')
+            #ax5.legend(bbox_to_anchor=(1.12, -.65), ncol = 2)
+
+            
+            ax4.set_ylim([-460,140])
+            ax5.set_ylim([-340,260])
+
+        elif self.stance == 'left_leg':
+            #Left Leg Stance Plot-----------------------------------------------------------------------------------------------------------
+            ax4.plot(self.time_array,-1*self.this_range_totalCOM_frame_XYZ[:,0], color = 'lightgrey')
+            ax4.plot(self.time_array, left_foot_avg_x, color = 'paleturquoise')
+            
+            ax4.axvline(self.time_array[frame], color = 'black')
+            ax4.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,0], color = 'grey')
+            ax4.plot(self.time_array[0:frame+1],left_foot_avg_x[0:frame+1], color = 'blue', alpha = .5)
         
-        #ax4.legend(bbox_to_anchor=(1.1, -1.85), ncol= 2)
+            ax4.plot(self.time_array[frame],this_frame_total_COM_x, '*', color = 'magenta', ms = 8, markeredgecolor = 'purple')
 
-        ax5.set_xlabel('Time (s)')
-        ax5.set_ylabel('Y Position (mm)')
-        #ax5.axhline(back_foot_average_position_y, color = 'forestgreen', alpha = .5, label = 'Mean Back Foot Position')
-        #ax5.axhline(front_foot_average_position_y, color = 'coral', alpha = .5, label = 'Mean Front Foot Position')
 
-        #future points
-        ax5.plot(self.time_array,-1*self.this_range_totalCOM_frame_XYZ[:,1], color = 'lightgrey')
-        ax5.plot(self.time_array, front_foot_avg_y, color = 'palegreen', alpha = .3)
-        ax5.plot(self.time_array, back_foot_avg_y, color = 'lightcoral', alpha = .3)
+            ax5.plot(self.time_array, -1*left_foot_y[1], color = 'palegreen', alpha = .3)
+            ax5.plot(self.time_array, -1*left_foot_y[0], color = 'lightcoral', alpha = .3)
+            ax5.plot(self.time_array,-1*self.this_range_totalCOM_frame_XYZ[:,1], color = 'lightgrey')
 
-        ax5.axvline(self.time_array[frame], color = 'black')
-        ax5.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,1], color = 'grey')
-        ax5.plot(self.time_array[0:frame+1],front_foot_avg_y[0:frame+1], color = 'forestgreen', alpha = .5)
-        ax5.plot(self.time_array[0:frame+1],back_foot_avg_y[0:frame+1], color = 'coral', alpha = .5)
+            ax5.axvline(self.time_array[frame], color = 'black')
+
+            ax5.plot(self.time_array[0:frame+1],-1*left_foot_y[1][0:frame+1], color = 'forestgreen', alpha = .5)
+            ax5.plot(self.time_array[0:frame+1],-1*left_foot_y[0][0:frame+1], color = 'coral', alpha = .5)
+
+            ax5.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,1], color = 'grey')
+
+            ax4.set_ylim([-590, 510])
+            ax5.set_ylim([-690, 409])
+        elif self.stance == 'right_leg': 
+        #Right Leg Stance Plot-----------------------------------------------------------------------------------------------------------
+            ax4.plot(self.time_array,-1*self.this_range_totalCOM_frame_XYZ[:,0], color = 'lightgrey')
+            ax4.plot(self.time_array, right_foot_avg_x, color = 'lightpink')
+            
+            ax4.axvline(self.time_array[frame], color = 'black')
+            ax4.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,0], color = 'grey')
+            ax4.plot(self.time_array[0:frame+1],right_foot_avg_x[0:frame+1], color = 'red', alpha = .5)
         
-        # ax5.plot(self.time_array[0:frame+1],self.anterior_bound_array, color = 'forestgreen', alpha = .5)
-        # ax5.plot(self.time_array[0:frame+1],self.posterior_bound_array, color = 'coral', alpha = .5)
+            ax4.plot(self.time_array[frame],this_frame_total_COM_x, '*', color = 'magenta', ms = 8, markeredgecolor = 'purple')
 
 
+            ax5.plot(self.time_array, -1*right_foot_y[1], color = 'palegreen', alpha = .3)
+            ax5.plot(self.time_array, -1*right_foot_y[0], color = 'lightcoral', alpha = .3)
 
-        ax5.plot(self.time_array[frame],this_frame_total_COM_y,'*', color = 'magenta', ms = 8, markeredgecolor = 'purple')
-        #ax5.legend(bbox_to_anchor=(1.12, -.65), ncol = 2)
+            ax5.plot(self.time_array,-1*self.this_range_totalCOM_frame_XYZ[:,1], color = 'lightgrey')
 
+            ax5.axvline(self.time_array[frame], color = 'black')
+
+            ax5.plot(self.time_array[0:frame+1],-1*right_foot_y[1][0:frame+1], color = 'forestgreen', alpha = .5)
+            ax5.plot(self.time_array[0:frame+1],-1*right_foot_y[0][0:frame+1], color = 'coral', alpha = .5)
+
+            ax5.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,1], color = 'grey')
+
+            ax4.set_ylim([-899, 401])
+            ax5.set_ylim([-739, 561])
+            
         
         ax2.set_xlabel('X Position (mm)')
         ax2.set_ylabel('Y Position (mm)')
@@ -606,7 +683,7 @@ class skeleton_COM_Plot:
         print('Starting Frame Animation') 
         ani = FuncAnimation(figure, self.animate, frames= num_frames_to_plot, interval=.1, repeat=False, fargs = (video_frames_to_plot,), init_func= self.animation_init)
         writervideo = animation.FFMpegWriter(fps=self.output_video_fps)
-        ani.save(self.this_freemocap_session_path/'qualysis_testing.mp4', writer=writervideo)
+        ani.save(self.this_freemocap_session_path/'qualysis_{}.mp4'.format(self.stance), writer=writervideo)
         print('Animation has been saved to {}'.format(self.this_freemocap_session_path))
         f=2
 if __name__ == '__main__':
@@ -633,7 +710,20 @@ if __name__ == '__main__':
     tail_length = 120 #number of frames to keep the COM trajectory tail 
     #num_frame_range = 0
 
-    COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length, step_interval= step_interval)
+    stance = 'right_leg'
+
+    if stance == 'natural':
+        num_frame_range = range(58355,70855,5)
+
+    elif stance == 'left_leg':
+        num_frame_range = range(75850,86750,5)
+
+    elif stance == 'right_leg':
+        num_frame_range = range(90890,98140,5)
+
+    #num_frame_range = range(95000,96000,5)
+
+    COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length,stance, step_interval= step_interval)
 
     this_range_mp_pose_XYZ,this_range_mp_skeleton_segment_XYZ,this_range_segmentCOM_fr_joint_XYZ,this_range_totalCOM_frame_XYZ, video_frames_to_plot = COM_plot.set_up_data()
     COM_plot.generate_plot(this_range_mp_pose_XYZ,this_range_mp_skeleton_segment_XYZ,this_range_segmentCOM_fr_joint_XYZ,this_range_totalCOM_frame_XYZ, video_frames_to_plot)

@@ -15,19 +15,28 @@ from COM_calculator import calculate_segment_COM, reformat_segment_COM, calculat
 this_computer_name = socket.gethostname()
 print(this_computer_name)
 
+if this_computer_name == 'DESKTOP-V3D343U':
+    freemocap_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
+elif this_computer_name == 'DESKTOP-F5LCT4Q':
+    #freemocap_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+    freemocap_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+else:
+    freemocap_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
 
+
+#parameters to adjust 
+sessionID = 'sesh_2022-03-11_12_06_30' #name of the sessionID folder
+data_array_name = 'mediaPipeSkel_3d_smoothed.npy'
+num_pose_joints = 33 #number of pose joints tracked by mediapipe 
 
 
 #creating paths to the session and data
 this_freemocap_session_path = freemocap_data_path / sessionID
 this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
 mediapipe_data_path = this_freemocap_data_path/data_array_name
-
-
-mediapipe_skeleton_file_path = this_freemocap_data_path/'origin_aligned_mediapipeSkelcoordinates_frame_segment_joint_XYZ.pkl'
-segmentCOM_data_path = this_freemocap_data_path/'origin_aligned_segmentedCOM_frame_joint_XYZ.npy'
-totalBodyCOM_data_path = this_freemocap_data_path/'origin_aligned_totalBodyCOM_frame_XYZ.npy'
-
+mediapipe_skeleton_file_path = this_freemocap_data_path/'mediapipeSkelcoordinates_frame_segment_joint_XYZ.pkl'
+segmentCOM_data_path = this_freemocap_data_path/'segmentedCOM_frame_joint_XYZ.npy'
+totalBodyCOM_data_path = this_freemocap_data_path/'totalBodyCOM_frame_XYZ.npy'
 
 
 #load the mediapipe data
