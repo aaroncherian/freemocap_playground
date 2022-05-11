@@ -37,6 +37,7 @@ save_file = this_freemocap_data_path/'{}_origin_aligned_skeleton_3D.npy'.format(
 
 
 if skeleton_to_plot == 'mediapipe':
+    #skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_corrected_and_rotated.npy'
     skeleton_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
     right_heel_index = 30
     right_toe_index = 32
@@ -156,12 +157,14 @@ left_foot_origin = rotation_frame_skeleton_data[left_heel_index,:]
 #create vectors for the right foot and left foot, and between the two heels 
 right_foot_vector = create_vector(rotation_frame_skeleton_data[right_heel_index,:],rotation_frame_skeleton_data[right_toe_index,:])
 left_foot_vector = create_vector(rotation_frame_skeleton_data[left_heel_index,:],rotation_frame_skeleton_data[left_toe_index,:])
-heel_vector = create_vector(rotation_frame_skeleton_data[right_heel_index,:],rotation_frame_skeleton_data[left_heel_index,:])
+heel_vector = create_vector(rotation_frame_skeleton_data[left_heel_index,:],rotation_frame_skeleton_data[right_heel_index,:])
 
 
 #create a normal unit vector from the right foot and heel vector
-foot_normal =  create_normal_vector(right_foot_vector,heel_vector)
+#foot_normal =  create_normal_vector(left_foot_vector,heel_vector)
+foot_normal = create_normal_vector(heel_vector,left_foot_vector)
 foot_normal_unit_vector = create_unit_vector(foot_normal)
+
 
 #calculate the rotation matrix between the origin normal and the foot normal
 rotation_matrix = calculate_rotation_matrix(foot_normal_unit_vector,origin_normal_unit_vector)
@@ -182,7 +185,7 @@ origin_aligned_skeleton_data = np.zeros(skeleton_data.shape)
 for frame in track(range(num_frames)):
    origin_aligned_skeleton_data[frame,:,:] = rotate_skeleton_frame(translated_and_rotated_skeleton_data[frame,:,:],rotation_matrix_to_align_skeleton_with_positive_y)
 
-
+f = 2
 # right_foot_origin = rotation_frame_skeleton_data[right_heel_index,:]
 # left_foot_origin = rotation_frame_skeleton_data[left_heel_index,:]
 
@@ -268,6 +271,22 @@ if debug:
 
         return right_foot_normal_vector
 
+    def calculate_normal_vector_to_foot(heel_one_index, toe_one_index, heel_two_index, skeleton_data):
+        foot_one_vector = create_vector(skeleton_data[heel_one_index,:],skeleton_data[toe_one_index,:])
+        heel_vector = create_vector(skeleton_data[heel_one_index,:],skeleton_data[heel_two_index,:])
+
+        foot_normal_vector =  create_normal_vector(heel_vector,foot_one_vector)
+
+        return foot_normal_vector
+
+    def plot_normal_unit_vector_to_foot(heel_one_index, toe_one_index, heel_two_index, skeleton_data, plot_ax):
+
+        normal_vector_to_foot = calculate_normal_vector_to_foot(heel_one_index, toe_one_index, heel_two_index, skeleton_data)
+        normal_vector_to_foot_unit_vector = create_unit_vector(normal_vector_to_foot)
+
+        normal_vector_to_foot_X,normal_vector_to_foot_Y,normal_vector_to_foot_Z = zip(normal_vector_to_foot_unit_vector*800)
+        plot_ax.quiver(skeleton_data[heel_one_index,0],skeleton_data[heel_one_index,1],skeleton_data[heel_one_index,2],normal_vector_to_foot_X,normal_vector_to_foot_Y,normal_vector_to_foot_Z,arrow_length_ratio=0.1,color='pink')
+
     def set_axes_ranges(plot_ax,skeleton_data, ax_range):
 
         mx = np.nanmean(skeleton_data[:,0])
@@ -294,25 +313,35 @@ if debug:
     this_frame_z_rotated_skeleton_data = translated_and_rotated_skeleton_data[rotation_base_frame,:,:]
     this_frame_origin_aligned_skeleton_data = origin_aligned_skeleton_data[rotation_base_frame,:,:]
 
-    translated_right_foot_normal_vector = get_foot_normal_vector(this_frame_translated_skeleton_data,right_heel_index,left_heel_index,right_toe_index)
-    translated_right_foot_normal_unit_vector = create_unit_vector(translated_right_foot_normal_vector)
+    # original_foot_normal_vector = get_foot_normal_vector(this_frame_original_skeleton_data,right_heel_index,left_heel_index,right_toe_index)
+    # original_foot_unit_vector = create_unit_vector(original_right_foot_normal_vector)
 
-    translated_right_heel_x, translated_right_heel_y, translated_right_heel_z = zip(this_frame_translated_skeleton_data[right_heel_index,:])
-    translated_foot_x, translated_foot_y, translated_foot_z = zip(translated_right_foot_normal_unit_vector*500)
+    # original_foot_normal_vector = calculate_normal_vector_to_foot(left_heel_index, left_toe_index, right_heel_index, this_frame_original_skeleton_data)
+    # original_foot_unit_vector = create_unit_vector(original_foot_normal_vector)
 
-    rotated_right_foot_normal_vector = get_foot_normal_vector(this_frame_z_rotated_skeleton_data,right_heel_index,left_heel_index,right_toe_index)
-    rotated_right_foot_normal_unit_vector = create_unit_vector(rotated_right_foot_normal_vector)
 
-    rotated_right_heel_x, rotated_right_heel_y, rotated_right_heel_z = zip(this_frame_z_rotated_skeleton_data[right_heel_index,:])
-    rotated_left_heel_x, rotated_left_heel_y, rotated_left_heel_z = zip(this_frame_z_rotated_skeleton_data[left_heel_index,:])
-    rotated_foot_x, rotated_foot_y, rotated_foot_z = zip(rotated_right_foot_normal_unit_vector*500)
+    # original_right_heel_x, original_right_heel_y, original_right_heel_z = zip(this_frame_original_skeleton_data[left_heel_index,:])
+    # original_foot_x, original_foot_y, original_foot_z = zip(original_foot_unit_vector*500) 
 
-    origin_aligned_right_foot_normal_vector = get_foot_normal_vector(this_frame_origin_aligned_skeleton_data,right_heel_index,left_heel_index,right_toe_index)
-    origin_aligned_right_foot_normal_unit_vector = create_unit_vector(origin_aligned_right_foot_normal_vector)
+    # translated_right_foot_normal_vector = get_foot_normal_vector(this_frame_translated_skeleton_data,right_heel_index,left_heel_index,right_toe_index)
+    # translated_right_foot_normal_unit_vector = create_unit_vector(translated_right_foot_normal_vector)
 
-    origin_aligned_right_heel_x, origin_aligned_right_heel_y, origin_aligned_right_heel_z = zip(this_frame_origin_aligned_skeleton_data[right_heel_index,:])
-    origin_aligned_left_heel_x, origin_aligned_left_heel_y, origin_aligned_left_heel_z = zip(this_frame_origin_aligned_skeleton_data[left_heel_index,:])
-    origin_aligned_foot_x, origin_aligned_foot_y, origin_aligned_foot_z = zip(origin_aligned_right_foot_normal_unit_vector*500)
+    # translated_right_heel_x, translated_right_heel_y, translated_right_heel_z = zip(this_frame_translated_skeleton_data[right_heel_index,:])
+    # translated_foot_x, translated_foot_y, translated_foot_z = zip(translated_right_foot_normal_unit_vector*500)
+
+    # rotated_right_foot_normal_vector = get_foot_normal_vector(this_frame_z_rotated_skeleton_data,right_heel_index,left_heel_index,right_toe_index)
+    # rotated_right_foot_normal_unit_vector = create_unit_vector(rotated_right_foot_normal_vector)
+
+    # rotated_right_heel_x, rotated_right_heel_y, rotated_right_heel_z = zip(this_frame_z_rotated_skeleton_data[right_heel_index,:])
+    # rotated_left_heel_x, rotated_left_heel_y, rotated_left_heel_z = zip(this_frame_z_rotated_skeleton_data[left_heel_index,:])
+    # rotated_foot_x, rotated_foot_y, rotated_foot_z = zip(rotated_right_foot_normal_unit_vector*500)
+
+    # origin_aligned_right_foot_normal_vector = get_foot_normal_vector(this_frame_origin_aligned_skeleton_data,right_heel_index,left_heel_index,right_toe_index)
+    # origin_aligned_right_foot_normal_unit_vector = create_unit_vector(origin_aligned_right_foot_normal_vector)
+
+    # origin_aligned_right_heel_x, origin_aligned_right_heel_y, origin_aligned_right_heel_z = zip(this_frame_origin_aligned_skeleton_data[right_heel_index,:])
+    # origin_aligned_left_heel_x, origin_aligned_left_heel_y, origin_aligned_left_heel_z = zip(this_frame_origin_aligned_skeleton_data[left_heel_index,:])
+    # origin_aligned_foot_x, origin_aligned_foot_y, origin_aligned_foot_z = zip(origin_aligned_right_foot_normal_unit_vector*500)
     #plot the origin vectors
 
 
@@ -337,6 +366,8 @@ if debug:
     ax1.scatter(original_COM_XYZ_ground_projection[0],original_COM_XYZ_ground_projection[1],original_COM_XYZ_ground_projection[2],c='b')
     ax1.plot([original_COM_XYZ[0],original_COM_XYZ_ground_projection[0]],[original_COM_XYZ[1],original_COM_XYZ_ground_projection[1]],[original_COM_XYZ[2],original_COM_XYZ_ground_projection[2]],c='b', alpha = .5)
 
+    plot_normal_unit_vector_to_foot(left_heel_index,left_toe_index,right_heel_index,this_frame_original_skeleton_data,ax1)
+
     ax2.scatter(this_frame_translated_skeleton_data[:,0],this_frame_translated_skeleton_data[:,1],this_frame_translated_skeleton_data[:,2],c='g')
     plot_origin_vectors(ax2,x_vector,y_vector,z_vector,origin)
 
@@ -347,20 +378,22 @@ if debug:
     ax2.scatter(translated_COM_XYZ_ground_projection[0],translated_COM_XYZ_ground_projection[1],translated_COM_XYZ_ground_projection[2],c='b')
     ax2.plot([translated_COM_XYZ[0],translated_COM_XYZ_ground_projection[0]],[translated_COM_XYZ[1],translated_COM_XYZ_ground_projection[1]],[translated_COM_XYZ[2],translated_COM_XYZ_ground_projection[2]],c='b', alpha = .5)
 
-    ax2.quiver(translated_right_heel_x,translated_right_heel_y,translated_right_heel_z,translated_foot_x,translated_foot_y,translated_foot_z,arrow_length_ratio=0.1,color='pink')
+    plot_normal_unit_vector_to_foot(left_heel_index,left_toe_index,right_heel_index,this_frame_translated_skeleton_data,ax2)
+    # ax2.quiver(translated_right_heel_x,translated_right_heel_y,translated_right_heel_z,translated_foot_x,translated_foot_y,translated_foot_z,arrow_length_ratio=0.1,color='pink')
 
     ax3.scatter(this_frame_z_rotated_skeleton_data[:,0],this_frame_z_rotated_skeleton_data[:,1],this_frame_z_rotated_skeleton_data[:,2],c='orange')
     plot_origin_vectors(ax3,x_vector,y_vector,z_vector,origin)
 
     z_rotated_COM_XYZ = calculate_COM(this_frame_z_rotated_skeleton_data[0:num_pose_joints,:])
-    z_rotated_COM_XYZ_ground_projection = calculate_COM_ground_projection_z(z_rotated_COM_XYZ,this_frame_z_rotated_skeleton_data)
+    z_rotated_COM_XYZ_ground_projection = calculate_COM_ground_projection_y(z_rotated_COM_XYZ,this_frame_z_rotated_skeleton_data)
 
     ax3.scatter(z_rotated_COM_XYZ[0],z_rotated_COM_XYZ[1],z_rotated_COM_XYZ[2],c='b', alpha = .5)
     ax3.scatter(z_rotated_COM_XYZ_ground_projection[0],z_rotated_COM_XYZ_ground_projection[1],z_rotated_COM_XYZ_ground_projection[2],c='b',alpha = .5)
     ax3.plot([z_rotated_COM_XYZ[0],z_rotated_COM_XYZ_ground_projection[0]],[z_rotated_COM_XYZ[1],z_rotated_COM_XYZ_ground_projection[1]],[z_rotated_COM_XYZ[2],z_rotated_COM_XYZ_ground_projection[2]],c='b', alpha = .5)
-    
-    ax3.quiver(rotated_right_heel_x,rotated_right_heel_y,rotated_right_heel_z,rotated_foot_x,rotated_foot_y,rotated_foot_z,arrow_length_ratio=0.1,color='pink')
-    ax3.quiver(rotated_right_heel_x,rotated_right_heel_y,rotated_right_heel_z,rotated_left_heel_x,rotated_left_heel_y,rotated_left_heel_z,arrow_length_ratio=0.1,color='pink')
+
+    plot_normal_unit_vector_to_foot(left_heel_index,left_toe_index,right_heel_index,this_frame_z_rotated_skeleton_data,ax3)    
+    # ax3.quiver(rotated_right_heel_x,rotated_right_heel_y,rotated_right_heel_z,rotated_foot_x,rotated_foot_y,rotated_foot_z,arrow_length_ratio=0.1,color='pink')
+    # ax3.quiver(rotated_right_heel_x,rotated_right_heel_y,rotated_right_heel_z,rotated_left_heel_x,rotated_left_heel_y,rotated_left_heel_z,arrow_length_ratio=0.1,color='pink')
 
     ax4.scatter(this_frame_origin_aligned_skeleton_data[:,0],this_frame_origin_aligned_skeleton_data[:,1],this_frame_origin_aligned_skeleton_data[:,2],c='purple')
     plot_origin_vectors(ax4,x_vector,y_vector,z_vector,origin)
@@ -371,8 +404,9 @@ if debug:
     ax4.scatter(origin_aligned_COM_XYZ[0],origin_aligned_COM_XYZ[1],origin_aligned_COM_XYZ[2],c='b')
     ax4.scatter(origin_aligned_COM_XYZ_ground_projection[0],origin_aligned_COM_XYZ_ground_projection[1],origin_aligned_COM_XYZ_ground_projection[2],c='b')
     ax4.plot([origin_aligned_COM_XYZ[0],origin_aligned_COM_XYZ_ground_projection[0]],[origin_aligned_COM_XYZ[1],origin_aligned_COM_XYZ_ground_projection[1]],[origin_aligned_COM_XYZ[2],origin_aligned_COM_XYZ_ground_projection[2]],c='b', alpha = .5)
-    ax4.quiver(origin_aligned_right_heel_x,origin_aligned_right_heel_y,origin_aligned_right_heel_z,origin_aligned_left_heel_x,origin_aligned_left_heel_y,origin_aligned_left_heel_z,arrow_length_ratio=0.1,color='pink')
-    
+    # ax4.quiver(origin_aligned_right_heel_x,origin_aligned_right_heel_y,origin_aligned_right_heel_z,origin_aligned_left_heel_x,origin_aligned_left_heel_y,origin_aligned_left_heel_z,arrow_length_ratio=0.1,color='pink')
+    plot_normal_unit_vector_to_foot(left_heel_index,left_toe_index,right_heel_index,this_frame_origin_aligned_skeleton_data,ax4)
+
 
     ax1.legend()
     ax2.legend()
