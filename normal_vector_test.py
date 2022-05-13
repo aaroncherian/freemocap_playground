@@ -24,15 +24,15 @@ system_to_plot = 'mediapipe'
 if this_computer_name == 'DESKTOP-V3D343U':
     freemocap_validation_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
 elif this_computer_name == 'DESKTOP-F5LCT4Q':
-    freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
-    #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+    #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+    freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
 else:
     #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
     freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
 debug = True
 
-sessionID = 'session_SER_1_20_22' #name of the sessionID folder
+sessionID = 'sesh_2022-05-09_15_40_59' #name of the sessionID folder
 this_freemocap_session_path = freemocap_validation_data_path / sessionID
 this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
 
@@ -44,7 +44,7 @@ elif system_to_plot == 'openpose':
 
 mediapipe_data = np.load(mediapipe_data_path)
 
-frame = 3000
+frame = 349
 
 
 this_mediapipe_test = mediapipe_data[frame,:,:]
@@ -246,9 +246,9 @@ if debug:
     ax.y_label = 'Y'
   
     #ax.set_box_aspect([1,1,1])
-    ax.set_xlim([mx-ax_range, mx+ax_range]) #maybe set ax limits before the function? if we're using cla() they probably don't need to be redefined every time 
-    ax.set_ylim([my-ax_range, my+ax_range])
-    ax.set_zlim([mz-ax_range, mz+ax_range])
+    # ax.set_xlim([mx-ax_range, mx+ax_range]) #maybe set ax limits before the function? if we're using cla() they probably don't need to be redefined every time 
+    # ax.set_ylim([my-ax_range, my+ax_range])
+    # ax.set_zlim([mz-ax_range, mz+ax_range])
     ax.scatter(origin_aligned_skeleton[:,0], origin_aligned_skeleton[:,1], origin_aligned_skeleton[:,2], c='orange', marker='.')
     # xx, yy = np.meshgrid(range(1000), range(1000))
     # zz = xx*0
@@ -256,7 +256,7 @@ if debug:
     
     # ax.plot_surface(xx, yy, zz)
 
-    # ax.scatter(this_frame_skel_x, this_frame_skel_y, this_frame_skel_z, c='r', marker='.')
+    ax.scatter(this_frame_skel_x, this_frame_skel_y, this_frame_skel_z, c='r', marker='.')
     # #ax.scatter(rotated_right_heel[0], rotated_right_heel[1], rotated_right_heel[2], c='b', marker='.')
 
     # ax.scatter(mediapipe_rotated_skeleton[:,0], mediapipe_rotated_skeleton[:,1], mediapipe_rotated_skeleton[:,2], c='g', marker='.')
