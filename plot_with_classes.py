@@ -586,8 +586,8 @@ class skeleton_COM_Plot:
             ax5.plot(self.time_array[0:frame+1],-1*left_foot_y[0][0:frame+1], color = 'coral', alpha = .5)
             ax5.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,1], color = 'grey')
 
-            ax4.set_ylim([-590, 510])
-            ax5.set_ylim([-690, 409])
+            # ax4.set_ylim([-590, 510])
+            # ax5.set_ylim([-690, 409])
         elif self.stance == 'right_leg': 
         #Right Leg Stance Plot-----------------------------------------------------------------------------------------------------------
 

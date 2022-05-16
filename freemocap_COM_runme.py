@@ -15,8 +15,17 @@ from COM_calculator import calculate_segment_COM, reformat_segment_COM, calculat
 this_computer_name = socket.gethostname()
 print(this_computer_name)
 
-
-
+if this_computer_name == 'DESKTOP-V3D343U':
+        freemocap_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
+elif this_computer_name == 'DESKTOP-F5LCT4Q':
+    #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+    freemocap_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+else:
+    #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
+    freemocap_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
+sessionID = 'sesh_2022-05-09_15_40_59' #name of the sessionID folder
+data_array_name = 'mediapipe_origin_aligned_skeleton_3D.npy'
+num_pose_joints = 33
 
 #creating paths to the session and data
 this_freemocap_session_path = freemocap_data_path / sessionID
