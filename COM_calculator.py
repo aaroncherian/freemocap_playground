@@ -20,6 +20,27 @@ def calculate_segment_COM(segment_conn_len_perc_dataframe,skelcoordinates_frame_
     return segment_COM_frame_dict
 
 
+def calculate_segment_COM_for_qualisys(segment_conn_len_perc_dataframe,skelcoordinates_frame_segment_joint_XYZ, num_frame_range):
+    segment_COM_frame_dict = []
+    for frame in track(num_frame_range, description = 'Calculating Segment Center of Mass'):
+        segment_COM_dict = {}
+        for segment,segment_info in segment_conn_len_perc_dataframe.iterrows():
+            this_segment_XYZ = skelcoordinates_frame_segment_joint_XYZ[frame][segment]
+
+            if segment == 'head': #since qualisys doesn't have a firm head calculating thing, just using the 
+               segment_COM_dict[segment] = this_segment_XYZ[0]
+            else:
+                this_segment_proximal = this_segment_XYZ[0]
+                this_segment_distal = this_segment_XYZ[1]
+                this_segment_COM_length = segment_info['Segment COM Length']
+
+                this_segment_COM = this_segment_proximal + this_segment_COM_length*(this_segment_distal-this_segment_proximal)
+                segment_COM_dict[segment] = this_segment_COM
+
+        segment_COM_frame_dict.append(segment_COM_dict)
+    return segment_COM_frame_dict
+
+
 def reformat_segment_COM(segment_COM_frame_dict, num_frame_range,num_segments):
     
     segment_COM_frame_imgPoint_XYZ = np.empty([int(len(num_frame_range)),int(num_segments),3])
