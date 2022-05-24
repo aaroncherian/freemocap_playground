@@ -169,12 +169,13 @@ def get_segment_values(segment):
     segment_z_values = [segment[0][2],segment[1][2]]
 
     return segment_x_values, segment_y_values, segment_z_values
-def plot_final_segments(ax,segmentA, segmentB, translation_matrix):
-    segmentA_translated_by_guess = [x + translation_matrix for x in segmentA]
+def plot_final_segments(ax,segmentA, segmentB, new_segment):
+    #segmentA_translated_by_guess = [x + translation_matrix for x in segmentA]
     
     segmentA_xvalues, segmentA_yvalues, segmentA_zvalues = get_segment_values(segmentA)
-    segmentA_translated_by_guess_xvalues, segmentA_translated_by_guess_yvalues, segmentA_translated_by_guess_zvalues = get_segment_values(segmentA_translated_by_guess)
+    #segmentA_translated_by_guess_xvalues, segmentA_translated_by_guess_yvalues, segmentA_translated_by_guess_zvalues = get_segment_values(segmentA_translated_by_guess)
     segmentB_xvalues, segmentB_yvalues, segmentB_zvalues = get_segment_values(segmentB)
+    new_segment_xvalues, new_segment_yvalues, new_segment_zvalues = get_segment_values(new_segment)
 
 
 
@@ -182,11 +183,11 @@ def plot_final_segments(ax,segmentA, segmentB, translation_matrix):
 
     ax.plot(segmentB_xvalues, segmentB_yvalues, segmentB_zvalues, 'r',label='original segmentB', alpha = .5)
 
-    ax.plot(segmentA_translated_by_guess_xvalues, segmentA_translated_by_guess_yvalues, segmentA_translated_by_guess_zvalues, 'g',label='segmentA_translated_by_guess', alpha = .5, linestyle = 'dashed')
-
+    #ax.plot(segmentA_translated_by_guess_xvalues, segmentA_translated_by_guess_yvalues, segmentA_translated_by_guess_zvalues, 'g',label='segmentA_translated_by_guess', alpha = .5, linestyle = 'dashed')
+    ax.plot(new_segment_xvalues, new_segment_yvalues, new_segment_zvalues, 'g',label='new_segment', alpha = .5)
     f =2 
 
-def plot_final_rotated_segments(ax,segmentA, segmentB, rotation_matrix):
+def plot_final_rotated_segments(ax,segmentA, segmentB, new_segment):
     segmentA_rotated_by_guess = [rotation_matrix @ x for x in segmentA]
 
     segmentA_xvalues, segmentA_yvalues, segmentA_zvalues = get_segment_values(segmentA)
@@ -196,6 +197,13 @@ def plot_final_rotated_segments(ax,segmentA, segmentB, rotation_matrix):
     ax.plot(segmentA_xvalues, segmentA_yvalues, segmentA_zvalues, 'b',label='original segmentA', alpha = .5)
     ax.plot(segmentB_xvalues, segmentB_yvalues, segmentB_zvalues, 'r',label='original segmentB', alpha = .5)
     ax.plot(segmentA_rotated_by_guess_xvalues, segmentA_rotated_by_guess_yvalues, segmentA_rotated_by_guess_zvalues, 'g-o',label='segmentA_rotated_by_guess', alpha = .5, linestyle = 'dashed')
+
+
+def translate_skeleton_frame(skeleton_data_frame, translation_distance):
+    """Take in a frame of rotated skeleton data, and apply the translation distance to each point in the skeleton"""
+
+    translated_point = [x + y for x,y in zip(skeleton_data_frame, translation_distance)]
+    return translated_point
 
 
 # #----TRANSLATION
@@ -271,9 +279,18 @@ if debug:
 
 translation_matrix = get_optimal_translation_matrix(segmentA_rotated_by_guess, segmentB)
 
+translation_distance = segmentB[0] - segmentA_rotated_by_guess[0]
+
+#segment_A_translated = [x + y for x,y in zip(segmentA_rotated_by_guess[0], translation_distance)]
+segmentA_translated = []
+
+for x in range(len(segmentA)):
+    point_translated = translate_skeleton_frame(segmentA_rotated_by_guess[x], translation_distance)
+    segmentA_translated.append(point_translated)
+
 figure = plt.figure()
 ax1 = figure.add_subplot(projection = '3d')
-plot_final_segments(ax1,segmentA_rotated_by_guess, segmentB, translation_matrix)
+plot_final_segments(ax1,segmentA_rotated_by_guess, segmentB, segmentA_translated)
 
 
 if debug:
@@ -299,9 +316,9 @@ segmentA_t = [segmentA_one_T[0:3],segmentA_two_T[0:3]]
 
 figure = plt.figure()
 ax1 = figure.add_subplot(projection = '3d')
-plot_final_segments(ax1,segmentA_t, segmentB, [0,0,0])
+#plot_final_segments(ax1,segmentA_t, segmentB, [0,0,0])
 
-ax1.legend()
+#ax1.legend()
 
 if debug:
     plt.show()

@@ -19,11 +19,11 @@ qualisys_indices = [ #these indices have been renamed to match the joint connect
     'right_hand_marker',
     'left_hip',
     'left_knee',
-    'left_back_of_foot_marker',
+    'left_heel',
     'left_foot_index',
     'right_hip',
     'right_knee',
-    'right_back_of_foot_marker',
+    'right_heel',
     'right_foot_index'
 ]
 
@@ -81,9 +81,9 @@ def build_qualisys_skeleton(qualisys_skeleton_data,segment_dataframe, qualisys_i
 
                 if 'ankle' in distal_joint_name: #qualysis doesn't have an ankle joint like mediapipe does, so need to replace the ankle joint with the foot markers they do track 
                     if segment == 'right_shin':
-                        distal_joint_name = 'right_back_of_foot_marker'
+                        distal_joint_name = 'right_heel'
                     else:
-                        distal_joint_name = 'left_back_of_foot_marker'
+                        distal_joint_name = 'left_heel'
 
             #get the mediapipe index for the proximal and distal joint for this segment
                 proximal_joint_index = qualisys_indices.index(proximal_joint_name)

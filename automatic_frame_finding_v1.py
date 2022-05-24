@@ -85,7 +85,7 @@ else:
 
     
 #sessionID = 'session_SER_1_20_22' #name of the sessionID folder
-sessionID = 'session_SER_1_20_22'
+sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
 
 skeleton_to_plot = 'mediapipe' #for a future situation where we want to rotate openpose/dlc skeletons 
 

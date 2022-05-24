@@ -258,6 +258,8 @@ class skeleton_COM_Plot:
         # self.anterior_bound_array.append(front_foot_average_position_y)
         # self.posterior_bound_array.append(back_foot_average_position_y)
 
+
+    
         left_foot_x = self.left_foot_position_XYZ[0]
         left_foot_y = self.left_foot_position_XYZ[1]
         left_foot_z = self.left_foot_position_XYZ[2]
@@ -979,19 +981,19 @@ if __name__ == '__main__':
     if this_computer_name == 'DESKTOP-V3D343U':
         freemocap_validation_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
     elif this_computer_name == 'DESKTOP-F5LCT4Q':
-        #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
-        freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+        freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+        #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
     else:
         #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
         freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
-    sessionID = 'sesh_2022-05-09_15_40_59' #name of the sessionID folder
+    sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0' #name of the sessionID folder
 
 
     stance = 'natural'
 
     if stance == 'natural':
         num_frame_range = range(9500,12000)
-        num_frame_range = 0
+        num_frame_range = range(5000,6500)
     elif stance == 'left_leg':
         num_frame_range = range(13000,15180)
 
