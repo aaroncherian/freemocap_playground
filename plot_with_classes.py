@@ -358,8 +358,8 @@ class skeleton_COM_Plot:
         
         ax2.set_aspect('equal', adjustable='box')
 
-        ax3.set_xlim([700,1300])
-        ax3.set_ylim([1000,200])
+        #ax3.set_xlim([700,1300])
+        #ax3.set_ylim([1000,200])
 
         ax4.set_title('Max/Min Lateral COM Position vs. Time')
         ax4.set_ylim([self.mx_com-300, self.mx_com+300])
@@ -981,24 +981,31 @@ if __name__ == '__main__':
     if this_computer_name == 'DESKTOP-V3D343U':
         freemocap_validation_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
     elif this_computer_name == 'DESKTOP-F5LCT4Q':
-        freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+        #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
         #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+        freemocap_validation_data_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
     else:
         #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
         freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
-    sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0' #name of the sessionID folder
-
+    #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0' #name of the sessionID folder
+    #sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
+    sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
 
     stance = 'natural'
 
     if stance == 'natural':
-        num_frame_range = range(9500,12000)
-        num_frame_range = range(5000,6500)
+        #num_frame_range = range(9500,12000)
+        num_frame_range = range(500,1550) #for BOS
+        num_frame_range = range(0, 1550) #for go pro natural 
+        #num_frame_range = range(4500,6800)
+
     elif stance == 'left_leg':
         num_frame_range = range(13000,15180)
+        num_frame_range = range(5500,6670)
 
     elif stance == 'right_leg':
         num_frame_range = range(16000,17450)
+        num_frame_range = range(5500,6650)
 
     #num_frame_range = range(10000,10100)
 

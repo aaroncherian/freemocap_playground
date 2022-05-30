@@ -52,9 +52,10 @@ def find_best_velocity_guess(skeleton_velocity_data, velocity_guess, iteration_r
     #return a list of matching frame indices from the four lists generated above 
     matching_values = find_matching_indices_in_lists(right_heel_x_velocity_limits, right_toe_x_velocity_limits, left_heel_x_velocity_limits, left_toe_x_velocity_limits)
     matching_values = [x for x in matching_values if x>75]
-
+    print(matching_values)
     if len(matching_values) > 1 and velocity_guess > 0:
-        #if there are multiple matching values, decrease the guess a little bit and run the function again 
+        #if there are multiple matching values, decrease the guess a little bit and run the function again
+        #  
         velocity_guess = velocity_guess - iteration_range
         print('Current Velocity Guess: ',velocity_guess, '\n','Number of Matching Values: ', len(matching_values))
         matching_values, velocity_guess = find_best_velocity_guess(skeleton_velocity_data, velocity_guess, iteration_range)
@@ -77,15 +78,17 @@ this_computer_name = socket.gethostname()
 if this_computer_name == 'DESKTOP-V3D343U':
     freemocap_validation_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
 elif this_computer_name == 'DESKTOP-F5LCT4Q':
-    freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+    #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
     #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+    freemocap_validation_data_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
 else:
     #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
     freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
     
 #sessionID = 'session_SER_1_20_22' #name of the sessionID folder
-sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
+#sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
+sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 
 skeleton_to_plot = 'mediapipe' #for a future situation where we want to rotate openpose/dlc skeletons 
 
@@ -113,7 +116,7 @@ skeleton_data_velocity_x_right_toe = skeleton_velocity_data[:,right_toe_index,0]
 skeleton_data_velocity_x_left_heel = skeleton_velocity_data[:,left_heel_index,0]
 skeleton_data_velocity_x_left_toe = skeleton_velocity_data[:,left_toe_index,0]
 
-velocity_guess = 0
+velocity_guess = 1
 
 matching_values = []
 while len(matching_values) == 0:
@@ -126,7 +129,7 @@ while len(matching_values) == 0:
 
     matching_values = find_matching_indices_in_lists(right_heel_x_velocity_limits, right_toe_x_velocity_limits, left_heel_x_velocity_limits, left_toe_x_velocity_limits)
     matching_values = [x for x in matching_values if x>75] #I thought it would be best to make sure that we're not looking too close to the start of a video, because things get wonky there
-
+    print(matching_values)
 
 print(matching_values)
 

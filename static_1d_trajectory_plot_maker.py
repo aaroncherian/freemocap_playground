@@ -28,20 +28,24 @@ print(this_computer_name)
 if this_computer_name == 'DESKTOP-V3D343U':
     freemocap_validation_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
 elif this_computer_name == 'DESKTOP-F5LCT4Q':
-    freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+    #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
     #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+    freemocap_validation_data_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
 else:
     #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
     freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
-sessionID = 'session_SER_1_20_22' #name of the sessionID folder
 
+#sessionID = 'session_SER_1_20_22' #name of the sessionID folder
+sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+
+#sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
 save_path = Path(r'C:\Users\aaron\Documents\HumonLab\RMASBM\comparison_graphics')
 
 
 
 
 
-run_type = 'freemocap'
+run_type = 'mediapipe'
 
 # run_type = 'freemocap'
 stance = 'natural'
@@ -59,11 +63,14 @@ ax_range = 300
 
 
 
-if run_type == 'openpose':
+if run_type == 'mediapipe':
     from plot_with_classes import skeleton_COM_Plot
 
     if stance == 'natural':
-        num_frame_range = range(9500,12000)
+        #num_frame_range = range(9500,12000)
+
+        num_frame_range = range(0,1550)
+        
         ax_range = 300
 
 
@@ -96,7 +103,7 @@ elif run_type == 'qualisys':
     from qualisys_class_plotting import skeleton_COM_Plot
 
     if stance == 'natural':
-        num_frame_range = range(58355,70855)
+        num_frame_range = range(0,70855)
         ax_range = 300
     
     if stance == 'left_leg':
@@ -215,15 +222,15 @@ my_com = -1*np.nanmean(this_range_totalCOM_frame_XYZ[:,1])
 #for every stance but right its been 300
 
 
-if stance == 'natural':
-    ax.set_ylim([-460,140])
-    ax2.set_ylim([-340,260])
-if stance == 'left_leg':
-    ax.set_ylim([-590, 510])
-    ax2.set_ylim([-690, 409])
-if stance == 'right_leg':
-    ax.set_ylim([-899, 401])
-    ax2.set_ylim([-739, 561])
+# if stance == 'natural':
+#     ax.set_ylim([-460,140])
+#     ax2.set_ylim([-340,260])
+# if stance == 'left_leg':
+#     ax.set_ylim([-590, 510])
+#     ax2.set_ylim([-690, 409])
+# if stance == 'right_leg':
+#     ax.set_ylim([-899, 401])
+#     ax2.set_ylim([-739, 561])
 
 ax.set_xlim([time_array[0],time_array[-1]])
 ax2.set_xlim([time_array[0],time_array[-1]])

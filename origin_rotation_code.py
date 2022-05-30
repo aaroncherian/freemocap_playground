@@ -18,17 +18,19 @@ this_computer_name = socket.gethostname()
 if this_computer_name == 'DESKTOP-V3D343U':
     freemocap_validation_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
 elif this_computer_name == 'DESKTOP-F5LCT4Q':
-    freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+    #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
     #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+    freemocap_validation_data_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
 else:
     #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
     freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
     
-sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0' #name of the sessionID folder
+#sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0' #name of the sessionID folder
+sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
 
 skeleton_to_plot = 'mediapipe' #for a future situation where we want to rotate openpose/dlc skeletons 
-base_frame = 377
+base_frame = 468
 debug = True
 
 
