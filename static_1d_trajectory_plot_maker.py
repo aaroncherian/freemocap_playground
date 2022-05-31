@@ -36,7 +36,8 @@ else:
     freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
 #sessionID = 'session_SER_1_20_22' #name of the sessionID folder
-sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+#sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
+sessionID = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 
 #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
 save_path = Path(r'C:\Users\aaron\Documents\HumonLab\RMASBM\comparison_graphics')
@@ -69,8 +70,13 @@ if run_type == 'mediapipe':
     if stance == 'natural':
         #num_frame_range = range(9500,12000)
 
-        num_frame_range = range(0,1550)
-        
+        #num_frame_range = range(0,1550)
+
+        num_frame_range = range(685,2335) #GoPro NIH eyes open/flat ground
+        num_frame_range = range(2765,4505) #GoPro NIH eyes closed/flat ground 
+        num_frame_range = range(5965,7755) #GoPro NIH eyes open/foam
+        num_frame_range = range(8365,10085) #GoPro NIH eyes closed/foam
+
         ax_range = 300
 
 
@@ -232,17 +238,32 @@ my_com = -1*np.nanmean(this_range_totalCOM_frame_XYZ[:,1])
 #     ax.set_ylim([-899, 401])
 #     ax2.set_ylim([-739, 561])
 
-ax.set_xlim([time_array[0],time_array[-1]])
-ax2.set_xlim([time_array[0],time_array[-1]])
+#ax.set_xlim([time_array[0],time_array[-1]])
+#ax2.set_xlim([time_array[0],time_array[-1]])
 #ax.set_ylim([mx_com-ax_range, mx_com + ax_range])
-ax.axes.xaxis.set_ticks([])
+
+
+##Reset for time marking
+#ax.set_xlim([time_array[0],time_array[-1]])
+#ax2.set_xlim([time_array[0],time_array[-1]])
+#ax.axes.xaxis.set_ticks([])
+#ax.set_xlim([num_frame_range[0],num_frame_range[-1]])
+
 
 # 6+
 #Natural stance
 if stance == 'natural':
-    ax.plot(time_array,-1*this_range_totalCOM_frame_XYZ[:,0], color = 'grey')
-    ax.plot(time_array, left_foot_avg_x, color = 'blue')
-    ax.plot(time_array, right_foot_avg_x, color = 'red')
+    # ax.plot(time_array,-1*this_range_totalCOM_frame_XYZ[:,0], color = 'grey')
+    # ax.plot(time_array, left_foot_avg_x, color = 'blue')
+    # ax.plot(time_array, right_foot_avg_x, color = 'red')
+
+    # ax2.plot(time_array,-1*this_range_totalCOM_frame_XYZ[:,1], color = 'grey')
+    # ax2.plot(time_array,front_foot_avg_y, color = 'forestgreen')
+    # ax2.plot(time_array,back_foot_avg_y, color = 'coral')
+    
+    ax.plot(-1*this_range_totalCOM_frame_XYZ[:,0], color = 'grey')
+    ax.plot(left_foot_avg_x, color = 'blue')
+    ax.plot(right_foot_avg_x, color = 'red')
 
     ax2.plot(time_array,-1*this_range_totalCOM_frame_XYZ[:,1], color = 'grey')
     ax2.plot(time_array,front_foot_avg_y, color = 'forestgreen')

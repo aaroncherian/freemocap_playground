@@ -87,13 +87,14 @@ else:
 
 
 #sessionID = 'session_SER_1_20_22'    
-sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+#sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
+sessionID = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 #sessionID = 'sesh_2022-05-12_15_13_02' #name of the sessionID folder
 #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
 #skeleton_to_plot = 'mediapipe' #for a future situation where we want to rotate openpose/dlc skeletons 
 skeleton_to_plot = 'mediapipe'
 #good_frame = 276
-good_frame = 463
+good_frame = 1350
 debug = True
 
 

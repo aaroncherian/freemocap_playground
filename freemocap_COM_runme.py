@@ -26,7 +26,9 @@ else:
     freemocap_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
 #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0' #name of the sessionID folder
-sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+#sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
+sessionID = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
+
 
 data_array_name = 'mediapipe_origin_aligned_skeleton_3D.npy'
 num_pose_joints = 33

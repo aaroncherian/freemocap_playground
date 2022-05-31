@@ -52,6 +52,7 @@ def find_best_velocity_guess(skeleton_velocity_data, velocity_guess, iteration_r
     #return a list of matching frame indices from the four lists generated above 
     matching_values = find_matching_indices_in_lists(right_heel_x_velocity_limits, right_toe_x_velocity_limits, left_heel_x_velocity_limits, left_toe_x_velocity_limits)
     matching_values = [x for x in matching_values if x>75]
+    
     print(matching_values)
     if len(matching_values) > 1 and velocity_guess > 0:
         #if there are multiple matching values, decrease the guess a little bit and run the function again
@@ -88,7 +89,9 @@ else:
     
 #sessionID = 'session_SER_1_20_22' #name of the sessionID folder
 #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
-sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+#sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
+sessionID = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
+
 
 skeleton_to_plot = 'mediapipe' #for a future situation where we want to rotate openpose/dlc skeletons 
 
@@ -129,7 +132,8 @@ while len(matching_values) == 0:
 
     matching_values = find_matching_indices_in_lists(right_heel_x_velocity_limits, right_toe_x_velocity_limits, left_heel_x_velocity_limits, left_toe_x_velocity_limits)
     matching_values = [x for x in matching_values if x>75] #I thought it would be best to make sure that we're not looking too close to the start of a video, because things get wonky there
-    print(matching_values)
+    if len(matching_values) < 5:
+        print(matching_values)
 
 print(matching_values)
 
