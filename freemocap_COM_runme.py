@@ -27,7 +27,7 @@ else:
 
 #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0' #name of the sessionID folder
 #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
-sessionID = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
+sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun'
 
 
 data_array_name = 'mediapipe_origin_aligned_skeleton_3D.npy'

@@ -141,7 +141,7 @@ def get_error_between_two_rotation_matrices(euler_angle_guess, segmentA, segment
 
     error = abs(np.cross(vectorA_rotated_by_guess,vectorB))
 
-    
+    error = np.linalg.norm(error)
     # figure = plt.figure()
     # ax1 = figure.add_subplot(projection = '3d')
     # plot_final_rotated_segments(ax1,segmentA, segmentB, rotation_matrix_guess)
@@ -187,7 +187,7 @@ def plot_final_segments(ax,segmentA, segmentB, new_segment):
     ax.plot(new_segment_xvalues, new_segment_yvalues, new_segment_zvalues, 'g',label='new_segment', alpha = .5)
     f =2 
 
-def plot_final_rotated_segments(ax,segmentA, segmentB, new_segment):
+def plot_final_rotated_segments(ax,segmentA, segmentB, rotation_matrix):
     segmentA_rotated_by_guess = [rotation_matrix @ x for x in segmentA]
 
     segmentA_xvalues, segmentA_yvalues, segmentA_zvalues = get_segment_values(segmentA)
@@ -252,6 +252,11 @@ pointB2 = np.array([19,2,12])
 # pointB1 = np.array([8,9,7])
 # pointB2 = np.array([13,14,12])
 
+pointA1 = np.array([-311.95498264,  107.9060753 , 1308.04556225])
+pointA2 = np.array([-358.87439602,  104.9854728 , 1035.59036417])
+
+pointB1 = np.array([ -70.52998081,   22.85845106, 1319.20843919])
+pointB2 = np.array([ -65.79256761,   41.31004819, 1093.13235156])
 segmentA = [pointA1, pointA2]
 
 segmentB = [pointB1, pointB2]

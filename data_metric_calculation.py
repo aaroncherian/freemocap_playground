@@ -40,7 +40,7 @@ class pathLengthDataHolder:
 
     def get_path_length(self):
         self.path_length = self.calculate_path_length(self.sliced_skeleton_data)
-        return self.path_length
+        return self.path_length 
 
 this_computer_name = socket.gethostname()
 print(this_computer_name)
@@ -69,17 +69,18 @@ this_webcam_data_path = this_webcam_session_path/'DataArrays'
 go_pro_data = np.load(this_go_pro_data_path/'origin_aligned_totalBodyCOM_frame_XYZ.npy')
 webcam_data = np.load(this_webcam_data_path/'origin_aligned_totalBodyCOM_frame_XYZ.npy')
 
-go_pro_num_frame_range_eyesopen_flatground = range(650,2300)
+
+go_pro_num_frame_range_eyesopen_flatground = range(650,2320)
 webcam_num_frame_range_eyesopen_flatground = range(685,2335)
 
-go_pro_num_frame_range_eyesclosed_flatground = range(2730,4480)
-webcam_num_frame_range_eyesclosed_flatground = range(2765,4515)
+go_pro_num_frame_range_eyesclosed_flatground = range(2690,4490)
+webcam_num_frame_range_eyesclosed_flatground = range(2725,4525)
 
-go_pro_num_frame_range_eyesopen_foam = range(5930,7720)
-webcam_num_frame_range_eyesopen_foam = range(5965,7755)
+go_pro_num_frame_range_eyesopen_foam = range(5925,7715)
+webcam_num_frame_range_eyesopen_foam = range(5960,7760)
 
-go_pro_num_frame_range_eyesclosed_foam = range(8330,10050)
-webcam_num_frame_range_eyesclosed_foam = range(8365,10085)
+go_pro_num_frame_range_eyesclosed_foam =  range(8315,10050)
+webcam_num_frame_range_eyesclosed_foam = range(8340,10085)
 
 go_pro_skeletonCOM_holder = pathLengthDataHolder(go_pro_data,go_pro_num_frame_range_eyesopen_flatground)
 go_pro_COM_path_length_eyesopen_flatground  = go_pro_skeletonCOM_holder.get_path_length()
@@ -112,6 +113,21 @@ go_pro_skeletonCOM_holder.update_frame_range(go_pro_num_frame_range_eyesclosed_f
 go_pro_COM_path_length_eyesclosed_foam = go_pro_skeletonCOM_holder.get_path_length()
 
 print('Eyes Closed/Foam:\n', 'GoPro: ', go_pro_COM_path_length_eyesclosed_foam, 'Webcam:', webcam_COM_path_length_eyesclosed_foam)
+
+
+
+figure = plt.figure()
+
+ax1 = figure.add_subplot()
+
+
+webcam_frame_range = range(0,len(webcam_data))
+gopro_frame_range = range(0,len(go_pro_data)+0)
+
+ax1.plot(np.diff(go_pro_data[:,0]),'b')
+ax1.plot(np.diff(webcam_data[:,0]),'r')
+plt.show()
+
 f = 2
 #mediapipe_COM_data = np.load(this_freemocap_data_path/'totalBodyCOM_frame_XYZ.npy')
 

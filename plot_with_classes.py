@@ -989,7 +989,7 @@ if __name__ == '__main__':
         freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
     #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0' #name of the sessionID folder
     #sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
-    sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
+    sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun'
 
     stance = 'natural'
 
@@ -1010,10 +1010,16 @@ if __name__ == '__main__':
     #num_frame_range = range(10000,10100)
 
     #num_frame_range = range(16680,17740)
+    #sessionID_list = ['sesh_2022-05-24_16_02_53_JSM_T1_NIH', 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH']
+    # sessionID_list = [gopro_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun']
+    # num_frame_range_list = [range(0,1550),range(53,2003)]
+
+    # for sessionID,num_frame_range in zip(sessionID_list,num_frame_range_list):
+
     camera_fps = 30
     output_video_fps = 30
     tail_length = 120 #number of frames to keep the COM trajectory tail 
-    #num_frame_range = 0
+    num_frame_range = 0
 
     COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length,stance,static_plot=False)
 

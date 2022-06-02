@@ -13,6 +13,9 @@ import matplotlib.ticker as mticker
 import sys 
 from datetime import datetime
 from scipy.optimize import minimize
+import scipy.io as sio
+
+from qualisys_skeleton_builder import qualisys_indices
 
 def find_velocity_values_within_limit(skeleton_velocity_data, velocity_limit):
     """
@@ -87,10 +90,10 @@ else:
     freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
     
-#sessionID = 'session_SER_1_20_22' #name of the sessionID folder
+sessionID = 'session_SER_1_20_22' #name of the sessionID folder
 #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
 #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
-sessionID = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
+#sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun'
 
 
 skeleton_to_plot = 'mediapipe' #for a future situation where we want to rotate openpose/dlc skeletons 
@@ -104,13 +107,27 @@ save_file = this_freemocap_data_path/'{}_origin_aligned_skeleton_3D.npy'.format(
 if skeleton_to_plot == 'mediapipe':
     #skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_corrected_and_rotated.npy'
     skeleton_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
+    skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_aligned_skeleton_3D.npy'
     right_heel_index = 30
     right_toe_index = 32
     left_heel_index = 29
     left_toe_index = 31
 
+    skeleton_data = np.load(skeleton_data_path)
 
-skeleton_data = np.load(skeleton_data_path)
+if skeleton_to_plot == 'qualisys':
+    skeleton_data_path = this_freemocap_data_path/'skeleton_fr_mar_dim_rotated.mat'
+    right_heel_index = 12
+    right_toe_index = 14
+    left_heel_index = 11
+    left_toe_index = 13
+
+    qualysis_mat_file = sio.loadmat(skeleton_data_path)
+    skeleton_data = qualysis_mat_file['skeleton_fr_mar_dim_rotated']
+    skeleton_data = skeleton_data[0:65000,:,:]
+
+
+
 
 skeleton_velocity_data = np.diff(skeleton_data, axis=0)
 
@@ -119,25 +136,25 @@ skeleton_data_velocity_x_right_toe = skeleton_velocity_data[:,right_toe_index,0]
 skeleton_data_velocity_x_left_heel = skeleton_velocity_data[:,left_heel_index,0]
 skeleton_data_velocity_x_left_toe = skeleton_velocity_data[:,left_toe_index,0]
 
-velocity_guess = 1
+velocity_guess = .3
 
 matching_values = []
-while len(matching_values) == 0:
-    velocity_guess += .01
-    #matching_values, velocity_guess = find_best_velocity_guess(skeleton_velocity_data, velocity_guess, iteration_range=.1)
-    right_heel_x_velocity_limits = find_velocity_values_within_limit(skeleton_data_velocity_x_right_heel, velocity_guess)
-    right_toe_x_velocity_limits = find_velocity_values_within_limit(skeleton_data_velocity_x_right_toe, velocity_guess)
-    left_heel_x_velocity_limits = find_velocity_values_within_limit(skeleton_data_velocity_x_left_heel, velocity_guess)
-    left_toe_x_velocity_limits = find_velocity_values_within_limit(skeleton_data_velocity_x_left_toe, velocity_guess)
+# while len(matching_values) == 0:
+#     velocity_guess += .01
+#     #matching_values, velocity_guess = find_best_velocity_guess(skeleton_velocity_data, velocity_guess, iteration_range=.1)
+#     right_heel_x_velocity_limits = find_velocity_values_within_limit(skeleton_data_velocity_x_right_heel, velocity_guess)
+#     right_toe_x_velocity_limits = find_velocity_values_within_limit(skeleton_data_velocity_x_right_toe, velocity_guess)
+#     left_heel_x_velocity_limits = find_velocity_values_within_limit(skeleton_data_velocity_x_left_heel, velocity_guess)
+#     left_toe_x_velocity_limits = find_velocity_values_within_limit(skeleton_data_velocity_x_left_toe, velocity_guess)
 
-    matching_values = find_matching_indices_in_lists(right_heel_x_velocity_limits, right_toe_x_velocity_limits, left_heel_x_velocity_limits, left_toe_x_velocity_limits)
-    matching_values = [x for x in matching_values if x>75] #I thought it would be best to make sure that we're not looking too close to the start of a video, because things get wonky there
-    if len(matching_values) < 5:
-        print(matching_values)
+#     matching_values = find_matching_indices_in_lists(right_heel_x_velocity_limits, right_toe_x_velocity_limits, left_heel_x_velocity_limits, left_toe_x_velocity_limits)
+#     matching_values = [x for x in matching_values if x>75] #I thought it would be best to make sure that we're not looking too close to the start of a video, because things get wonky there
+#     if len(matching_values) < 5:
+#         print(matching_values)
 
-print(matching_values)
+# print(matching_values)
 
-good_clean_frame = matching_values[0]
+# good_clean_frame = matching_values[0]
 
 matching_values, velocity_guess = find_best_velocity_guess(skeleton_velocity_data, velocity_guess, iteration_range=.1)
 

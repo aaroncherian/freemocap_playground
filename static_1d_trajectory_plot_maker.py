@@ -37,7 +37,9 @@ else:
 
 #sessionID = 'session_SER_1_20_22' #name of the sessionID folder
 #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
-sessionID = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
+#sessionID = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
+sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+
 
 #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
 save_path = Path(r'C:\Users\aaron\Documents\HumonLab\RMASBM\comparison_graphics')
@@ -72,10 +74,7 @@ if run_type == 'mediapipe':
 
         #num_frame_range = range(0,1550)
 
-        num_frame_range = range(685,2335) #GoPro NIH eyes open/flat ground
-        num_frame_range = range(2765,4505) #GoPro NIH eyes closed/flat ground 
-        num_frame_range = range(5965,7755) #GoPro NIH eyes open/foam
-        num_frame_range = range(8365,10085) #GoPro NIH eyes closed/foam
+        num_frame_range = range(0,6620)
 
         ax_range = 300
 

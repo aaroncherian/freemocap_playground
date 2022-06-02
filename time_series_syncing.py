@@ -41,7 +41,9 @@ else:
     freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
 #sessionID = 'session_SER_1_20_22' #name of the sessionID folder
+#sessionID_one = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 sessionID_one = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS' 
+
 
 #sessionID_two = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 sessionID_two = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
@@ -56,8 +58,8 @@ session_two_medipipe_data = np.load(session_two_data_path)
 
 left_shoulder_index = mediapipe_indices.index('left_shoulder')
 
-session_one_left_shoulder = savgol_filter(session_one_medipipe_data[0:6000,left_shoulder_index,0], 51, 3)
-session_two_left_shoulder = savgol_filter(session_two_medipipe_data[0:6000:,left_shoulder_index,0],51,3)
+session_one_left_shoulder = savgol_filter(session_one_medipipe_data[1573:2553,left_shoulder_index,0], 51, 3)
+session_two_left_shoulder = savgol_filter(session_two_medipipe_data[1520:2500:,left_shoulder_index,0],51,3)
 
 #peaks_one, _ = find_peaks(abs(session_one_left_shoulder[0]), height=200)
 
@@ -67,7 +69,9 @@ maximums_one = argrelextrema(session_one_left_shoulder, np.greater)
 
 maximums_two = argrelextrema(session_two_left_shoulder, np.greater)
 
-frame_window = range(2000,2517)
+#frame_window = range(2000,2517) #for BOS
+frame_window = range(1870,2267) #for NIH
+
 
 maximums_one_window = [x for x in maximums_one[0] if x in frame_window]
 
@@ -81,7 +85,7 @@ maximums_difference = np.sort([abs(y -x) for x,y in zip(maximums_one_window, max
 # A = fft(session_two_left_shoulder[0:6620])
 
 median = np.median(maximums_difference)
-#median = 52
+median = 53
 #shift for gopro/webcam BOS data = 52
 
 x_range = range(0,len(session_one_left_shoulder))
