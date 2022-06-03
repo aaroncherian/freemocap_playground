@@ -53,7 +53,6 @@ def build_mediapipe_skeleton(mediapipe_pose_data,segment_dataframe, mediapipe_in
         have a list that contains the skeleton segment XYZ coordinates for each frame."""
 
     def build_mediapipe_virtual_markers(mediapipe_indices,frame):
-        
         def mediapipe_index_finder(list_of_joint_names):
 
             indices = []

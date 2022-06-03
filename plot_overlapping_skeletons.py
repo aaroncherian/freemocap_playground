@@ -147,7 +147,7 @@ mediapipe_pose_data = slice_mediapipe_data(mediapipeSkel_fr_mar_dim, num_mediapi
 #mediapipe_num_frame_range = range(9500,12000)
 mediapipe_num_frame_range = range(13000,15180)
 #qualisys_num_frame_range = range(58355,70855,5)
-qualisys_num_frame_range = range(75855,86755,5)
+qualisys_num_frame_range = range(75835,86735,5)
 
 assert len(qualisys_num_frame_range) == len(mediapipe_num_frame_range), "The number of frames in the two data arrays must be the same. Num qualisys frames is {} and num mediapipe frames is {}".format(len(qualisys_num_frame_range), len(mediapipe_num_frame_range))
 
