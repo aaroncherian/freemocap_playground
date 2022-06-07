@@ -46,7 +46,7 @@ class OverlappingSkeletonPlotter:
     def slice_data_to_plot(self, mediapipe_num_frame_range, qualisys_num_frame_range):
 
         mediapipe_data_to_plot = self.mediapipe_data[mediapipe_num_frame_range[0]:mediapipe_num_frame_range[-1],:,:]
-        qualisys_data_to_plot = self.qualisys_data[qualisys_num_frame_range[0]:qualisys_num_frame_range[-1]:5,:,:]
+        qualisys_data_to_plot = self.qualisys_data[qualisys_num_frame_range[0]:qualisys_num_frame_range[-1]:10,:,:]
 
         num_frames_to_plot = range(self.mediapipe_num_frame_range[-1] - self.mediapipe_num_frame_range[0])
 
@@ -125,33 +125,40 @@ class OverlappingSkeletonPlotter:
         self.create_plot()
 
         f = 2
-sessionID = 'session_SER_1_20_22' #name of the sessionID folder
+#sessionID = 'session_SER_1_20_22' #name of the sessionID folder
 
-qualisys_data_array_name = 'skeleton_fr_mar_dim_rotated.mat'
+freemocap_sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS' #name of the sessionID folder
+
+qualisys_sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+
+qualisys_data_array_name = 'qualisys_origin_aligned_skeleton_3D.npy'
 
 mediapipe_data_array_name = 'mediapipe_skel_data_aligned_to_qualisys.npy'
 
-this_freemocap_session_path = freemocap_data_path / sessionID
-this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
+freemocap_session_path = freemocap_data_path / freemocap_sessionID
+freemocap_data_array_path = freemocap_session_path/'DataArrays'
 
-qualisys_data_path = this_freemocap_data_path/qualisys_data_array_name
-mediapipe_data_path = this_freemocap_data_path/mediapipe_data_array_name
+qualisys_session_path = freemocap_data_path/qualisys_sessionID
+qualisys_data_array_path = qualisys_session_path/'DataArrays'
 
-qualysis_mat_file = sio.loadmat(qualisys_data_path)
-qualisys_pose_data = qualysis_mat_file['skeleton_fr_mar_dim_rotated']
+qualisys_data_path = qualisys_data_array_path/qualisys_data_array_name
+mediapipe_data_path = freemocap_data_array_path/mediapipe_data_array_name
+
+
+qualisys_pose_data = np.load(qualisys_data_path)
 
 num_mediapipe_pose_joints = 33
 mediapipeSkel_fr_mar_dim = np.load(mediapipe_data_path)
 mediapipe_pose_data = slice_mediapipe_data(mediapipeSkel_fr_mar_dim, num_mediapipe_pose_joints)
 
 #mediapipe_num_frame_range = range(9500,12000)
-mediapipe_num_frame_range = range(13000,15180)
+mediapipe_num_frame_range = range(25,425)
 #qualisys_num_frame_range = range(58355,70855,5)
-qualisys_num_frame_range = range(75835,86735,5)
+qualisys_num_frame_range = range(0,4000,10)
 
 assert len(qualisys_num_frame_range) == len(mediapipe_num_frame_range), "The number of frames in the two data arrays must be the same. Num qualisys frames is {} and num mediapipe frames is {}".format(len(qualisys_num_frame_range), len(mediapipe_num_frame_range))
 
-overlapping_skeleton_plotter = OverlappingSkeletonPlotter(sessionID,mediapipe_pose_data, qualisys_pose_data, mediapipe_num_frame_range, qualisys_num_frame_range)
+overlapping_skeleton_plotter = OverlappingSkeletonPlotter(qualisys_sessionID,mediapipe_pose_data, qualisys_pose_data, mediapipe_num_frame_range, qualisys_num_frame_range)
 overlapping_skeleton_plotter.run()
 
 f = 2

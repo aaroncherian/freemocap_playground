@@ -10,20 +10,24 @@ from anthropometry_data_tables import segments, joint_connections, segment_COM_l
 from qualisys_skeleton_builder import qualisys_indices, build_qualisys_skeleton
 from COM_calculator import calculate_segment_COM_for_qualisys, reformat_segment_COM, calculate_total_body_COM
 
+from fmc_validation_toolbox import good_frame_finder 
+
+
 this_computer_name = socket.gethostname()
 print(this_computer_name)
 
 if this_computer_name == 'DESKTOP-V3D343U':
         freemocap_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
 elif this_computer_name == 'DESKTOP-F5LCT4Q':
-    freemocap_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+    #freemocap_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
     #freemocap_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+    freemocap_data_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
 else:
     #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
     freemocap_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
-sessionID = 'session_SER_1_20_22' #name of the sessionID folder
-data_array_name = 'skeleton_fr_mar_dim_rotated.mat'
+sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS' #name of the sessionID folder
+data_array_name = 'qualisys_origin_aligned_skeleton_3D.npy'
 
 this_freemocap_session_path = freemocap_data_path / sessionID
 this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
@@ -33,9 +37,9 @@ qualisys_skeleton_file_path = this_freemocap_data_path/'qualisys_Skelcoordinates
 segmentCOM_data_path = this_freemocap_data_path/'qualisys_segmentedCOM_frame_joint_XYZ.npy'
 totalBodyCOM_data_path = this_freemocap_data_path/'qualisys_totalBodyCOM_frame_XYZ.npy'
 
-qualysis_mat_file = sio.loadmat(qualisys_data_path)
+#qualysis_mat_file = sio.loadmat(qualisys_data_path)
 
-qualisys_pose_data = qualysis_mat_file['skeleton_fr_mar_dim_rotated']
+qualisys_pose_data = np.load(qualisys_data_path)
 
 num_frame_range = range(qualisys_pose_data.shape[0])
 

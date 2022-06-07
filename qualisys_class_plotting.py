@@ -41,13 +41,14 @@ class skeleton_COM_Plot:
         this_freemocap_session_path = validation_data_path / sessionID
         this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
 
-        totalCOM_data_path = this_freemocap_data_path / 'qualisys_totalBodyCOM_frame_XYZ.npy'
-        segmentedCOM_data_path = this_freemocap_data_path / 'qualisys_segmentedCOM_frame_joint_XYZ.npy'
+        totalCOM_data_path = this_freemocap_data_path / 'origin_aligned_totalBodyCOM_frame_XYZ.npy'
+        segmentedCOM_data_path = this_freemocap_data_path / 'origin_aligned_segmentedCOM_frame_joint_XYZ.npy'
         #mediapipe_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
         #mediapipe_data_path = this_freemocap_data_path/'qualisysData_3d.mat'
 
-        mediapipe_data_path = this_freemocap_data_path/'skeleton_fr_mar_dim_rotated.mat'    
-        mediapipeSkeleton_file_name = this_freemocap_data_path/'qualisysSkelcoordinates_frame_segment_joint_XYZ.pkl'
+        mediapipe_data_path = this_freemocap_data_path/'qualisys_origin_aligned_skeleton_3D.npy' 
+
+        mediapipeSkeleton_file_name = this_freemocap_data_path/'origin_aligned_qualisys_Skelcoordinates_frame_segment_joint_XYZ.pkl'
 
         syncedVideoName = sessionID + '_Cam1_synced.mp4'
       
@@ -64,10 +65,10 @@ class skeleton_COM_Plot:
 
         segmentedCOM_frame_joint_XYZ = np.load(segmentedCOM_data_path)
 
-        qualysis_mat_file = sio.loadmat(mediapipe_data_path)
+        #qualysis_mat_file = sio.loadmat(mediapipe_data_path)
         #mediapipe_pose_data = qualysis_mat_file['skeleton_fr_mar_dim_reorg']
 
-        mediapipe_pose_data = qualysis_mat_file['skeleton_fr_mar_dim_rotated']
+        mediapipe_pose_data = np.load(mediapipe_data_path)
 
         open_file = open(mediapipeSkeleton_file_name, "rb")
         mediapipeSkelcoordinates_frame_segment_joint_XYZ = pickle.load(open_file)
@@ -694,15 +695,17 @@ if __name__ == '__main__':
     if this_computer_name == 'DESKTOP-V3D343U':
         freemocap_validation_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
     elif this_computer_name == 'DESKTOP-F5LCT4Q':
-        freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+        #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
         #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+        freemocap_validation_data_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
+
     else:
         #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
         freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
-    sessionID = 'session_SER_1_20_22' #name of the sessionID folder
+    sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS' #name of the sessionID folder
 
     step_interval = 5
-    num_frame_range = range(60255,71635, step_interval)
+    num_frame_range = range(9000,12000, step_interval)
     #num_frame_range = range(65000,78000, step_interval)
     #num_frame_range = 0
     camera_fps = 300
@@ -710,10 +713,11 @@ if __name__ == '__main__':
     tail_length = 120 #number of frames to keep the COM trajectory tail 
     #num_frame_range = 0
 
-    stance = 'right_leg'
+    stance = 'naturala'
 
     if stance == 'natural':
-        num_frame_range = range(58355,70855,5)
+        #num_frame_range = range(58355,70855,5
+        num_frame_range = range(9000,12000, step_interval)
 
     elif stance == 'left_leg':
         num_frame_range = range(75850,86750,5)

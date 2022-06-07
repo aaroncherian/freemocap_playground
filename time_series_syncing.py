@@ -41,8 +41,8 @@ else:
     #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
     freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
-sessionID_one = 'session_SER_1_20_22' #name of the sessionID folder
-sessionID_two = 'session_SER_1_20_22'
+sessionID_one = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS' #name of the sessionID folder
+sessionID_two = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 #sessionID_one = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 #sessionID_one = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS' 
 
@@ -51,22 +51,24 @@ sessionID_two = 'session_SER_1_20_22'
 #sessionID_two = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 
 
-session_one_data_path = freemocap_validation_data_path / sessionID_one / 'DataArrays'/ 'mediapipe_origin_aligned_skeleton_3D.npy'
-session_two_data_path = freemocap_validation_data_path / sessionID_two / 'DataArrays'/'qualisys_origin_aligned_skeleton_3D.npy'
+#session_one_data_path = freemocap_validation_data_path / sessionID_one / 'DataArrays'/ 'mediapipe_origin_aligned_skeleton_3D.npy'
+#session_two_data_path = freemocap_validation_data_path / sessionID_two / 'DataArrays'/'qualisys_origin_aligned_skeleton_3D.npy'
 
+session_one_data_path = freemocap_validation_data_path / sessionID_one / 'DataArrays'/ 'origin_aligned_totalBodyCOM_frame_XYZ.npy'
+session_two_data_path = freemocap_validation_data_path / sessionID_two / 'DataArrays'/'origin_aligned_totalBodyCOM_frame_XYZ.npy'
 
 session_one_medipipe_data = np.load(session_one_data_path)
 session_two_medipipe_data = np.load(session_two_data_path)
 
 
-left_mp_shoulder_index = mediapipe_indices.index('right_foot_index')
-left_qual_shoulder_index = qualisys_indices.index('right_foot_index')
+left_mp_shoulder_index = mediapipe_indices.index('left_shoulder')
+left_qual_shoulder_index = qualisys_indices.index('left_shoulder')
 
 
 
 
-session_one_left_shoulder = session_one_medipipe_data[0:20000,left_mp_shoulder_index,0]
-session_two_left_shoulder = session_two_medipipe_data[0:100000,left_qual_shoulder_index,0]
+session_one_left_shoulder = session_one_medipipe_data[:,left_mp_shoulder_index,0]
+session_two_left_shoulder = session_two_medipipe_data[:,left_qual_shoulder_index,0]
 
 #peaks_one, _ = find_peaks(abs(session_one_left_shoulder[0]), height=200)
 
@@ -92,7 +94,7 @@ maximums_difference = np.sort([abs(y -x) for x,y in zip(maximums_one_window, max
 # A = fft(session_two_left_shoulder[0:6620])
 
 median = np.median(maximums_difference)
-median = -2167
+#median = -2167
 #shift for gopro/webcam BOS data = 52
 
 x_range = range(0,len(session_one_left_shoulder))

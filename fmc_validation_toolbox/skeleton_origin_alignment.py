@@ -104,11 +104,12 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_folder_path:str
 
 
     elif skeleton_type_to_plot == 'qualisys':
-        skeleton_data_path = this_freemocap_data_path/'qualisysData_3d.mat'
+        skeleton_data_path = this_freemocap_data_path/'qualisys_skel_3D.mat'
 
         skeleton_mat_file = sio.loadmat(skeleton_data_path)
 
-        skeleton_data = skeleton_mat_file['skeleton_fr_mar_dim_reorg']
+        skeleton_data = skeleton_mat_file['mat_data_reshaped']
+
 
         skeleton_indices = qualisys_indices
         
@@ -199,8 +200,13 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_folder_path:str
     spine_aligned_heel_unit_vector = spine_aligned_skeleton_holder.heel_unit_vector
     spine_aligned_heel_vector_origin = spine_aligned_skeleton_holder.heel_vector_origin
 
-    
-    np.save(save_file,spine_aligned_skeleton_data)
+
+    if skeleton_type_to_plot == 'qualisys':
+        print('saving qualisys aligned data')
+        np.save(save_file,y_aligned_skeleton_data)
+    elif skeleton_type_to_plot == 'mediapipe':  
+        print('saving mediapipe aligned data')  
+        np.save(save_file,spine_aligned_skeleton_data)
 
 
     if debug:

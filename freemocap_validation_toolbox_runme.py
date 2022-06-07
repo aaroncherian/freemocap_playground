@@ -34,13 +34,16 @@ else:
     freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
     
-session_one_info = {'sessionID': 'session_SER_1_20_22', 'skeleton_type': 'mediapipe'} #name of the sessionID folder
+#session_one_info = {'sessionID': 'session_SER_1_20_22', 'skeleton_type': 'mediapipe'} #name of the sessionID folder
 
-session_two_info = {'sessionID': 'session_SER_1_20_22', 'skeleton_type': 'qualisys'} 
+#session_two_info = {'sessionID': 'session_SER_1_20_22', 'skeleton_type': 'qualisys'} 
 
-task = 'time_sync_two_sessions'
+session_one_info = {'sessionID': 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS', 'skeleton_type': 'mediapipe'} #name of the sessionID folder
+session_two_info = {'sessionID': 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS', 'skeleton_type': 'qualisys'} #name of the sessionID folder
 
-session_task_list = [session_one_info]
+task = 'align_skeleton_with_origin'
+
+session_task_list = [session_two_info]
 
 for session_info in session_task_list:
 
@@ -48,11 +51,14 @@ for session_info in session_task_list:
         good_frame = good_frame_finder.find_good_frame(session_info,freemocap_data_folder_path, initial_velocity_guess=.2, debug = True)
         skeleton_origin_alignment.align_skeleton_with_origin(session_info, freemocap_data_folder_path, good_frame, debug = True)
 
+    elif task == 'find_good_frame':
+        good_frame = good_frame_finder.find_good_frame(session_info,freemocap_data_folder_path, initial_velocity_guess=.2, debug = True)
+
     elif task == 'calculate_COM': 
         freemocap_COM_runme.run(session_info, freemocap_data_folder_path)
 
     elif task == 'time_sync_two_sessions':
-        lag = time_syncing.get_time_sync_lag(session_info, session_two_info, freemocap_data_folder_path)
+        lag = time_syncing.get_time_sync_lag(session_info, session_two_info, freemocap_data_folder_path, debug = True)
         print(lag)
 
     elif task == 'align_and_calculate_COM':

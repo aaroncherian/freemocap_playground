@@ -20,6 +20,8 @@ from mediapipe_skeleton_builder import mediapipe_indices, build_mediapipe_skelet
 from anthropometry_data_tables import segments, joint_connections, segment_COM_lengths, segment_COM_percentages
 from qualisys_skeleton_builder import qualisys_indices, build_qualisys_skeleton
 
+from fmc_validation_toolbox import good_frame_finder
+
 def get_translation_error_between_two_rotation_matrices(translation_guess,segments_list_A, segments_list_B):
     #convert euler angles to rotation matrix
     total_error_list = []
@@ -111,24 +113,32 @@ else:
     freemocap_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
 
-sessionID = 'session_SER_1_20_22' #name of the sessionID folder
 
-qualisys_data_array_name = 'skeleton_fr_mar_dim_rotated.mat'
+freemocap_sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS' #name of the sessionID folder
+
+qualisys_sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+
+
+qualisys_data_array_name = 'qualisys_origin_aligned_skeleton_3D.npy'
 
 mediapipe_data_array_name = 'mediapipe_origin_aligned_skeleton_3D.npy'
 #mediapipe_data_array_name = 'mediaPipeSkel_3d_smoothed.npy'
 
 num_pose_joints = 33
 
-this_freemocap_session_path = freemocap_data_path / sessionID
-this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
-qualisys_data_path = this_freemocap_data_path/qualisys_data_array_name
-mediapipe_data_path = this_freemocap_data_path/mediapipe_data_array_name
+freemocap_session_path = freemocap_data_path / freemocap_sessionID
+freemocap_data_array_path = freemocap_session_path/'DataArrays'
 
-qualysis_mat_file = sio.loadmat(qualisys_data_path)
-qualisys_pose_data = qualysis_mat_file['skeleton_fr_mar_dim_rotated']
+qualisys_session_path = freemocap_data_path/qualisys_sessionID
+qualisys_data_array_path = qualisys_session_path/'DataArrays'
+
+qualisys_data_path = qualisys_data_array_path/qualisys_data_array_name
+mediapipe_data_path = freemocap_data_array_path/mediapipe_data_array_name
+
+#qualysis_mat_file = sio.loadmat(qualisys_data_path)
+qualisys_pose_data = np.load(qualisys_data_path)
 #qualisys_num_frame_range = range(qualisys_pose_data.shape[0])
-qualisys_num_frame_range = range(20000)
+qualisys_num_frame_range = range(qualisys_pose_data.shape[0])
 
 mediapipeSkel_fr_mar_dim = np.load(mediapipe_data_path)
 mediapipe_pose_data = slice_mediapipe_data(mediapipeSkel_fr_mar_dim, num_pose_joints)
@@ -137,8 +147,8 @@ mediapipe_pose_data = slice_mediapipe_data(mediapipeSkel_fr_mar_dim, num_pose_jo
 
 mediapipe_num_frame_range = range(len(mediapipe_pose_data))
 
-mediapipe_skeleton_path = this_freemocap_data_path/'origin_aligned_mediapipeSkelcoordinates_frame_segment_joint_XYZ.pkl'
-qualisys_skeleton_path = this_freemocap_data_path/'qualisys_Skelcoordinates_frame_segment_joint_XYZ.pkl'
+mediapipe_skeleton_path = freemocap_data_array_path/'origin_aligned_mediapipeSkelcoordinates_frame_segment_joint_XYZ.pkl'
+qualisys_skeleton_path = qualisys_data_array_path/'origin_aligned_qualisys_Skelcoordinates_frame_segment_joint_XYZ.pkl'
 
 df = pd.DataFrame(list(zip(segments,joint_connections,segment_COM_lengths,segment_COM_percentages)),columns = ['Segment Name','Joint Connection','Segment COM Length','Segment COM Percentage'])
 segment_conn_len_perc_dataframe = df.set_index('Segment Name')
@@ -157,10 +167,13 @@ if qualisys_skeleton_path.is_file():
 else:
     qualisys_skeleton_data = build_qualisys_skeleton(qualisys_pose_data,segment_conn_len_perc_dataframe, qualisys_indices, qualisys_num_frame_range)
 
+
+
+
 #qualisys_frame = 56686
-qualisys_frame = 58355
+qualisys_frame = 4160
 #mediapipe_frame = 9499
-mediapipe_frame = 9500
+mediapipe_frame = 470
 
 this_frame_qualisys_joint_data = qualisys_pose_data[qualisys_frame,:,:]
 this_frame_qualisys_skeleton = qualisys_skeleton_data[qualisys_frame]
@@ -260,7 +273,7 @@ this_frame_mediapipe_translated = mediapipe_translated[mediapipe_frame]
 #mediapipe_translated[:,:] = translate_skeleton_frame(this_frame_rotated_mediapipe_joint_data, translation_matrix)
 
 save_name = 'mediapipe_skel_data_aligned_to_qualisys.npy'
-save_path = this_freemocap_data_path/save_name
+save_path = freemocap_data_array_path/save_name
 
 
 np.save(save_path, mediapipe_translated)

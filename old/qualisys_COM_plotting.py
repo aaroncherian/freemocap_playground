@@ -31,19 +31,18 @@ sessionID = 'session_SER_1_20_22' #name of the sessionID folder
 this_freemocap_session_path = freemocap_validation_data_path / sessionID
 this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
 
-totalCOM_data_path = this_freemocap_data_path / 'qualisys_totalBodyCOM_frame_XYZ.npy'
-segmentedCOM_data_path = this_freemocap_data_path / 'qualisys_segmentedCOM_frame_joint_XYZ.npy'
+joint_data_path = this_freemocap_data_path / 'qualisys_origin_aligned_skeleton_3D.npy'
+totalCOM_data_path = this_freemocap_data_path / 'origin_aligned_totalBodyCOM_frame_XYZ.npy'
+segmentedCOM_data_path = this_freemocap_data_path / 'origin_aligned_segmentedCOM_frame_joint_XYZ.npy'
 #mediapipe_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
 
-qualisysSkeleton_file_name = this_freemocap_data_path/'qualisysSkelcoordinates_frame_segment_joint_XYZ.pkl'
+qualisysSkeleton_file_name = this_freemocap_data_path/'origin_aligned_qualisys_Skelcoordinates_frame_segment_joint_XYZ.pkl'
 
 open_file = open(qualisysSkeleton_file_name, "rb")
 qualisysSkelcoordinates_frame_segment_joint_XYZ = pickle.load(open_file)
 open_file.close()
 
-qualisys_data_path = this_freemocap_data_path/'qualisysData_3d.mat'
-qualysis_mat_file = sio.loadmat(qualisys_data_path)
-qualisys_pose_data = qualysis_mat_file['skeleton_fr_mar_dim_reorg']
+qualisys_pose_data = np.load(joint_data_path)
 
 totalCOM_frame_XYZ = np.load(totalCOM_data_path) #loads in the data as a numpy array
 

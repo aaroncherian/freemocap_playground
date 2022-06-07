@@ -8,6 +8,8 @@ import scipy.io as sio
 
 from anthropometry_data_tables import segments, joint_connections, segment_COM_lengths, segment_COM_percentages
 from mediapipe_skeleton_builder import mediapipe_indices, build_mediapipe_skeleton, slice_mediapipe_data
+from qualisys_skeleton_builder import qualisys_indices, build_qualisys_skeleton
+
 from COM_calculator import calculate_segment_COM, reformat_segment_COM, calculate_total_body_COM
 
 
@@ -15,8 +17,9 @@ from COM_calculator import calculate_segment_COM, reformat_segment_COM, calculat
 def run(session_info, freemocap_data_folder_path):
 
     sessionID = session_info['sessionID']
+    skeleton_type = session_info['skeleton_type']
 
-    data_array_name = 'mediapipe_origin_aligned_skeleton_3D.npy'
+    data_array_name = '{}_origin_aligned_skeleton_3D.npy'.format(skeleton_type)
     num_pose_joints = 33
 
     #creating paths to the session and data

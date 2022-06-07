@@ -38,8 +38,8 @@ else:
 #sessionID = 'session_SER_1_20_22' #name of the sessionID folder
 #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 #sessionID = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
-sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
-
+#sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 
 #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
 save_path = Path(r'C:\Users\aaron\Documents\HumonLab\RMASBM\comparison_graphics')
@@ -47,8 +47,8 @@ save_path = Path(r'C:\Users\aaron\Documents\HumonLab\RMASBM\comparison_graphics'
 
 
 
-
-run_type = 'mediapipe'
+#run_type = 'mediapipe'
+run_type = 'qualisys'
 
 # run_type = 'freemocap'
 stance = 'natural'
@@ -108,7 +108,7 @@ elif run_type == 'qualisys':
     from qualisys_class_plotting import skeleton_COM_Plot
 
     if stance == 'natural':
-        num_frame_range = range(0,70855)
+        num_frame_range = range(0,60000)
         ax_range = 300
     
     if stance == 'left_leg':
@@ -137,7 +137,7 @@ elif run_type == 'qualisys':
 
 
     camera_fps = 300
-    COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length)
+    COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length, stance = 'natural')
     title_text = 'Qualisys Right Leg Stance Sway'
     left_heel_index = 18
     left_toe_index = 19

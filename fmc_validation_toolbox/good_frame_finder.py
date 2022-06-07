@@ -123,23 +123,16 @@ def find_good_frame(session_info, freemocap_data_folder_path, initial_velocity_g
         #skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_corrected_and_rotated.npy'
         skeleton_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
         skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_aligned_skeleton_3D.npy'
-        right_heel_index = 30
-        right_toe_index = 32
-        left_heel_index = 29
-        left_toe_index = 31
-
         skeleton_data = np.load(skeleton_data_path)
 
     elif skeleton_type_to_use == 'qualisys':
-        skeleton_data_path = this_freemocap_data_path/'skeleton_fr_mar_dim_rotated.mat'
-        right_heel_index = 12
-        right_toe_index = 14
-        left_heel_index = 11
-        left_toe_index = 13
-
+        skeleton_data_path = this_freemocap_data_path/'qualisys_skel_3D.mat'
         qualysis_mat_file = sio.loadmat(skeleton_data_path)
-        skeleton_data = qualysis_mat_file['skeleton_fr_mar_dim_rotated']
-        skeleton_data = skeleton_data[0:65000,:,:]
+        skeleton_data = qualysis_mat_file['mat_data_reshaped']
+        qualisys_num_frames = skeleton_data.shape[0]
+        
+        skeleton_data = skeleton_data[0:int(qualisys_num_frames/2),:,:]
+
 
     else:
         print('Please enter a valid skeleton type to use')

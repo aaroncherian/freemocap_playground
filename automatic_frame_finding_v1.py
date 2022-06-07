@@ -116,15 +116,17 @@ if skeleton_to_plot == 'mediapipe':
     skeleton_data = np.load(skeleton_data_path)
 
 if skeleton_to_plot == 'qualisys':
-    skeleton_data_path = this_freemocap_data_path/'skeleton_fr_mar_dim_rotated.mat'
+    skeleton_data_path = this_freemocap_data_path/'qualisys_skel_3D.mat'
     right_heel_index = 12
     right_toe_index = 14
     left_heel_index = 11
     left_toe_index = 13
 
     qualysis_mat_file = sio.loadmat(skeleton_data_path)
-    skeleton_data = qualysis_mat_file['skeleton_fr_mar_dim_rotated']
-    skeleton_data = skeleton_data[0:65000,:,:]
+    skeleton_data = qualysis_mat_file['mat_data_reshaped']
+    qualisys_num_frames = skeleton_data.shape[0]
+    
+    skeleton_data = skeleton_data[0:int(qualisys_num_frames/2),:,:]
 
 
 
