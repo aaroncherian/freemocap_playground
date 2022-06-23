@@ -16,9 +16,9 @@ from scipy import optimize
 from scipy.spatial.transform import Rotation
 import scipy.io as sio
 
-from mediapipe_skeleton_builder import mediapipe_indices, build_mediapipe_skeleton, slice_mediapipe_data
+from fmc_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices, build_mediapipe_skeleton, slice_mediapipe_data
 from anthropometry_data_tables import segments, joint_connections, segment_COM_lengths, segment_COM_percentages
-from qualisys_skeleton_builder import qualisys_indices, build_qualisys_skeleton
+from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices, build_qualisys_skeleton
 
 from fmc_validation_toolbox import good_frame_finder
 
@@ -114,10 +114,14 @@ else:
 
 
 
-freemocap_sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS' #name of the sessionID folder
+#freemocap_sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS' #name of the sessionID folder
+#qualisys_sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 
-qualisys_sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+#freemocap_sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun'
+#qualisys_sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun'
 
+freemocap_sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
+qualisys_sessionID =  'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 
 qualisys_data_array_name = 'qualisys_origin_aligned_skeleton_3D.npy'
 
@@ -147,7 +151,7 @@ mediapipe_pose_data = slice_mediapipe_data(mediapipeSkel_fr_mar_dim, num_pose_jo
 
 mediapipe_num_frame_range = range(len(mediapipe_pose_data))
 
-mediapipe_skeleton_path = freemocap_data_array_path/'origin_aligned_mediapipeSkelcoordinates_frame_segment_joint_XYZ.pkl'
+mediapipe_skeleton_path = freemocap_data_array_path/'origin_aligned_mediapipe_Skelcoordinates_frame_segment_joint_XYZ.pkl'
 qualisys_skeleton_path = qualisys_data_array_path/'origin_aligned_qualisys_Skelcoordinates_frame_segment_joint_XYZ.pkl'
 
 df = pd.DataFrame(list(zip(segments,joint_connections,segment_COM_lengths,segment_COM_percentages)),columns = ['Segment Name','Joint Connection','Segment COM Length','Segment COM Percentage'])
@@ -171,9 +175,9 @@ else:
 
 
 #qualisys_frame = 56686
-qualisys_frame = 4160
+qualisys_frame = 4730-750
 #mediapipe_frame = 9499
-mediapipe_frame = 470
+mediapipe_frame = 473
 
 this_frame_qualisys_joint_data = qualisys_pose_data[qualisys_frame,:,:]
 this_frame_qualisys_skeleton = qualisys_skeleton_data[qualisys_frame]

@@ -359,21 +359,15 @@ class skeleton_COM_Plot:
 
         
         for segment in this_frame_bones_XYZ.keys():
-            if segment == 'head':
-                head_point = this_frame_bones_XYZ[segment][0]
-                bone_x,bone_y,bone_z = [head_point[0],head_point[1],head_point[2]]
 
-                bone_x = -bone_x
-                bone_y = -bone_y
-            else:
-                prox_joint = this_frame_bones_XYZ[segment][0] 
-                dist_joint = this_frame_bones_XYZ[segment][1]
-   
-                dist_joint = this_frame_bones_XYZ[segment][1]              
-                bone_x,bone_y,bone_z = [prox_joint[0],dist_joint[0]],[prox_joint[1],dist_joint[1]],[prox_joint[2],dist_joint[2]] 
-                
-                bone_x = [-x for x in bone_x]
-                bone_y = [-x for x in bone_y]
+            prox_joint = this_frame_bones_XYZ[segment][0] 
+            dist_joint = this_frame_bones_XYZ[segment][1]
+
+            dist_joint = this_frame_bones_XYZ[segment][1]              
+            bone_x,bone_y,bone_z = [prox_joint[0],dist_joint[0]],[prox_joint[1],dist_joint[1]],[prox_joint[2],dist_joint[2]] 
+            
+            bone_x = [-x for x in bone_x]
+            bone_y = [-x for x in bone_y]
 
 
             ax.plot(bone_x,bone_y,bone_z,color = 'black')
@@ -493,8 +487,8 @@ class skeleton_COM_Plot:
             #ax5.legend(bbox_to_anchor=(1.12, -.65), ncol = 2)
 
             
-            ax4.set_ylim([-460,140])
-            ax5.set_ylim([-340,260])
+            #ax4.set_ylim([-460,140])
+            #ax5.set_ylim([-340,260])
 
         elif self.stance == 'left_leg':
             #Left Leg Stance Plot-----------------------------------------------------------------------------------------------------------
@@ -519,8 +513,8 @@ class skeleton_COM_Plot:
 
             ax5.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,1], color = 'grey')
 
-            ax4.set_ylim([-590, 510])
-            ax5.set_ylim([-690, 409])
+            #ax4.set_ylim([-590, 510])
+            #ax5.set_ylim([-690, 409])
         elif self.stance == 'right_leg': 
         #Right Leg Stance Plot-----------------------------------------------------------------------------------------------------------
             ax4.plot(self.time_array,-1*self.this_range_totalCOM_frame_XYZ[:,0], color = 'lightgrey')
@@ -545,8 +539,8 @@ class skeleton_COM_Plot:
 
             ax5.plot(self.time_array[0:frame+1],-1*self.this_range_totalCOM_frame_XYZ[0:frame+1,1], color = 'grey')
 
-            ax4.set_ylim([-899, 401])
-            ax5.set_ylim([-739, 561])
+            #ax4.set_ylim([-899, 401])
+            #ax5.set_ylim([-739, 561])
             
         
         ax2.set_xlabel('X Position (mm)')
@@ -652,8 +646,8 @@ class skeleton_COM_Plot:
         self.skel_y = skel_y
         self.skel_z = skel_z
 
-        self.left_foot_position_XYZ, self.left_foot_avg_position_XYZ = self.get_foot_data(skel_x,skel_y,skel_z,18,19)
-        self.right_foot_position_XYZ, self.right_foot_avg_position_XYZ = self.get_foot_data(skel_x,skel_y,skel_z,22,23)
+        self.left_foot_position_XYZ, self.left_foot_avg_position_XYZ = self.get_foot_data(skel_x,skel_y,skel_z,18,20)
+        self.right_foot_position_XYZ, self.right_foot_avg_position_XYZ = self.get_foot_data(skel_x,skel_y,skel_z,19,21)
 
         self.front_foot_avg_position_XYZ,self.back_foot_avg_position_XYZ = self.get_anterior_posterior_bounds(self.left_foot_position_XYZ,self.right_foot_position_XYZ)
 
@@ -704,26 +698,27 @@ if __name__ == '__main__':
         freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
     sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS' #name of the sessionID folder
 
-    step_interval = 5
-    num_frame_range = range(9000,12000, step_interval)
+    step_interval = 10
+    #num_frame_range = range(9000,12000, step_interval)
     #num_frame_range = range(65000,78000, step_interval)
     #num_frame_range = 0
     camera_fps = 300
-    output_video_fps = 60
+    output_video_fps = 30
     tail_length = 120 #number of frames to keep the COM trajectory tail 
     #num_frame_range = 0
 
-    stance = 'naturala'
+    stance = 'right_leg'
 
+    lag = 230
     if stance == 'natural':
         #num_frame_range = range(58355,70855,5
-        num_frame_range = range(9000,12000, step_interval)
-
+        num_frame_range = range(4500-lag,13000-lag, step_interval)
     elif stance == 'left_leg':
         num_frame_range = range(75850,86750,5)
 
     elif stance == 'right_leg':
-        num_frame_range = range(90890,98140,5)
+        #num_frame_range = range(90890,98140,5)
+        num_frame_range = range(54000-lag,65800-lag, step_interval)
 
     #num_frame_range = range(95000,96000,5)
 

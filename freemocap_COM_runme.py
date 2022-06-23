@@ -8,7 +8,7 @@ import scipy.io as sio
 
 from anthropometry_data_tables import segments, joint_connections, segment_COM_lengths, segment_COM_percentages
 from mediapipe_skeleton_builder import mediapipe_indices, build_mediapipe_skeleton, slice_mediapipe_data
-from qualisys_skeleton_builder import qualisys_indices, build_qualisys_skeleton
+from old_qualisys_skeleton_builder import qualisys_indices, build_qualisys_skeleton
 
 from COM_calculator import calculate_segment_COM, reformat_segment_COM, calculate_total_body_COM
 

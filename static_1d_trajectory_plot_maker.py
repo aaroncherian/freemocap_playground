@@ -39,16 +39,18 @@ else:
 #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 #sessionID = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
-sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+#sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+
+sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
 
 #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
-save_path = Path(r'C:\Users\aaron\Documents\HumonLab\RMASBM\comparison_graphics')
+save_path = Path(r'C:\Users\aaron\Documents\HumonLab\DynamicWalking2022\comparison_graphics')
 
 
 
 
 #run_type = 'mediapipe'
-run_type = 'qualisys'
+run_type = 'mediapipe'
 
 # run_type = 'freemocap'
 stance = 'natural'
@@ -58,7 +60,7 @@ save_image = save_path/name
 
 #num_frame_range = range(9900,12000)
 # camera_fps = 60
-output_video_fps = 60
+output_video_fps = 30
 tail_length = 120 #number of frames to keep the COM trajectory tail 
 
 
@@ -74,7 +76,7 @@ if run_type == 'mediapipe':
 
         #num_frame_range = range(0,1550)
 
-        num_frame_range = range(0,6620)
+        num_frame_range = range(473,1373)
 
         ax_range = 300
 

@@ -7,44 +7,45 @@ import pickle
 import scipy.io as sio
 
 from anthropometry_data_tables import segments, joint_connections, segment_COM_lengths, segment_COM_percentages
-from mediapipe_skeleton_builder import mediapipe_indices, build_mediapipe_skeleton, slice_mediapipe_data
+from fmc_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices, build_mediapipe_skeleton, slice_mediapipe_data
 from COM_calculator import calculate_segment_COM,calculate_segment_COM_for_qualisys, reformat_segment_COM, calculate_total_body_COM
-from qualisys_skeleton_builder import qualisys_indices, build_qualisys_skeleton
+from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices, build_qualisys_skeleton
 
 
 
-def run(session_info, freemocap_data_folder_path):
+def run(session_info, freemocap_data_array_path, skeleton_data):
 
     sessionID = session_info['sessionID']
     skeleton_type = session_info['skeleton_type']
 
-    data_array_name = '{}_origin_aligned_skeleton_3D.npy'.format(skeleton_type)
+    #data_array_name = '{}_origin_aligned_skeleton_3D.npy'.format(skeleton_type)
 
-
+    num_frames = skeleton_data.shape[0]
+    num_frame_range = range(num_frames)
     #creating paths to the session and data
-    this_freemocap_session_path = freemocap_data_folder_path / sessionID
-    this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
-    data_array_path = this_freemocap_data_path/data_array_name
+    #this_freemocap_session_path = freemocap_data_folder_path / sessionID
+    #this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
+    #data_array_path = this_freemocap_data_path/data_array_name
 
 
-    skeleton_file_path = this_freemocap_data_path/'origin_aligned_{}_Skelcoordinates_frame_segment_joint_XYZ.pkl'.format(skeleton_type)
-    segmentCOM_data_path = this_freemocap_data_path/'origin_aligned_segmentedCOM_frame_joint_XYZ.npy'
-    totalBodyCOM_data_path = this_freemocap_data_path/'origin_aligned_totalBodyCOM_frame_XYZ.npy'
+    skeleton_file_path = freemocap_data_array_path/'origin_aligned_{}_Skelcoordinates_frame_segment_joint_XYZ.pkl'.format(skeleton_type)
+    segmentCOM_data_path = freemocap_data_array_path/'origin_aligned_segmentedCOM_frame_joint_XYZ.npy'
+    totalBodyCOM_data_path = freemocap_data_array_path/'origin_aligned_totalBodyCOM_frame_XYZ.npy'
 
 
 
     #load the mediapipe data
-    if skeleton_type == 'mediapipe':
-        skeleton_data_all_joints = np.load(data_array_path)
-        num_pose_joints = 33 
-        #get just the body data for mediapipe 
-        skeleton_data = slice_mediapipe_data(skeleton_data_all_joints, num_pose_joints)
-        num_frame_range = range(len(skeleton_data))
+    # if skeleton_type == 'mediapipe':
+    #     skeleton_data_all_joints = np.load(data_array_path)
+    #     num_pose_joints = 33 
+    #     #get just the body data for mediapipe 
+    #     skeleton_data = slice_mediapipe_data(skeleton_data_all_joints, num_pose_joints)
+    #     num_frame_range = range(len(skeleton_data))
 
-    elif skeleton_type == 'qualisys':
-        skeleton_data = np.load(data_array_path)
-        num_frames = skeleton_data.shape[0]
-        num_frame_range = range(num_frames)
+    # elif skeleton_type == 'qualisys':
+    #     skeleton_data = np.load(data_array_path)
+    #     num_frames = skeleton_data.shape[0]
+    #     num_frame_range = range(num_frames)
 
     #load anthropometric data into a pandas dataframe
     df = pd.DataFrame(list(zip(segments,joint_connections,segment_COM_lengths,segment_COM_percentages)),columns = ['Segment Name','Joint Connection','Segment COM Length','Segment COM Percentage'])
@@ -54,12 +55,14 @@ def run(session_info, freemocap_data_folder_path):
     #build a mediapipe skeleton based on the segments defined in the anthropometry_data_tables.py file
     if skeleton_type == 'mediapipe':
         skelcoordinates_frame_segment_joint_XYZ = build_mediapipe_skeleton(skeleton_data,segment_conn_len_perc_dataframe, mediapipe_indices, num_frame_range)
-        segment_COM_frame_dict = calculate_segment_COM(segment_conn_len_perc_dataframe, skelcoordinates_frame_segment_joint_XYZ, num_frame_range)
+        #segment_COM_frame_dict = calculate_segment_COM(segment_conn_len_perc_dataframe, skelcoordinates_frame_segment_joint_XYZ, num_frame_range)
     elif skeleton_type == 'qualisys':
         skelcoordinates_frame_segment_joint_XYZ = build_qualisys_skeleton(skeleton_data,segment_conn_len_perc_dataframe, qualisys_indices, num_frame_range)
-        segment_COM_frame_dict = calculate_segment_COM_for_qualisys(segment_conn_len_perc_dataframe, skelcoordinates_frame_segment_joint_XYZ, num_frame_range)
+        #segment_COM_frame_dict = calculate_segment_COM(segment_conn_len_perc_dataframe, skelcoordinates_frame_segment_joint_XYZ, num_frame_range)
+        #segment_COM_frame_dict = calculate_segment_COM_for_qualisys(segment_conn_len_perc_dataframe, skelcoordinates_frame_segment_joint_XYZ, num_frame_range)
     #calculate segment and total body COM data 
-    
+
+    segment_COM_frame_dict = calculate_segment_COM(segment_conn_len_perc_dataframe, skelcoordinates_frame_segment_joint_XYZ, num_frame_range)
     segment_COM_frame_imgPoint_XYZ = reformat_segment_COM(segment_COM_frame_dict,num_frame_range, num_segments)
     totalBodyCOM_frame_XYZ = calculate_total_body_COM(segment_conn_len_perc_dataframe,segment_COM_frame_dict,num_frame_range)
 
@@ -71,7 +74,6 @@ def run(session_info, freemocap_data_folder_path):
     np.save(segmentCOM_data_path,segment_COM_frame_imgPoint_XYZ)
 
     np.save(totalBodyCOM_data_path,totalBodyCOM_frame_XYZ,num_frame_range)
-
 
 if __name__ == '__main__':
 

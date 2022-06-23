@@ -7,7 +7,7 @@ import pickle
 import scipy.io as sio
 
 from anthropometry_data_tables import segments, joint_connections, segment_COM_lengths, segment_COM_percentages
-from qualisys_skeleton_builder import qualisys_indices, build_qualisys_skeleton
+from old_qualisys_skeleton_builder import qualisys_indices, build_qualisys_skeleton
 from COM_calculator import calculate_segment_COM_for_qualisys, reformat_segment_COM, calculate_total_body_COM
 
 from fmc_validation_toolbox import good_frame_finder 

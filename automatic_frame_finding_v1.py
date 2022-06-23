@@ -15,7 +15,7 @@ from datetime import datetime
 from scipy.optimize import minimize
 import scipy.io as sio
 
-from qualisys_skeleton_builder import qualisys_indices
+from old_qualisys_skeleton_builder import qualisys_indices
 
 def find_velocity_values_within_limit(skeleton_velocity_data, velocity_limit):
     """

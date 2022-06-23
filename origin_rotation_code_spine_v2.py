@@ -14,7 +14,7 @@ import sys
 from datetime import datetime
 
 from mediapipe_skeleton_builder import mediapipe_indices
-from qualisys_skeleton_builder import qualisys_indices
+from old_qualisys_skeleton_builder import qualisys_indices
 
 from skeleton_data_holder import SkeletonDataHolder
 import scipy.io as sio

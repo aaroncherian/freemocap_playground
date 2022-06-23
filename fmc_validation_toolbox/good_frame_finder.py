@@ -15,15 +15,15 @@ from datetime import datetime
 from scipy.optimize import minimize
 import scipy.io as sio
 
-from mediapipe_skeleton_builder import mediapipe_indices
-from qualisys_skeleton_builder import qualisys_indices
+#from fmc_validation_toolbox import mediapipe_skeleton_builder, qualisys_skeleton_builder
 
 from skeleton_data_holder import SkeletonDataHolder
 
+#mediapipe_indices = mediapipe_skeleton_builder.mediapipe_indices
+#qualisys_indices = qualisys_skeleton_builder.qualisys_indices
 
 #import debugging_plot_tools
 
-from qualisys_skeleton_builder import qualisys_indices
 
 def find_velocity_values_within_limit(skeleton_velocity_data, velocity_limit):
     """
@@ -111,31 +111,31 @@ def find_best_velocity_guess(skeleton_type_to_use, skeleton_velocity_data, veloc
     return matching_values, velocity_guess
 
 
-def find_good_frame(session_info, freemocap_data_folder_path, initial_velocity_guess, debug = False):
+def find_good_frame(session_info, skeleton_data, initial_velocity_guess, debug = False):
 
     sessionID = session_info['sessionID']
     skeleton_type_to_use = session_info['skeleton_type']
 
-    this_freemocap_session_path = freemocap_data_folder_path / sessionID
-    this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
+    # this_freemocap_session_path = freemocap_data_folder_path / sessionID
+    # this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
 
-    if skeleton_type_to_use == 'mediapipe':
-        #skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_corrected_and_rotated.npy'
-        skeleton_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
-        skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_aligned_skeleton_3D.npy'
-        skeleton_data = np.load(skeleton_data_path)
+    # if skeleton_type_to_use == 'mediapipe':
+    #     #skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_corrected_and_rotated.npy'
+    #     skeleton_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
+    #     skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_aligned_skeleton_3D.npy'
+    #     skeleton_data = np.load(skeleton_data_path)
 
-    elif skeleton_type_to_use == 'qualisys':
-        skeleton_data_path = this_freemocap_data_path/'qualisys_skel_3D.mat'
-        qualysis_mat_file = sio.loadmat(skeleton_data_path)
-        skeleton_data = qualysis_mat_file['mat_data_reshaped']
-        qualisys_num_frames = skeleton_data.shape[0]
+    # elif skeleton_type_to_use == 'qualisys':
+    #     skeleton_data_path = this_freemocap_data_path/'qualisys_skel_3D.mat'
+    #     qualysis_mat_file = sio.loadmat(skeleton_data_path)
+    #     skeleton_data = qualysis_mat_file['mat_data_reshaped']
+    #     qualisys_num_frames = skeleton_data.shape[0]
         
-        skeleton_data = skeleton_data[0:int(qualisys_num_frames/2),:,:]
+    #     skeleton_data = skeleton_data[0:int(qualisys_num_frames/2),:,:]
 
 
-    else:
-        print('Please enter a valid skeleton type to use')
+    # else:
+    #     print('Please enter a valid skeleton type to use')
 
     skeleton_velocity_data = np.diff(skeleton_data, axis=0)
 
@@ -161,26 +161,24 @@ if __name__ == '__main__':
         
     this_computer_name = socket.gethostname()
 
-    if this_computer_name == 'DESKTOP-V3D343U':
-        freemocap_validation_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
-    elif this_computer_name == 'DESKTOP-F5LCT4Q':
+    if this_computer_name == 'DESKTOP-F5LCT4Q':
         #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
         #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
         freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
-    else:
-        #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
-        freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
     session_info = {'sessionID': 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH', 'skeleton_type': 'mediapipe'} #name of the sessionID folder    
 
     #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
     #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
     #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun'
+    freemocap_data_array_folder_path = freemocap_data_folder_path/session_info['sessionID']/'DataArrays'
 
-
-
-
-
-    good_frame = find_good_frame(session_info, freemocap_data_folder_path,initial_velocity_guess=.3, debug = True)
+    if session_info['skeleton_type'] == 'mediapipe':
+        skeleton_data_path = freemocap_data_array_folder_path/'mediaPipeSkel_3d_smoothed.npy' 
+        skeleton_data = np.load(skeleton_data_path)
+    elif session_info['skeleton_type'] == 'qualisys':
+            skeleton_data_path = freemocap_data_array_folder_path/'qualisysSkel_3d.npy' 
+            skeleton_data = np.load(skeleton_data_path)
+    good_frame = find_good_frame(session_info, skeleton_data ,initial_velocity_guess=.3, debug = True)
     
     f = 2

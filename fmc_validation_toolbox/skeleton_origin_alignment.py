@@ -13,8 +13,10 @@ import matplotlib.ticker as mticker
 import sys 
 from datetime import datetime
 
-from mediapipe_skeleton_builder import mediapipe_indices
-from qualisys_skeleton_builder import qualisys_indices
+
+
+#from fmc_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices
+#from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
 
 from skeleton_data_holder import SkeletonDataHolder
 import scipy.io as sio
@@ -73,47 +75,47 @@ def rotate_skeleton_frame(this_frame_aligned_skeleton_data, rotation_matrix):
     return this_frame_rotated_skeleton
 
 
-def align_skeleton_with_origin(session_info:dict, this_freemocap_folder_path:str, good_frame, debug = False):
+def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path:str, skeleton_data, skeleton_indices ,good_frame, debug = False):
 
-    sessionID = session_info['sessionID']
+    #sessionID = session_info['sessionID']
     skeleton_type_to_plot = session_info['skeleton_type']
-    this_freemocap_session_path = this_freemocap_folder_path / sessionID
-    this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
-    save_file = this_freemocap_data_path/'{}_origin_aligned_skeleton_3D.npy'.format(skeleton_type_to_plot)
+    # this_freemocap_session_path = this_freemocap_folder_path / sessionID
+    # this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
+    save_file = this_freemocap_data_array_path/'{}_origin_aligned_skeleton_3D.npy'.format(skeleton_type_to_plot)
 
-    if skeleton_type_to_plot == 'mediapipe':
-        #skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_corrected_and_rotated.npy'
-        skeleton_data_path = this_freemocap_data_path/'mediaPipeSkel_3d_smoothed.npy'
-        right_heel_index = 30
-        right_toe_index = 32
-        left_heel_index = 29
-        left_toe_index = 31
-
-
-        left_shoulder_index = 11
-        right_shoulder_index = 12
-
-        left_hip_index = 23
-        right_hip_index = 24
-
-        #num_pose_joints = 33
-
-        skeleton_data = np.load(skeleton_data_path)
-
-        skeleton_indices = mediapipe_indices
+    # if skeleton_type_to_plot == 'mediapipe':
+        # #skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_corrected_and_rotated.npy'
+        # skeleton_data_path = this_freemocap_data_array_path/'mediaPipeSkel_3d_smoothed.npy'
+        # right_heel_index = 30
+        # right_toe_index = 32
+        # left_heel_index = 29
+        # left_toe_index = 31
 
 
-    elif skeleton_type_to_plot == 'qualisys':
-        skeleton_data_path = this_freemocap_data_path/'qualisys_skel_3D.mat'
+        # left_shoulder_index = 11
+        # right_shoulder_index = 12
 
-        skeleton_mat_file = sio.loadmat(skeleton_data_path)
+        # left_hip_index = 23
+        # right_hip_index = 24
 
-        skeleton_data = skeleton_mat_file['mat_data_reshaped']
+        # #num_pose_joints = 33
+
+        # skeleton_data = np.load(skeleton_data_path)
+
+        # skeleton_indices = mediapipe_indices
 
 
-        skeleton_indices = qualisys_indices
+    # elif skeleton_type_to_plot == 'qualisys':
+        # skeleton_data_path = this_freemocap_data_path/'qualisys_skel_3D.mat'
+
+        # skeleton_mat_file = sio.loadmat(skeleton_data_path)
+
+        # skeleton_data = skeleton_mat_file['mat_data_reshaped']
+
+
+        # skeleton_indices = qualisys_indices
         
-        f =2 
+        #f =2 
 
 
 
@@ -289,6 +291,10 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_folder_path:str
 
 
 if __name__ == '__main__':
+
+    from mediapipe_skeleton_builder import mediapipe_indices
+    from qualisys_skeleton_builder import qualisys_indices
+    
     this_computer_name = socket.gethostname()
 
     if this_computer_name == 'DESKTOP-V3D343U':
@@ -301,7 +307,7 @@ if __name__ == '__main__':
         #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
         freemocap_data_folder_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
-
+    
     #sessionID = 'session_SER_1_20_22'    
     #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 
@@ -312,10 +318,20 @@ if __name__ == '__main__':
     #good_frame = 276
     good_frame = 81
     debug = True
+    freemocap_data_array_folder_path = freemocap_data_folder_path/session_info['sessionID']/'DataArrays'
 
+    if session_info['skeleton_type'] == 'mediapipe':
+            skeleton_data_path = freemocap_data_array_folder_path/'mediaPipeSkel_3d_smoothed.npy' 
+            skeleton_data = np.load(skeleton_data_path)
+            skeleton_indices = mediapipe_indices
 
+    elif session_info['skeleton_type'] == 'qualisys':
+            skeleton_data_path = freemocap_data_array_folder_path/'qualisysSkel_3d.npy'
+            skeleton_data = np.load(skeleton_data_path)
+            skeleton_indices = qualisys_indices
+       
 
-    align_skeleton_with_origin(session_info, freemocap_data_folder_path, good_frame, debug = True)
+    align_skeleton_with_origin(session_info, freemocap_data_array_folder_path, skeleton_data,skeleton_indices, good_frame, debug = True)
 
 
 f = 2

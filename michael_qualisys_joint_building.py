@@ -14,22 +14,22 @@ qualisys_joints = [
 'left_ear',
 'right_ear',
 'cspine',
-'left_wrist',
-'right_wrist',
 'left_shoulder',
 'right_shoulder',
 'left_elbow',
 'right_elbow',
+'left_wrist',
+'right_wrist',
+'left_hip',
+'right_hip',
 'left_knee',
 'right_knee',
 'left_ankle',
 'right_ankle',
-'left_foot',
-'right_foot',
-'left_hip',
-'right_hip',
 'left_heel',
 'right_heel',
+'left_foot_index',
+'right_foot_index',
 ]
 
 
@@ -117,7 +117,7 @@ else:
     #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
     freemocap_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
-session_ID = 'sesh_jon_treadmill'
+session_ID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 debug = True
 frame_to_use = 2000
 freemocap_data_array_path = freemocap_data_folder_path/session_ID/'DataArrays'
@@ -268,8 +268,8 @@ left_toe_index = qualisys_marker_labels.index('L_Toe')
 left_toe_Y = qualisys_data[frame_to_use,left_toe_index,1]
 left_foot_XYZ[1] = left_toe_Y
 
-left_foot_index = qualisys_joints.index('left_foot')
-right_foot_index = qualisys_joints.index('right_foot')
+left_foot_index = qualisys_joints.index('left_foot_index')
+right_foot_index = qualisys_joints.index('right_foot_index')
 qualisys_joints_array [frame_to_use,left_foot_index,:] = left_foot_XYZ
 qualisys_joints_array [frame_to_use,right_foot_index,:] = right_foot_XYZ
 

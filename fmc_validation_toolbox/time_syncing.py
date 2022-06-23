@@ -20,8 +20,8 @@ from datetime import datetime
 
 from io import BytesIO
 
-from mediapipe_skeleton_builder import mediapipe_indices
-from qualisys_skeleton_builder import qualisys_indices
+from fmc_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices
+from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
 
 from scipy.signal import find_peaks, argrelextrema, savgol_filter
 from scipy.fft import fft, fftfreq
@@ -40,18 +40,28 @@ def get_time_sync_lag(session_one_info, session_two_info, freemocap_data_folder_
 
     sessionID_one = session_one_info['sessionID']
     sessionID_two = session_two_info['sessionID']
-    
+    joint_to_index = 'right_shoulder'
+
     session_one_data_path = freemocap_data_folder_path / sessionID_one / 'DataArrays'/ 'mediapipe_origin_aligned_skeleton_3D.npy'
-    session_two_data_path = freemocap_data_folder_path / sessionID_two / 'DataArrays'/ 'qualisys_origin_aligned_skeleton_3D.npy'
-    #session_two_data_path = freemocap_data_folder_path / sessionID_two / 'DataArrays'/'mediapipe_origin_aligned_skeleton_3D.npy'
-
-
     session_one_mediapipe_data = np.load(session_one_data_path)
-    session_two_mediapipe_data = np.load(session_two_data_path)
+    session_one_index = mediapipe_indices.index(joint_to_index)
 
-    #session_one_mediapipe_data = session_one_mediapipe_data[0:6000, :, :]
+    if session_two_info['skeleton_type'] == 'qualisys':
+        session_two_data_path = freemocap_data_folder_path / sessionID_two / 'DataArrays'/ 'qualisys_origin_aligned_skeleton_3D.npy'
+        session_two_mediapipe_data = np.load(session_two_data_path)
+        session_two_mediapipe_data = session_two_mediapipe_data[0:len(session_two_mediapipe_data):10,:,:]
+        session_two_index = qualisys_indices.index(joint_to_index)
 
-    session_two_mediapipe_data = session_two_mediapipe_data[0:len(session_two_mediapipe_data):10,:,:]
+    elif session_two_info['skeleton_type'] == 'mediapipe':
+        session_two_data_path = freemocap_data_folder_path / sessionID_two / 'DataArrays'/'mediapipe_origin_aligned_skeleton_3D.npy'
+        session_two_mediapipe_data = np.load(session_two_data_path)
+        session_two_index = mediapipe_indices.index(joint_to_index)
+
+
+    #session_one_mediapipe_data = session_one_mediapipe_data[4500:5300, :, :]
+    #session_two_mediapipe_data = session_two_mediapipe_data[4500:5300, :, :]
+    session_one_mediapipe_data = session_one_mediapipe_data[5400:6700,:,:]
+    session_two_mediapipe_data = session_two_mediapipe_data[5400:6700,:,:]
 
     if session_one_mediapipe_data.shape[0] > session_two_mediapipe_data.shape[0]:
         frame_length_to_equalize = session_two_mediapipe_data.shape[0]
@@ -62,11 +72,11 @@ def get_time_sync_lag(session_one_info, session_two_info, freemocap_data_folder_
     else:
         frame_length_to_equalize = session_one_mediapipe_data.shape[0]
 
-    mediapipe_left_shoulder_index = mediapipe_indices.index('right_shoulder')
-    qualisys_left_shoulder_index = qualisys_indices.index('right_shoulder')
 
-    session_one_left_shoulder = session_one_mediapipe_data[0:frame_length_to_equalize,mediapipe_left_shoulder_index,0]
-    session_two_left_shoulder = session_two_mediapipe_data[0:frame_length_to_equalize:,qualisys_left_shoulder_index,0]
+
+    #session_one_left_shoulder = savgol_filter(session_one_mediapipe_data[0:frame_length_to_equalize,mediapipe_left_shoulder_index,0],11,3)
+    session_one_left_shoulder = session_one_mediapipe_data[0:frame_length_to_equalize,session_one_index,0]
+    session_two_left_shoulder = session_two_mediapipe_data[0:frame_length_to_equalize:,session_two_index,0]
 
     #session_one_left_shoulder = session_one_left_shoulder/np.max(session_one_left_shoulder)
     #session_two_left_shoulder = session_two_left_shoulder/np.max(session_two_left_shoulder)
@@ -77,11 +87,11 @@ def get_time_sync_lag(session_one_info, session_two_info, freemocap_data_folder_
     lags = signal.correlation_lags(session_one_left_shoulder.size,session_two_left_shoulder.size, mode="full")
     lag = lags[np.argmax(correlation)]
 
-    max_qual_index = np.where(session_two_left_shoulder == np.max(session_two_left_shoulder))[0][0]
+    #max_qual_index = np.where(session_two_left_shoulder == np.max(session_two_left_shoulder))[0][0]
     #max_qual_index = 8170
 
     matching_range = range(0+lag, frame_length_to_equalize+lag)
-    matching_mp_index = max_qual_index + lag
+    #matching_mp_index = max_qual_index + lag
 
 
     if debug:

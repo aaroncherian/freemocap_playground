@@ -20,8 +20,8 @@ from datetime import datetime
 
 from io import BytesIO
 
-from mediapipe_skeleton_builder import mediapipe_indices
-from qualisys_skeleton_builder import qualisys_indices
+from fmc_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices
+from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
 
 from scipy.signal import find_peaks, argrelextrema, savgol_filter
 from scipy.fft import fft, fftfreq
@@ -60,9 +60,10 @@ session_two_data_path = freemocap_validation_data_path / sessionID_two / 'DataAr
 session_one_medipipe_data = np.load(session_one_data_path)
 session_two_medipipe_data = np.load(session_two_data_path)
 
+joint_to_sync = 'left_ankle'
 
-left_mp_shoulder_index = mediapipe_indices.index('left_shoulder')
-left_qual_shoulder_index = qualisys_indices.index('left_shoulder')
+left_mp_shoulder_index = mediapipe_indices.index('left_ankle')
+left_qual_shoulder_index = qualisys_indices.index('left_ankle')
 
 
 

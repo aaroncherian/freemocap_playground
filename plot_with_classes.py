@@ -48,7 +48,7 @@ class skeleton_COM_Plot:
         #mediapipe_data_path = this_freemocap_data_path/'rotated_mediaPipeSkel_3d_smoothed.npy'
         mediapipe_data_path = this_freemocap_data_path/'mediapipe_origin_aligned_skeleton_3D.npy'
         #mediapipe_data_path = this_freemocap_data_path/'mediapipe_origin_corrected_and_rotated.npy' 
-        mediapipeSkeleton_file_name = this_freemocap_data_path/'origin_aligned_mediapipeSkelcoordinates_frame_segment_joint_XYZ.pkl'
+        mediapipeSkeleton_file_name = this_freemocap_data_path/'origin_aligned_mediapipe_Skelcoordinates_frame_segment_joint_XYZ.pkl'
 
 
         syncedVideoName = sessionID + '_synced_Cam1.mp4'
@@ -358,7 +358,7 @@ class skeleton_COM_Plot:
         
         ax2.set_aspect('equal', adjustable='box')
 
-        #ax3.set_xlim([700,1300])
+        ax3.set_xlim([700,1300])
         #ax3.set_ylim([1000,200])
 
         ax4.set_title('Max/Min Lateral COM Position vs. Time')
@@ -988,15 +988,17 @@ if __name__ == '__main__':
         #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
         freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
     #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0' #name of the sessionID folder
-    #sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
-    sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun'
+    sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
+    #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 
     stance = 'natural'
 
     if stance == 'natural':
         #num_frame_range = range(9500,12000)
-        num_frame_range = range(500,1550) #for BOS
-        num_frame_range = range(0, 1550) #for go pro natural 
+        #num_frame_range = range(500,1600) #for BOS
+        #num_frame_range = range(450, 1300) #for go pro natural 
+        #num_frame_range = range(503,1353) #for webcam natural
+        num_frame_range = range(500,700)
         #num_frame_range = range(4500,6800)
 
     elif stance == 'left_leg':
@@ -1004,8 +1006,9 @@ if __name__ == '__main__':
         num_frame_range = range(5500,6670)
 
     elif stance == 'right_leg':
-        num_frame_range = range(16000,17450)
-        num_frame_range = range(5500,6650)
+        #num_frame_range = range(16000,17450)
+        #num_frame_range = range(5400,6620) #gopro
+        num_frame_range = range(5453,6673)
 
     #num_frame_range = range(10000,10100)
 
@@ -1019,7 +1022,7 @@ if __name__ == '__main__':
     camera_fps = 30
     output_video_fps = 30
     tail_length = 120 #number of frames to keep the COM trajectory tail 
-    num_frame_range = 0
+    #num_frame_range = 0
 
     COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length,stance,static_plot=False)
 
