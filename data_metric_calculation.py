@@ -42,6 +42,10 @@ class pathLengthDataHolder:
         self.path_length = self.calculate_path_length(self.sliced_skeleton_data)
         return self.path_length 
 
+    def get_velocity(self):
+        velocity_data = np.diff(self.sliced_skeleton_data[:,0])
+        return velocity_data
+
 this_computer_name = socket.gethostname()
 print(this_computer_name)
 
@@ -88,10 +92,14 @@ go_pro_COM_path_length_eyesopen_flatground  = go_pro_skeletonCOM_holder.get_path
 webcam_skeletonCOM_holder = pathLengthDataHolder(webcam_data,go_pro_num_frame_range_eyesopen_flatground)
 webcam_COM_path_length_eyesopen_flatground = webcam_skeletonCOM_holder.get_path_length()
 
+webcam_EO_FG_velocity = webcam_skeletonCOM_holder.get_velocity()
+
 print('Eyes Open/Flat Ground:\n', 'GoPro: ', go_pro_COM_path_length_eyesopen_flatground, 'Webcam:', webcam_COM_path_length_eyesopen_flatground)
 
 webcam_skeletonCOM_holder.update_frame_range(webcam_num_frame_range_eyesclosed_flatground)
 webcam_COM_path_length_eyesclosed_flatground = webcam_skeletonCOM_holder.get_path_length()
+
+webcam_EC_FG__velocity = webcam_skeletonCOM_holder.get_velocity()
 
 go_pro_skeletonCOM_holder.update_frame_range(go_pro_num_frame_range_eyesclosed_flatground)
 go_pro_COM_path_length_eyesclosed_flatground = go_pro_skeletonCOM_holder.get_path_length()
@@ -101,6 +109,8 @@ print('Eyes Closed/Flat Ground:\n', 'GoPro: ', go_pro_COM_path_length_eyesclosed
 webcam_skeletonCOM_holder.update_frame_range(webcam_num_frame_range_eyesopen_foam)
 webcam_COM_path_length_eyesopen_foam = webcam_skeletonCOM_holder.get_path_length()
 
+webcam_EO_foam_velocity = webcam_skeletonCOM_holder.get_velocity()
+
 go_pro_skeletonCOM_holder.update_frame_range(go_pro_num_frame_range_eyesopen_foam)
 go_pro_COM_path_length_eyesopen_foam = go_pro_skeletonCOM_holder.get_path_length()
 
@@ -108,6 +118,8 @@ print('Eyes Open/Foam:\n', 'GoPro: ', go_pro_COM_path_length_eyesopen_foam, 'Web
 
 webcam_skeletonCOM_holder.update_frame_range(webcam_num_frame_range_eyesclosed_foam)
 webcam_COM_path_length_eyesclosed_foam = webcam_skeletonCOM_holder.get_path_length()
+
+webcam_EC_foam_velocity = webcam_skeletonCOM_holder.get_velocity()
 
 go_pro_skeletonCOM_holder.update_frame_range(go_pro_num_frame_range_eyesclosed_foam)
 go_pro_COM_path_length_eyesclosed_foam = go_pro_skeletonCOM_holder.get_path_length()
@@ -117,15 +129,42 @@ print('Eyes Closed/Foam:\n', 'GoPro: ', go_pro_COM_path_length_eyesclosed_foam, 
 
 
 figure = plt.figure()
+figure.suptitle('Center of Mass X Velocity Profiles')
 
-ax1 = figure.add_subplot()
+ylimit = 120
+
+ax1 = figure.add_subplot(411)
+ax1.set_title('Eyes Open/Flat Ground')
+ax1.set_ylim(0,ylimit)
+
+ax2 = figure.add_subplot(412)
+ax2.set_title('Eyes Closed/Flat Ground')
+ax2.set_ylim(0,ylimit)
 
 
-webcam_frame_range = range(0,len(webcam_data))
-gopro_frame_range = range(0,len(go_pro_data)+0)
+ax3 = figure.add_subplot(413)
+ax3.set_title('Eyes Open/Foam')
+ax3.set_ylim(0,ylimit)
 
-ax1.plot(np.diff(go_pro_data[:,0]),'b')
-ax1.plot(np.diff(webcam_data[:,0]),'r')
+ax4 = figure.add_subplot(414)
+ax4.set_title('Eyes Closed/Foam')
+ax4.set_ylim(0,ylimit)
+
+hist_range = (-.5,.5)
+num_bins = 100
+alpha_val = .75
+
+ax1.hist(webcam_EO_FG_velocity, bins = num_bins, range = hist_range,label = 'Eyes Open/Flat Ground', alpha = alpha_val)
+ax2.hist(webcam_EC_FG__velocity, bins = num_bins, range = hist_range, label = 'Eyes Closed/Flat Ground',alpha = alpha_val)
+
+ax3.hist(webcam_EO_foam_velocity, bins = num_bins, range = hist_range, label = 'Eyes Open/Foam',alpha = alpha_val)
+ax4.hist(webcam_EC_foam_velocity, bins = num_bins, range = hist_range, label = 'Eyes Closed/Foam',alpha = alpha_val)
+
+# webcam_frame_range = range(0,len(webcam_data))
+# gopro_frame_range = range(0,len(go_pro_data)+0)
+
+# ax1.plot(np.diff(go_pro_data[:,0]),'b')
+# ax1.plot(np.diff(webcam_data[:,0]),'r')
 plt.show()
 
 f = 2

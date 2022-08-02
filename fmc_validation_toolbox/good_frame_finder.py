@@ -17,7 +17,6 @@ import scipy.io as sio
 
 #from fmc_validation_toolbox import mediapipe_skeleton_builder, qualisys_skeleton_builder
 
-from skeleton_data_holder import SkeletonDataHolder
 
 #mediapipe_indices = mediapipe_skeleton_builder.mediapipe_indices
 #qualisys_indices = qualisys_skeleton_builder.qualisys_indices

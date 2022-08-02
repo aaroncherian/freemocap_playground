@@ -42,18 +42,21 @@ else:
 
 #session_one_info = {'sessionID': 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS', 'skeleton_type': 'mediapipe'} #name of the sessionID folder
 #session_two_info = {'sessionID': 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS', 'skeleton_type': 'qualisys'} #name of the sessionID folder
-session_one_info = {'sessionID': 'sesh_2022-05-24_15_55_40_JSM_T1_BOS', 'skeleton_type': 'mediapipe'} #name of the sessionID folder
+session_one_info = {'sessionID': 'sesh_2022-05-24_15_10_49_JSM_T2_slackline', 'skeleton_type': 'mediapipe'} #name of the sessionID folder
+
+session_two_info = {'sessionID': 'qualisys_sesh_2022-05-24_15_10_49_JSM_T2_slackline', 'skeleton_type': 'qualisys'} #name of the sessionID folder
 
 #session_one_info = {'sessionID': 'sesh_2022-05-24_16_10_46_JSM_T1_WalkRun', 'skeleton_type': 'mediapipe'} #name of the sessionID folder
-session_two_info = {'sessionID': 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS', 'skeleton_type': 'qualisys'} #name of the sessionID folder
+#session_two_info = {'sessionID': 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS', 'skeleton_type': 'qualisys'} #name of the sessionID folder
 #session_one_info = {'sessionID': 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun', 'skeleton_type': 'mediapipe'} #name of the sessionID folder
 #session_one_info = {'sessionID':''}
 
-task = 'time_sync_two_sessions'
+#task = 'time_sync_two_sessions'
+#task = 'align_and_calculate_COM'
+task = 'align_skeleton_with_origin'
+#task = 'calculate_COM'
 
-#task = 'align_skeleton_with_origin'
-
-session_task_list = [session_one_info]
+session_task_list = [session_two_info]
 
 for session_info in session_task_list:
 

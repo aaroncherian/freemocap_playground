@@ -1,4 +1,4 @@
-from ast import Return
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -37,104 +37,104 @@ qualisys_joints = [
 ]
 
 
-qualisys_marker_labels = [
-'HeadTop',	
-'HeadFront',
-'HeadLeft',
-'HeadRight',
-'R_AntShoulder',
-'R_PostShoulder',
-'R_Arm',
-'R_LatElbow',
-'R_MedElbow',
-'R_LatHand',
-'R_MedHand',
-'R_Hand',
-'R_Thigh',
-'R_LatKnee',
-'R_MedKnee',
-'R_Shin',
-'R_LatAnkle',
-'R_MedAnkle',
-'R_Heel',
-'R_LatFoot',
-'R_MedFoot',
-'R_Toe',
-'L_AntShoulder',
-'L_PostShoulder',
-'L_LatElbow',
-'L_MedElbow',
-'L_LatHand',
-'L_MedHand',
-'L_Hand',
-'L_Thigh',
-'L_LatKnee',
-'L_MedKnee',
-'L_Shin',
-'L_LatAnkle',
-'L_MedAnkle',
-'L_Heel',
-'L_LatFoot',
-'L_MedFoot',
-'L_Toe',
-'R_Back',
-'L_Back',
-'R_PSIS',
-'L_PSIS',
-'R_ASIS',
-'L_ASIS',
-'Chest']
-
 # qualisys_marker_labels = [
+# 'HeadTop',	
+# 'HeadFront',
 # 'HeadLeft',
-# 'HeadTop',	c3
-# 'HeadRight',	
-# 'HeadFront',	
-# 'L_AntShoulder',	
-# 'L_PostShoulder',	
-# 'L_Arm',	
-# 'L_LatElbow',	
-# 'L_LatHand',	
-# 'L_MedHand',	
-# 'L_Hand',	
-# 'R_AntShoulder',	
-# 'R_PostShoulder',	
-# 'R_Arm',	
-# 'R_LatElbow',	
-# 'R_LatHand',	
-# 'R_MedHand',	
-# 'R_Hand',	
-# 'Chest',
-# 'C7',	
-# 'L_Back',	
-# 'R_Back',	
-# 'L_ASIS',	
-# 'L_PSIS',	
-# 'R_PSIS',	
-# 'R_ASIS',	
-# 'L_Thigh',	
-# 'L_LatKnee',	
-# 'L_Shin',	
-# 'R_Thigh',	
-# 'R_LatKnee',	
-# 'R_Shin',	
-# 'L_MedElbow',	
-# 'R_MedElbow',	
-# 'L_MedKnee',	
-# 'R_MedKnee',	
-# 'L_MedAnkle',	
-# 'R_MedAnkle',	
-# 'L_LatAnkle',	
-# 'L_Heel',	
-# 'L_Toe',	
-# 'L_LatFoot',	
-# 'L_MedFoot',	
-# 'R_Heel',	
-# 'R_LatAnkle',	
-# 'R_Toe',	
-# 'R_LatFoot',	
-# 'R_MedFoot'
-# ]
+# 'HeadRight',
+# 'R_AntShoulder',
+# 'R_PostShoulder',
+# 'R_Arm',
+# 'R_LatElbow',
+# 'R_MedElbow',
+# 'R_LatHand',
+# 'R_MedHand',
+# 'R_Hand',
+# 'R_Thigh',
+# 'R_LatKnee',
+# 'R_MedKnee',
+# 'R_Shin',
+# 'R_LatAnkle',
+# 'R_MedAnkle',
+# 'R_Heel',
+# 'R_LatFoot',
+# 'R_MedFoot',
+# 'R_Toe',
+# 'L_AntShoulder',
+# 'L_PostShoulder',
+# 'L_LatElbow',
+# 'L_MedElbow',
+# 'L_LatHand',
+# 'L_MedHand',
+# 'L_Hand',
+# 'L_Thigh',
+# 'L_LatKnee',
+# 'L_MedKnee',
+# 'L_Shin',
+# 'L_LatAnkle',
+# 'L_MedAnkle',
+# 'L_Heel',
+# 'L_LatFoot',
+# 'L_MedFoot',
+# 'L_Toe',
+# 'R_Back',
+# 'L_Back',
+# 'R_PSIS',
+# 'L_PSIS',
+# 'R_ASIS',
+# 'L_ASIS',
+# 'Chest']
+
+qualisys_marker_labels = [
+'HeadLeft',
+'HeadTop',	
+'HeadRight',	
+'HeadFront',	
+'L_AntShoulder',	
+'L_PostShoulder',	
+'L_Arm',	
+'L_LatElbow',	
+'L_LatHand',	
+'L_MedHand',	
+'L_Hand',	
+'R_AntShoulder',	
+'R_PostShoulder',	
+'R_Arm',	
+'R_LatElbow',	
+'R_LatHand',	
+'R_MedHand',	
+'R_Hand',	
+'Chest',
+'C7',	
+'L_Back',	
+'R_Back',	
+'L_ASIS',	
+'L_PSIS',	
+'R_PSIS',	
+'R_ASIS',	
+'L_Thigh',	
+'L_LatKnee',	
+'L_Shin',	
+'R_Thigh',	
+'R_LatKnee',	
+'R_Shin',	
+'L_MedElbow',	
+'R_MedElbow',	
+'L_MedKnee',	
+'R_MedKnee',	
+'L_MedAnkle',	
+'R_MedAnkle',	
+'L_LatAnkle',	
+'L_Heel',	
+'L_Toe',	
+'L_LatFoot',	
+'L_MedFoot',	
+'R_Heel',	
+'R_LatAnkle',	
+'R_Toe',	
+'R_LatFoot',	
+'R_MedFoot'
+]
 
 
 def set_axes_ranges(plot_ax,skeleton_data,ax_range):
@@ -172,17 +172,16 @@ else:
     #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
     freemocap_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
-session_ID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
+session_ID = 'qualisys_sesh_2022-05-24_15_10_49_JSM_T2_slackline'
 debug = True
 #frame_to_use = 2000
 freemocap_data_array_path = freemocap_data_folder_path/session_ID/'DataArrays'
 
-# qualisys_data_path = freemocap_data_array_path/'mat_data_reshaped.mat'
-# qualisys_mat_file = sio.loadmat(qualisys_data_path)
+qualisys_data_path = freemocap_data_array_path/'qualisys_markers_3d.mat'
+qualisys_mat_file = sio.loadmat(qualisys_data_path)
+qualisys_data = qualisys_mat_file['mat_data_reshaped']
 
-# qualisys_data = qualisys_mat_file['mat_data_reshaped']
-
-qualisys_data = np.load(freemocap_data_array_path/'qualisys_markers_3d.npy')
+#qualisys_data = np.load(freemocap_data_array_path/'qualisys_markers_3d.npy')
 #qualisys_mat = sio.loadmat(freemocap_data_array_path/'qualisys_markers_3d.mat')
 
 #qualisys_data = qualisys_mat['mat_data_reshaped']
@@ -397,7 +396,7 @@ np.save(qualisys_skel_save_path,qualisys_joints_array)
 
 
 if debug:
-        frame_to_plot = 3000
+        frame_to_plot = 2000
         figure = plt.figure()
         ax1 = figure.add_subplot(121,projection = '3d')
         ax2 = figure.add_subplot(122, projection = '3d')
