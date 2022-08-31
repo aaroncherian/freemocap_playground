@@ -18,9 +18,9 @@ from datetime import datetime
 #from fmc_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices
 #from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
 
-#from fmc_validation_toolbox.skeleton_data_holder import SkeletonDataHolder
+from fmc_validation_toolbox.skeleton_data_holder import SkeletonDataHolder
 
-from skeleton_data_holder import SkeletonDataHolder
+#from skeleton_data_holder import SkeletonDataHolder
 import scipy.io as sio
 
 
@@ -87,7 +87,7 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path
     origin = np.array([0, 0, 0])
     x_axis = np.array([1, 0, 0])
     y_axis = np.array([0, 1, 0])
-    z_axis = np.array([0, 0, 1])
+    z_axis = np.array([0, 0, -1])
 
     x_vector = create_vector(origin,x_axis)
     y_vector = create_vector(origin,y_axis)
@@ -132,7 +132,7 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path
 
     #Rotating for +y alignment
 
-    rotation_matrix_to_align_skeleton_with_positive_y = calculate_rotation_matrix(foot_translated_heel_unit_vector,x_vector)
+    rotation_matrix_to_align_skeleton_with_positive_y = calculate_rotation_matrix(foot_translated_heel_unit_vector,-1*x_vector)
 
     y_aligned_skeleton_data = np.zeros(skeleton_data.shape)
 
@@ -183,9 +183,9 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path
 
                 Origin_X,Origin_Y,Origin_Z = zip(origin)
 
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Zvector_X,Zvector_Y,Zvector_Z,arrow_length_ratio=0.1,color='b', label = 'Z-axis')
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Xvector_X,Xvector_Y,Xvector_Z,arrow_length_ratio=0.1,color='r', label = 'X-axis')
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Yvector_X,Yvector_Y,Yvector_Z,arrow_length_ratio=0.1,color='g', label = 'Y-axis')
+                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Zvector_X,Zvector_Y,Zvector_Z,arrow_length_ratio=0.1,color='r', label = 'Z-axis')
+                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Xvector_X,Xvector_Y,Xvector_Z,arrow_length_ratio=0.1,color='g', label = 'X-axis')
+                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Yvector_X,Yvector_Y,Yvector_Z,arrow_length_ratio=0.1,color='b', label = 'Y-axis')
             
             def set_axes_ranges(plot_ax,skeleton_data, ax_range):
 
@@ -250,8 +250,8 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path
 
             plt.show()
     
-    print('Origin aligned skeleton data saved to: ' + str(save_file))
-
+    #print('Origin aligned skeleton data saved to: ' + str(save_file))
+    return spine_aligned_skeleton_data
 
 
 if __name__ == '__main__':
