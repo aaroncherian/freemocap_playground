@@ -28,7 +28,7 @@ else:
 #sessionID = 'sesh_2022-05-12_15_13_02'  
 #sessionID = 'sesh_2022-06-28_12_55_34'
 
-sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
+sessionID = 'sesh_2022-05-24_16_10_46_JSM_T1_WalkRun'
 data_array_folder = 'DataArrays'
 array_name = 'mediaPipeSkel_3d.npy'
 
@@ -39,11 +39,12 @@ order = 4
 data_array_folder_path = freemocap_data_folder_path / sessionID / data_array_folder
 skel3d_raw_data = np.load(data_array_folder_path / array_name)
 
-skel3d_raw_data = skel3d_raw_data[0:6600, :, :]
+#skel3d_raw_data = skel3d_raw_data[0:6600, :, :]
 
 skel_3d_interpolated = skeleton_interpolation.interpolate_skeleton(skel3d_raw_data)
 skel_3d_filtered = skeleton_filtering.filter_skeleton(skel_3d_interpolated,cutoff,sampling_rate,order)
 
+np.save(data_array_folder_path/'mediaPipeSkel_3d_filtered.npy', skel_3d_filtered)
 
 class plotWindow():
     def __init__(self, parent=None):
