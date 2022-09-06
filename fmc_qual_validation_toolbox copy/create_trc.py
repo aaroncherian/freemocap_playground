@@ -65,7 +65,6 @@ def get_trajectory_dataframe(self):
 
 def create_trajectory_trc(skeleton_data_frame, keypoints_names, frame_rate, data_array_folder_path):
     
-
     #Header
     data_rate = camera_rate = orig_data_rate = frame_rate
     num_frames = len(skeleton_data_frame)
