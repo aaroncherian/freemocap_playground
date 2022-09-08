@@ -18,8 +18,6 @@ from datetime import datetime
 #from fmc_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices
 #from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
 
-#from fmc_validation_toolbox.skeleton_data_holder import SkeletonDataHolder
-
 from skeleton_data_holder import SkeletonDataHolder
 import scipy.io as sio
 
@@ -81,13 +79,51 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path
 
     #sessionID = session_info['sessionID']
     skeleton_type_to_plot = session_info['skeleton_type']
+    # this_freemocap_session_path = this_freemocap_folder_path / sessionID
+    # this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
     save_file = this_freemocap_data_array_path/'{}_origin_aligned_skeleton_3D.npy'.format(skeleton_type_to_plot)
+
+    # if skeleton_type_to_plot == 'mediapipe':
+        # #skeleton_data_path = this_freemocap_data_path/'mediapipe_origin_corrected_and_rotated.npy'
+        # skeleton_data_path = this_freemocap_data_array_path/'mediaPipeSkel_3d_smoothed.npy'
+        # right_heel_index = 30
+        # right_toe_index = 32
+        # left_heel_index = 29
+        # left_toe_index = 31
+
+
+        # left_shoulder_index = 11
+        # right_shoulder_index = 12
+
+        # left_hip_index = 23
+        # right_hip_index = 24
+
+        # #num_pose_joints = 33
+
+        # skeleton_data = np.load(skeleton_data_path)
+
+        # skeleton_indices = mediapipe_indices
+
+
+    # elif skeleton_type_to_plot == 'qualisys':
+        # skeleton_data_path = this_freemocap_data_path/'qualisys_skel_3D.mat'
+
+        # skeleton_mat_file = sio.loadmat(skeleton_data_path)
+
+        # skeleton_data = skeleton_mat_file['mat_data_reshaped']
+
+
+        # skeleton_indices = qualisys_indices
+        
+        #f =2 
+
+
 
 
     origin = np.array([0, 0, 0])
     x_axis = np.array([1, 0, 0])
     y_axis = np.array([0, 1, 0])
-    z_axis = np.array([0, 0, -1])
+    z_axis = np.array([0, 0, 1])
 
     x_vector = create_vector(origin,x_axis)
     y_vector = create_vector(origin,y_axis)
@@ -152,7 +188,7 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path
 
     spine_aligned_skeleton_data = np.zeros(skeleton_data.shape)
 
-    rotation_matrix_to_align_spine = calculate_rotation_matrix(y_aligned_spine_unit_vector,y_vector)
+    rotation_matrix_to_align_spine = calculate_rotation_matrix(y_aligned_spine_unit_vector,origin_normal_unit_vector)
 
     for frame in track(range(num_frames)):
         spine_aligned_skeleton_data [frame,:,:] = rotate_skeleton_frame(y_aligned_skeleton_data[frame,:,:],rotation_matrix_to_align_spine)
@@ -169,10 +205,10 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path
 
     if skeleton_type_to_plot == 'qualisys':
         print('saving qualisys aligned data')
-        #np.save(save_file,y_aligned_skeleton_data)
+        np.save(save_file,y_aligned_skeleton_data)
     elif skeleton_type_to_plot == 'mediapipe':  
         print('saving mediapipe aligned data')  
-        #np.save(save_file,spine_aligned_skeleton_data)
+        np.save(save_file,spine_aligned_skeleton_data)
 
 
     if debug:
@@ -183,9 +219,9 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path
 
                 Origin_X,Origin_Y,Origin_Z = zip(origin)
 
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Zvector_X,Zvector_Y,Zvector_Z,arrow_length_ratio=0.1,color='r', label = 'Z-axis')
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Xvector_X,Xvector_Y,Xvector_Z,arrow_length_ratio=0.1,color='g', label = 'X-axis')
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Yvector_X,Yvector_Y,Yvector_Z,arrow_length_ratio=0.1,color='b', label = 'Y-axis')
+                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Zvector_X,Zvector_Y,Zvector_Z,arrow_length_ratio=0.1,color='b', label = 'Z-axis')
+                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Xvector_X,Xvector_Y,Xvector_Z,arrow_length_ratio=0.1,color='r', label = 'X-axis')
+                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Yvector_X,Yvector_Y,Yvector_Z,arrow_length_ratio=0.1,color='g', label = 'Y-axis')
             
             def set_axes_ranges(plot_ax,skeleton_data, ax_range):
 
@@ -220,8 +256,8 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path
 
             ax1.set_title('Original Skeleton')
             ax2.set_title('Skeleton Translated to Origin')
-            ax3.set_title('Skeleton Rotated to Make +Z Forwards')
-            ax4.set_title('Skeleton Rotated to Make +Y Up')
+            ax3.set_title('Skeleton Rotated to Make +Z Up')
+            ax4.set_title('Skeleton Rotated to Make +Y Forwards')
 
             ax_range = 1800
 
@@ -250,8 +286,8 @@ def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path
 
             plt.show()
     
-    #print('Origin aligned skeleton data saved to: ' + str(save_file))
-    return spine_aligned_skeleton_data
+    print('Origin aligned skeleton data saved to: ' + str(save_file))
+
 
 
 if __name__ == '__main__':
@@ -278,7 +314,7 @@ if __name__ == '__main__':
     #sessionID = 'sesh_2022-05-12_15_13_02' #name of the sessionID folder
     #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
     #skeleton_to_plot = 'mediapipe' #for a future situation where we want to rotate openpose/dlc skeletons 
-    session_info = {'sessionID': 'sesh_2022-05-24_15_55_40_JSM_T1_BOS', 'skeleton_type': 'mediapipe'}
+    session_info = {'sessionID': 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH', 'skeleton_type': 'mediapipe'}
     #good_frame = 276
     good_frame = 81
     debug = True
