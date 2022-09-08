@@ -18,9 +18,9 @@ from datetime import datetime
 #from fmc_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices
 #from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
 
-from fmc_validation_toolbox.skeleton_data_holder import SkeletonDataHolder
+#from fmc_validation_toolbox.skeleton_data_holder import SkeletonDataHolder
 
-#from skeleton_data_holder import SkeletonDataHolder
+from skeleton_data_holder import SkeletonDataHolder
 import scipy.io as sio
 
 

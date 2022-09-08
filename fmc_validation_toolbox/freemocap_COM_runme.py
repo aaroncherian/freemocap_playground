@@ -13,22 +13,16 @@ from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices, b
 
 
 
-def run(session_info, freemocap_data_array_path, skeleton_data):
+def run(skeleton_data,freemocap_data_array_path):
 
-    sessionID = session_info['sessionID']
-    skeleton_type = session_info['skeleton_type']
 
-    #data_array_name = '{}_origin_aligned_skeleton_3D.npy'.format(skeleton_type)
+
 
     num_frames = skeleton_data.shape[0]
     num_frame_range = range(num_frames)
-    #creating paths to the session and data
-    #this_freemocap_session_path = freemocap_data_folder_path / sessionID
-    #this_freemocap_data_path = this_freemocap_session_path/'DataArrays'
-    #data_array_path = this_freemocap_data_path/data_array_name
 
 
-    skeleton_file_path = freemocap_data_array_path/'origin_aligned_{}_Skelcoordinates_frame_segment_joint_XYZ.pkl'.format(skeleton_type)
+    skeleton_file_path = freemocap_data_array_path/'origin_aligned_Skelcoordinates_frame_segment_joint_XYZ.pkl'
     segmentCOM_data_path = freemocap_data_array_path/'origin_aligned_segmentedCOM_frame_joint_XYZ.npy'
     totalBodyCOM_data_path = freemocap_data_array_path/'origin_aligned_totalBodyCOM_frame_XYZ.npy'
 
