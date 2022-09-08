@@ -14,6 +14,36 @@ def create_vector(point1,point2):
     vector = point2 - point1
     return vector
 
+def calculate_unit_vector(vector): 
+    """Take in a vector, make it a unit vector"""
+    unit_vector = vector/np.linalg.norm(vector)
+    return unit_vector
+
+def calculate_shoulder_center_XYZ_coordinates(single_frame_skeleton_data,left_shoulder_index,right_shoulder_index ):
+    """Take in the left and right shoulder indices, and calculate the shoulder center point"""
+    left_shoulder_point = single_frame_skeleton_data[left_shoulder_index,:]
+    right_shoulder_point = single_frame_skeleton_data[right_shoulder_index,:]
+    shoulder_center_XYZ_coordinates = (left_shoulder_point + right_shoulder_point)/2
+    
+    return shoulder_center_XYZ_coordinates
+
+
+def calculate_mid_hip_XYZ_coordinates(single_frame_skeleton_data,left_hip_index,right_hip_index):
+    """Take in the left and right hip indices, and calculate the mid hip point"""
+    left_hip_point = single_frame_skeleton_data[left_hip_index,:]
+    right_hip_point = single_frame_skeleton_data[right_hip_index,:]
+    mid_hip_XYZ_coordinates = (left_hip_point + right_hip_point)/2
+
+    return mid_hip_XYZ_coordinates
+
+def calculate_mid_foot_XYZ_coordinate(single_frame_skeleton_data,left_heel_index,right_heel_index,):
+    """Take in the primary and secondary foot indices, and calculate the mid foot point"""
+    right_foot_point = single_frame_skeleton_data[right_heel_index,:]
+    left_foot_point = single_frame_skeleton_data[left_heel_index,:]
+    mid_foot_XYZ_coordinates = (right_foot_point + left_foot_point)/2
+
+    return mid_foot_XYZ_coordinates
+
 def calculate_translation_distance(skeleton_point_coordinate):
     """Take a skeleton point coordinate and calculate its distance to the origin"""
 
@@ -63,6 +93,94 @@ def rotate_skeleton_frame(this_frame_aligned_skeleton_data, rotation_matrix):
     return this_frame_rotated_skeleton
 
 
+def plot_all_skeletons(raw_skeleton_data,origin_translated_skeleton_data,y_aligned_skeleton_data,spine_aligned_skeleton_data, good_frame):
+
+    def plot_origin_vectors(plot_ax,x_vector,y_vector,z_vector,origin):
+        Zvector_X,Zvector_Y,Zvector_Z = zip(z_vector*800)
+        Xvector_X,Xvector_Y,Xvector_Z = zip(x_vector*800)
+        Yvector_X,Yvector_Y,Yvector_Z = zip(y_vector*800)
+
+        Origin_X,Origin_Y,Origin_Z = zip(origin)
+
+        plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Xvector_X,Xvector_Y,Xvector_Z,arrow_length_ratio=0.1,color='r', label = 'X-axis')
+        plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Yvector_X,Yvector_Y,Yvector_Z,arrow_length_ratio=0.1,color='g', label = 'Y-axis')
+        plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Zvector_X,Zvector_Y,Zvector_Z,arrow_length_ratio=0.1,color='b', label = 'Z-axis')            
+    
+    def set_axes_ranges(plot_ax,skeleton_data, ax_range):
+
+        mx = np.nanmean(skeleton_data[:,0])
+        my = np.nanmean(skeleton_data[:,1])
+        mz = np.nanmean(skeleton_data[:,2])
+    
+        plot_ax.set_xlim(mx-ax_range,mx+ax_range)
+        plot_ax.set_ylim(my-ax_range,my+ax_range)
+        plot_ax.set_zlim(mz-ax_range,mz+ax_range)        
+
+    def plot_spine_unit_vector(plot_ax,skeleton_mid_hip_XYZ,skeleton_spine_unit_vector):
+
+        skeleton_spine_unit_x, skeleton_spine_unit_y, skeleton_spine_unit_z = zip(skeleton_spine_unit_vector*800)
+
+        plot_ax.quiver(skeleton_mid_hip_XYZ[0],skeleton_mid_hip_XYZ[1],skeleton_mid_hip_XYZ[2], skeleton_spine_unit_x,skeleton_spine_unit_y,skeleton_spine_unit_z,arrow_length_ratio=0.1,color='pink')
+
+    def plot_heel_unit_vector(plot_ax,skeleton_heel_unit_vector, heel_vector_origin_XYZ):
+
+        origin_heel_x, origin_heel_y, origin_heel_z = zip(heel_vector_origin_XYZ)
+        skeleton_heel_unit_x, skeleton_heel_unit_y, skeleton_heel_unit_z = zip(skeleton_heel_unit_vector*500)
+
+        plot_ax.quiver(origin_heel_x,origin_heel_y,origin_heel_z, skeleton_heel_unit_x,skeleton_heel_unit_y,skeleton_heel_unit_z,arrow_length_ratio=0.1,color='orange')
+
+    def plot_vectors_for_skeleton(plot_ax,skeleton_data_holder):
+        heel_unit_vector = skeleton_data_holder.heel_unit_vector
+        heel_vector_origin = skeleton_data_holder.heel_vector_origin
+        mid_hip_XYZ = skeleton_data_holder.mid_hip_XYZ
+        spine_unit_vector = skeleton_data_holder.spine_unit_vector
+
+        plot_heel_unit_vector(plot_ax,heel_unit_vector,heel_vector_origin)
+        plot_spine_unit_vector(plot_ax,mid_hip_XYZ,spine_unit_vector)
+
+    origin = np.array([0, 0, 0])
+    x_axis = np.array([1, 0, 0])
+    y_axis = np.array([0, 1, 0])
+    z_axis = np.array([0, 0, 1])
+
+    x_vector = create_vector(origin,x_axis)
+    y_vector = create_vector(origin,y_axis)
+    z_vector = create_vector(origin,z_axis)
+    figure = plt.figure()
+
+    ax1 = figure.add_subplot(221,projection = '3d')
+    ax2 = figure.add_subplot(222,projection = '3d')
+    ax3 = figure.add_subplot(223,projection = '3d')
+    ax4 = figure.add_subplot(224,projection = '3d')
+
+    axes_list = [ax1,ax2,ax3,ax4]
+
+    ax1.set_title('Original Skeleton')
+    ax2.set_title('Skeleton Translated to Origin')
+    ax3.set_title('Skeleton Rotated to Make +Y Forwards')
+    ax4.set_title('Skeleton Rotated to Make +Z Up')
+
+    raw_skeleton_holder = SkeletonDataHolder(raw_skeleton_data,mediapipe_indices,good_frame)
+    origin_translated_skeleton_holder = SkeletonDataHolder(origin_translated_skeleton_data,mediapipe_indices,good_frame)
+    y_aligned_skeleton_holder = SkeletonDataHolder(y_aligned_skeleton_data,mediapipe_indices,good_frame)
+    spine_aligned_skeleton_holder = SkeletonDataHolder(spine_aligned_skeleton_data,mediapipe_indices,good_frame)
+
+    skeleton_holder_list = [raw_skeleton_holder, origin_translated_skeleton_holder, y_aligned_skeleton_holder,spine_aligned_skeleton_holder]
+
+    ax_range = 1800
+    for ax,skeleton_data_holder in zip(axes_list,skeleton_holder_list):
+        set_axes_ranges(ax,skeleton_data_holder.good_frame_skeleton_data,ax_range)
+        plot_origin_vectors(ax,x_vector,y_vector,z_vector,origin)
+        ax.scatter(skeleton_data_holder.good_frame_skeleton_data[:,0], skeleton_data_holder.good_frame_skeleton_data[:,1], skeleton_data_holder.good_frame_skeleton_data[:,2], c = 'r')
+        plot_vectors_for_skeleton(ax,skeleton_data_holder)
+
+    ax3.legend()
+    ax4.legend()
+
+    plt.show()
+
+
+
 def align_skeleton_with_origin( skeleton_data, skeleton_indices, good_frame, debug = False):
 
     """
@@ -79,7 +197,15 @@ def align_skeleton_with_origin( skeleton_data, skeleton_indices, good_frame, deb
     Output:
         spine aligned skeleton data: a 3d numpy array of the origin aligned data in freemocap format 
     """
+    left_shoulder_index = skeleton_indices.index('left_shoulder')
+    right_shoulder_index = skeleton_indices.index('right_shoulder')
 
+    left_hip_index = skeleton_indices.index('left_hip')
+    right_hip_index = skeleton_indices.index('right_hip')
+
+    left_heel_index = skeleton_indices.index('left_heel')
+    right_heel_index = skeleton_indices.index('right_heel')
+    
     origin = np.array([0, 0, 0])
     x_axis = np.array([1, 0, 0])
     y_axis = np.array([0, 1, 0])
@@ -89,143 +215,51 @@ def align_skeleton_with_origin( skeleton_data, skeleton_indices, good_frame, deb
     y_vector = create_vector(origin,y_axis)
     z_vector = create_vector(origin,z_axis)
 
-    origin_normal_unit_vector = z_vector  #note - this is kinda unncessary because the origin normal unit vector == original normal vector 
-
+ 
     num_frames = skeleton_data.shape[0]
-
-    #Put the raw, unaligned skeleton data in the SkeletonDataHolder class 
-    raw_skeleton_holder = SkeletonDataHolder(skeleton_data, skeleton_indices, good_frame)
-
     ## Translate the raw data such that the midpoint of the hips is over the origin 
-    raw_mid_hip_XYZ = raw_skeleton_holder.mid_hip_XYZ #hip midpoint of the raw data 
+    raw_mid_hip_XYZ = calculate_mid_hip_XYZ_coordinates(skeleton_data[good_frame,:,:], left_hip_index,right_hip_index)
     mid_hip_translation_distance = calculate_translation_distance(raw_mid_hip_XYZ) #get distance between hip midpoint and origin
 
     hip_translated_skeleton_data = np.zeros(skeleton_data.shape)
     for frame in track(range(num_frames)):
         hip_translated_skeleton_data[frame,:,:] = translate_skeleton_frame(skeleton_data[frame,:,:],mid_hip_translation_distance) #translate the skeleton data for each frame  
-    hip_translated_skeleton_holder = SkeletonDataHolder(hip_translated_skeleton_data, skeleton_indices, good_frame)
+
     
     ## Now translate the data upwards, such that the midpoint between the two feet is at the origin 
-    hip_translated_mid_foot_XYZ = hip_translated_skeleton_holder.mid_foot_XYZ
+    hip_translated_mid_foot_XYZ = calculate_mid_foot_XYZ_coordinate(hip_translated_skeleton_data[good_frame,:,:],left_heel_index, right_heel_index)
     mid_foot_translated_distance = calculate_translation_distance(hip_translated_mid_foot_XYZ)
 
     foot_translated_skeleton_data = np.zeros(skeleton_data.shape)
     for frame in track (range(num_frames)):
         foot_translated_skeleton_data[frame,:,:] = translate_skeleton_frame(hip_translated_skeleton_data[frame,:,:],mid_foot_translated_distance)
-    foot_translated_skeleton_holder = SkeletonDataHolder(foot_translated_skeleton_data, skeleton_indices, good_frame)
 
     # Rotate the skeleton to face the +y direction
-    foot_translated_heel_unit_vector = foot_translated_skeleton_holder.heel_unit_vector
+    heel_vector_origin = foot_translated_skeleton_data[good_frame,right_heel_index,:]
+    heel_vector = create_vector(heel_vector_origin ,foot_translated_skeleton_data[good_frame,left_heel_index,:])
+
+    foot_translated_heel_unit_vector = calculate_unit_vector(heel_vector)
     rotation_matrix_to_align_skeleton_with_positive_y = calculate_rotation_matrix(foot_translated_heel_unit_vector,-1*x_vector)
 
     y_aligned_skeleton_data = np.zeros(skeleton_data.shape)
     for frame in track(range(num_frames)):
         y_aligned_skeleton_data [frame,:,:] = rotate_skeleton_frame(foot_translated_skeleton_data[frame,:,:],rotation_matrix_to_align_skeleton_with_positive_y)
-    y_aligned_skeleton_holder = SkeletonDataHolder(y_aligned_skeleton_data, skeleton_indices, good_frame)
-  
+
     #Rotating the skeleton so that the spine is aligned with +z
-    y_aligned_spine_unit_vector = y_aligned_skeleton_holder.spine_unit_vector
-    rotation_matrix_to_align_spine = calculate_rotation_matrix(y_aligned_spine_unit_vector,origin_normal_unit_vector)
+    y_aligned_mid_hip_XYZ = calculate_mid_hip_XYZ_coordinates(y_aligned_skeleton_data[good_frame,:,:],left_hip_index,right_hip_index)
+    y_aligned_mid_shoulder_XYZ = calculate_shoulder_center_XYZ_coordinates(y_aligned_skeleton_data[good_frame,:,:], left_shoulder_index, right_shoulder_index)
+    y_aligned_spine_vector = create_vector(y_aligned_mid_hip_XYZ,y_aligned_mid_shoulder_XYZ)
+    y_aligned_spine_unit_vector = calculate_unit_vector(y_aligned_spine_vector)
+
+    rotation_matrix_to_align_spine = calculate_rotation_matrix(y_aligned_spine_unit_vector,z_vector)
 
     spine_aligned_skeleton_data = np.zeros(skeleton_data.shape)
     for frame in track(range(num_frames)):
         spine_aligned_skeleton_data [frame,:,:] = rotate_skeleton_frame(y_aligned_skeleton_data[frame,:,:],rotation_matrix_to_align_spine)
-    spine_aligned_skeleton_holder = SkeletonDataHolder(spine_aligned_skeleton_data, skeleton_indices, good_frame)
-
 
     if debug:
-            def plot_origin_vectors(plot_ax,x_vector,y_vector,z_vector,origin):
-                Zvector_X,Zvector_Y,Zvector_Z = zip(origin_normal_unit_vector*800)
-                Xvector_X,Xvector_Y,Xvector_Z = zip(x_vector*800)
-                Yvector_X,Yvector_Y,Yvector_Z = zip(y_vector*800)
-
-                Origin_X,Origin_Y,Origin_Z = zip(origin)
-
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Xvector_X,Xvector_Y,Xvector_Z,arrow_length_ratio=0.1,color='r', label = 'X-axis')
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Yvector_X,Yvector_Y,Yvector_Z,arrow_length_ratio=0.1,color='g', label = 'Y-axis')
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Zvector_X,Zvector_Y,Zvector_Z,arrow_length_ratio=0.1,color='b', label = 'Z-axis')            
-            
-            def set_axes_ranges(plot_ax,skeleton_data, ax_range):
-
-                mx = np.nanmean(skeleton_data[:,0])
-                my = np.nanmean(skeleton_data[:,1])
-                mz = np.nanmean(skeleton_data[:,2])
-            
-                plot_ax.set_xlim(mx-ax_range,mx+ax_range)
-                plot_ax.set_ylim(my-ax_range,my+ax_range)
-                plot_ax.set_zlim(mz-ax_range,mz+ax_range)        
-
-            def plot_spine_unit_vector(plot_ax,skeleton_data,skeleton_mid_hip_XYZ,skeleton_spine_unit_vector):
-
-                skeleton_spine_unit_x, skeleton_spine_unit_y, skeleton_spine_unit_z = zip(skeleton_spine_unit_vector*800)
-
-                plot_ax.quiver(skeleton_mid_hip_XYZ[0],skeleton_mid_hip_XYZ[1],skeleton_mid_hip_XYZ[2], skeleton_spine_unit_x,skeleton_spine_unit_y,skeleton_spine_unit_z,arrow_length_ratio=0.1,color='pink')
-
-            def plot_heel_unit_vector(plot_ax,skeleton_heel_unit_vector, heel_vector_origin_XYZ):
-
-                origin_heel_x, origin_heel_y, origin_heel_z = zip(heel_vector_origin_XYZ)
-                skeleton_heel_unit_x, skeleton_heel_unit_y, skeleton_heel_unit_z = zip(skeleton_heel_unit_vector*500)
-
-                plot_ax.quiver(origin_heel_x,origin_heel_y,origin_heel_z, skeleton_heel_unit_x,skeleton_heel_unit_y,skeleton_heel_unit_z,arrow_length_ratio=0.1,color='orange')
-
-            
-            figure = plt.figure()
-            ax1 = figure.add_subplot(221,projection = '3d')
-            ax2 = figure.add_subplot(222,projection = '3d')
-            ax3 = figure.add_subplot(223,projection = '3d')
-            ax4 = figure.add_subplot(224,projection = '3d')
-
-            axes_list = [ax1,ax2,ax3,ax4]
-
-            ax1.set_title('Original Skeleton')
-            ax2.set_title('Skeleton Translated to Origin')
-            ax3.set_title('Skeleton Rotated to Make +Y Forwards')
-            ax4.set_title('Skeleton Rotated to Make +Z Up')
-
-      
-
-            #grab the skeleton data for each plot for the frame we are plotting
-            raw_good_frame_skeleton_data = raw_skeleton_holder.good_frame_skeleton_data
-            foot_translated_good_frame_skeleton_data = foot_translated_skeleton_holder.good_frame_skeleton_data
-            y_aligned_good_frame_skeleton_data = y_aligned_skeleton_holder.good_frame_skeleton_data
-            spine_aligned_good_frame_skeleton_data = spine_aligned_skeleton_holder.good_frame_skeleton_data 
-            good_frame_data_arrays_list = [raw_good_frame_skeleton_data,foot_translated_good_frame_skeleton_data, y_aligned_good_frame_skeleton_data, spine_aligned_good_frame_skeleton_data]
-            
-            ax_range = 1800
-            for ax,skeleton_data_array in zip(axes_list,good_frame_data_arrays_list):
-                set_axes_ranges(ax,skeleton_data_array,ax_range)
-                plot_origin_vectors(ax,x_vector,y_vector,z_vector,origin)
-                ax.scatter(skeleton_data_array[:,0], skeleton_data_array[:,1], skeleton_data_array[:,2], c = 'r')
-
-            ##Plot the spine vector on ax1
-            # raw_spine_unit_vector = raw_skeleton_holder.spine_unit_vector
-            # plot_spine_unit_vector(ax1,raw_good_frame_skeleton_data,raw_mid_hip_XYZ,raw_spine_unit_vector)
-
-            #Plot the heel vector on ax2    
-            foot_translated_heel_vector_origin = foot_translated_skeleton_holder.heel_vector_origin
-            plot_heel_unit_vector(ax2,foot_translated_heel_unit_vector,foot_translated_heel_vector_origin)
-
-            #Plot the spine and heel vectors on ax3
-            y_aligned_heel_unit_vector = y_aligned_skeleton_holder.heel_unit_vector
-            y_aligned_heel_vector_origin = y_aligned_skeleton_holder.heel_vector_origin
-            y_aligned_mid_hip_XYZ = y_aligned_skeleton_holder.mid_hip_XYZ
-            plot_heel_unit_vector(ax3,y_aligned_heel_unit_vector,y_aligned_heel_vector_origin)
-            plot_spine_unit_vector(ax3,y_aligned_good_frame_skeleton_data,y_aligned_mid_hip_XYZ,y_aligned_spine_unit_vector)
-
-
-            #Plot the spine and heel vectors on ax4
-            spine_aligned_mid_hip_XYZ = spine_aligned_skeleton_holder.mid_hip_XYZ
-            spine_aligned_spine_unit_vector = spine_aligned_skeleton_holder.spine_unit_vector
-            spine_aligned_heel_unit_vector = spine_aligned_skeleton_holder.heel_unit_vector
-            spine_aligned_heel_vector_origin = spine_aligned_skeleton_holder.heel_vector_origin
-            plot_heel_unit_vector(ax4,spine_aligned_heel_unit_vector,spine_aligned_heel_vector_origin)
-            plot_spine_unit_vector(ax4,spine_aligned_good_frame_skeleton_data,spine_aligned_mid_hip_XYZ,spine_aligned_spine_unit_vector)
-
-            ax3.legend()
-            ax4.legend()
-
-            plt.show()
-    
+        plot_all_skeletons(skeleton_data,foot_translated_skeleton_data,y_aligned_skeleton_data,spine_aligned_skeleton_data,good_frame)
+   
     return spine_aligned_skeleton_data
 
 
