@@ -181,7 +181,7 @@ def plot_all_skeletons(raw_skeleton_data,origin_translated_skeleton_data,y_align
 
 
 
-def align_skeleton_with_origin( skeleton_data, skeleton_indices, good_frame, debug = False):
+def align_skeleton_with_origin(skeleton_data, skeleton_indices, good_frame, debug = False):
 
     """
     Takes in freemocap skeleton data and translates the skeleton to the origin, and then rotates the data 
