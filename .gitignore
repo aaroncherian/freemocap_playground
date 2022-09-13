@@ -1,3 +1,4 @@
 
 .vscode/launch.json
 desktop.ini
+**/__pycache__
