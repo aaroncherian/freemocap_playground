@@ -117,7 +117,7 @@ def build_mediapipe_skeleton(mediapipe_pose_data,segment_dataframe, mediapipe_in
                                                                 trunk_virtual_markers[1]
                                                                 ]
             elif segment == 'left_hand' or segment == 'right_hand':
-                proximal_joint_hand = segment_info['Joint Connection'][0]
+                proximal_joint_hand = segment_info['Joint_Connection'][0]
                 if segment == 'left_hand':
                     distal_joint_hand = 'left_index'
                 else:
@@ -137,14 +137,14 @@ def build_mediapipe_skeleton(mediapipe_pose_data,segment_dataframe, mediapipe_in
                 
                 proximal_joint_foot_index = mediapipe_indices.index(proximal_joint_foot_name)
 
-                distal_joint_foot = segment_info['Joint Connection'][1]
+                distal_joint_foot = segment_info['Joint_Connection'][1]
                 distal_joint_foot_index = mediapipe_indices.index(distal_joint_foot)
                 mediapipe_pose_skeleton_coordinates[segment] = [mediapipe_pose_data[frame,proximal_joint_foot_index, :],
                                                                 mediapipe_pose_data[frame, distal_joint_foot_index,:]]            
 
             else:
-                proximal_joint_name = segment_info['Joint Connection'][0] 
-                distal_joint_name = segment_info['Joint Connection'][1]
+                proximal_joint_name = segment_info['Joint_Connection'][0] 
+                distal_joint_name = segment_info['Joint_Connection'][1]
 
             #get the mediapipe index for the proximal and distal joint for this segment
                 proximal_joint_index = mediapipe_indices.index(proximal_joint_name)

@@ -12,7 +12,7 @@ def calculate_segment_COM(segment_conn_len_perc_dataframe,skelcoordinates_frame_
             #for mediapipe
             this_segment_proximal = this_segment_XYZ[0]
             this_segment_distal = this_segment_XYZ[1]
-            this_segment_COM_length = segment_info['Segment COM Length']
+            this_segment_COM_length = segment_info['Segment_COM_Length']
 
             this_segment_COM = this_segment_proximal + this_segment_COM_length*(this_segment_distal-this_segment_proximal)
             segment_COM_dict[segment] = this_segment_COM
@@ -32,7 +32,7 @@ def calculate_segment_COM_for_qualisys(segment_conn_len_perc_dataframe,skelcoord
             else:
                 this_segment_proximal = this_segment_XYZ[0]
                 this_segment_distal = this_segment_XYZ[1]
-                this_segment_COM_length = segment_info['Segment COM Length']
+                this_segment_COM_length = segment_info['Segment_COM_Length']
 
                 this_segment_COM = this_segment_proximal + this_segment_COM_length*(this_segment_distal-this_segment_proximal)
                 segment_COM_dict[segment] = this_segment_COM
@@ -63,7 +63,7 @@ def calculate_total_body_COM(segment_conn_len_perc_dataframe,segment_COM_frame_d
         for segment, segment_info in segment_conn_len_perc_dataframe.iterrows():
 
             this_segment_COM = this_frame_skeleton[segment]
-            this_segment_COM_percentage = segment_info['Segment COM Percentage']
+            this_segment_COM_percentage = segment_info['Segment_COM_Percentage']
 
             this_segment_total_body_percentage = this_segment_COM * this_segment_COM_percentage
             this_frame_total_body_percentages.append(this_segment_total_body_percentage)
