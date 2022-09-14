@@ -1,16 +1,16 @@
 import pandas as pd
+import numpy as np
 
-from anthropometry_data_tables import segments, joint_connections, segment_COM_lengths, segment_COM_percentages
 from mediapipe_skeleton_builder import mediapipe_indices, build_mediapipe_skeleton
 from COM_calculator import calculate_segment_COM, reformat_segment_COM, calculate_total_body_COM
 
-def build_anthropometric_dataframe(segments,joint_connections,segment_COM_lengths,segment_COM_percentages):
+def build_anthropometric_dataframe(segments:list,joint_connections:list,segment_COM_lengths:list,segment_COM_percentages:list):
     #load anthropometric data into a pandas dataframe
     df = pd.DataFrame(list(zip(segments,joint_connections,segment_COM_lengths,segment_COM_percentages)),columns = ['Segment_Name','Joint_Connection','Segment_COM_Length','Segment_COM_Percentage'])
     segment_conn_len_perc_dataframe = df.set_index('Segment_Name')
     return segment_conn_len_perc_dataframe
 
-def run(freemocap_marker_data_array, pose_estimation_skeleton:list, anthropometric_info_dataframe):
+def run(freemocap_marker_data_array:np.ndarray, pose_estimation_skeleton:list, anthropometric_info_dataframe:pd.DataFrame):
 
     num_frames = freemocap_marker_data_array.shape[0]
     num_frame_range = range(num_frames)
@@ -24,7 +24,9 @@ def run(freemocap_marker_data_array, pose_estimation_skeleton:list, anthropometr
 
 if __name__ == '__main__':
     from pathlib import Path
-    import numpy as np 
+    import numpy as np
+     
+    from anthropometry_data_tables import segments, joint_connections, segment_COM_lengths, segment_COM_percentages
 
     freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
 
