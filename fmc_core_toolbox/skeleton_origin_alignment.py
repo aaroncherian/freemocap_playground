@@ -242,7 +242,6 @@ def align_skeleton_with_origin(skeleton_data, skeleton_indices, good_frame, debu
     right_heel_index = skeleton_indices.index('right_heel')
     
     origin = np.array([0, 0, 0])
-    
     x_axis = np.array([1, 0, 0])
     y_axis = np.array([0, 1, 0])
     z_axis = np.array([0, 0, 1])
