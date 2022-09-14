@@ -16,15 +16,15 @@ def butter_lowpass_filter(data, cutoff, sampling_rate, order):
     return y
 
 
-def filter_skeleton(skeleton_3d_data, cutoff, sampling_rate, order):
+def filter_freemocap_data(freemocap_marker_data:np.ndarray, cutoff:float, sampling_rate:int, order:int):
     """ Take in a 3d skeleton numpy array and run a low pass butterworth filter on each marker in the data"""
-    num_frames = skeleton_3d_data.shape[0]
-    num_markers = skeleton_3d_data.shape[1]
+    num_frames = freemocap_marker_data.shape[0]
+    num_markers = freemocap_marker_data.shape[1]
     filtered_data = np.empty((num_frames,num_markers,3))
 
     for marker in range(num_markers):
         for x in range(3):
-            filtered_data[:,marker,x] = butter_lowpass_filter(skeleton_3d_data[:,marker,x],cutoff,sampling_rate,order)
+            filtered_data[:,marker,x] = butter_lowpass_filter(freemocap_marker_data[:,marker,x],cutoff,sampling_rate,order)
 
     
     return filtered_data
@@ -45,13 +45,13 @@ if __name__ == '__main__':
     array_name = 'skel_3d_interpolated.npy'
 
     data_array_folder_path = freemocap_data_folder_path / sessionID / data_array_folder
-    skel3d_data = np.load(data_array_folder_path / array_name)
+    freemocap_marker_data = np.load(data_array_folder_path / array_name)
 
     
     sampling_rate = 30
     cutoff = 1
     order = 4
 
-    filtered_data = filter_skeleton(skel3d_data,cutoff,sampling_rate,order)
+    filtered_data = filter_freemocap_data(freemocap_marker_data,cutoff,sampling_rate,order)
     f = 2
 

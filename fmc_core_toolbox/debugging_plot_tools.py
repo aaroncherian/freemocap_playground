@@ -4,7 +4,6 @@ import socket
 
 from pathlib import Path
 
-from requests import session
 import scipy.io as sio
 
 def set_axes_ranges(plot_ax,skeleton_data,ax_range):
