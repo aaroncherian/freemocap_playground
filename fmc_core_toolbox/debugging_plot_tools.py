@@ -16,15 +16,15 @@ def plot_all_skeletons(raw_skeleton_data,origin_translated_skeleton_data,y_align
         return vector
 
     def plot_origin_vectors(plot_ax,x_vector,y_vector,z_vector,origin):
-        Zvector_X,Zvector_Y,Zvector_Z = zip(z_vector*800)
-        Xvector_X,Xvector_Y,Xvector_Z = zip(x_vector*800)
-        Yvector_X,Yvector_Y,Yvector_Z = zip(y_vector*800)
+        zvector_X,zvector_Y,zvector_Z = zip(z_vector*800)
+        xvector_X,xvector_Y,xvector_Z = zip(x_vector*800)
+        yvector_X,yvector_Y,yvector_Z = zip(y_vector*800)
 
-        Origin_X,Origin_Y,Origin_Z = zip(origin)
+        origin_X,origin_Y,origin_Z = zip(origin)
 
-        plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Xvector_X,Xvector_Y,Xvector_Z,arrow_length_ratio=0.1,color='r', label = 'X-axis')
-        plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Yvector_X,Yvector_Y,Yvector_Z,arrow_length_ratio=0.1,color='g', label = 'Y-axis')
-        plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Zvector_X,Zvector_Y,Zvector_Z,arrow_length_ratio=0.1,color='b', label = 'Z-axis')            
+        plot_ax.quiver(origin_X,origin_Y,origin_Z,xvector_X,xvector_Y,xvector_Z,arrow_length_ratio=0.1,color='r', label = 'X-axis')
+        plot_ax.quiver(origin_X,origin_Y,origin_Z,yvector_X,yvector_Y,yvector_Z,arrow_length_ratio=0.1,color='g', label = 'Y-axis')
+        plot_ax.quiver(origin_X,origin_Y,origin_Z,zvector_X,zvector_Y,zvector_Z,arrow_length_ratio=0.1,color='b', label = 'Z-axis')            
     
     def set_axes_ranges(plot_ax,skeleton_data, ax_range):
 
@@ -75,8 +75,8 @@ def plot_all_skeletons(raw_skeleton_data,origin_translated_skeleton_data,y_align
 
     axes_list = [ax1,ax2,ax3,ax4]
 
-    ax1.set_title('Original Skeleton')
-    ax2.set_title('Skeleton Translated to Origin')
+    ax1.set_title('original Skeleton')
+    ax2.set_title('Skeleton Translated to origin')
     ax3.set_title('Skeleton Rotated to Make +Y Forwards')
     ax4.set_title('Skeleton Rotated to Make +Z Up')
 
