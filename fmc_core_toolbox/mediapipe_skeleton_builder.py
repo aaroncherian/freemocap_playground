@@ -77,7 +77,7 @@ def build_virtual_trunk_marker(freemocap_data,list_of_indices, trunk_joint_conne
     
  
 
-def build_mediapipe_skeleton(mediapipe_pose_data,segment_dataframe, mediapipe_indices):
+def build_mediapipe_skeleton(mediapipe_pose_data,segment_dataframe, mediapipe_indices) -> list:
     """ This function takes in the mediapipe pose data array and the segment_conn_len_perc_dataframe. 
         For each frame of data, it loops through each segment we want to find and identifies the names
         of the proximal and distal joints of that segment. Then it searches the mediapipe_indices list

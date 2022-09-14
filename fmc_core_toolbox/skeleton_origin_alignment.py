@@ -61,7 +61,7 @@ def translate_skeleton_to_origin(point_to_translate, original_skeleton_data):
 
     translated_skeleton_data = np.zeros(original_skeleton_data.shape)
 
-    for frame in track (range(num_frames)):
+    for frame in track (range(num_frames), description = 'Translating Skeleton'):
         translated_skeleton_data[frame,:,:] = translate_skeleton_frame(skeleton_data[frame,:,:],point_to_translate)
 
     return translated_skeleton_data
@@ -101,7 +101,7 @@ def rotate_skeleton_frame(this_frame_aligned_skeleton_data, rotation_matrix):
 
     return this_frame_rotated_skeleton
 
-def rotate_skeleton_to_vector(reference_vector, vector_to_rotate_to, original_skeleton_np_array):
+def rotate_skeleton_to_vector(reference_vector:np.ndarray, vector_to_rotate_to:np.ndarray, original_skeleton_np_array:np.ndarray) -> np.ndarray:
     """ 
     Find the rotation matrix needed to rotate the 'reference vector' to match the 'vector_to_rotate_to', and 
     rotate the entire skeleton with that matrix.
@@ -120,7 +120,7 @@ def rotate_skeleton_to_vector(reference_vector, vector_to_rotate_to, original_sk
     rotation_matrix = calculate_rotation_matrix(reference_unit_vector, vector_to_rotate_to)
 
     rotated_skeleton_data_array = np.zeros(skeleton_data.shape)
-    for frame in track(range(num_frames)):
+    for frame in track(range(num_frames), description = 'Rotating Skeleton'):
         rotated_skeleton_data_array [frame,:,:] = rotate_skeleton_frame(original_skeleton_np_array[frame,:,:],rotation_matrix)
 
     return rotated_skeleton_data_array
@@ -130,7 +130,7 @@ def rotate_skeleton_to_vector(reference_vector, vector_to_rotate_to, original_sk
 
 
 
-def align_skeleton_with_origin(skeleton_data:np.ndarray, skeleton_indices:list, good_frame:int):
+def align_skeleton_with_origin(skeleton_data:np.ndarray, skeleton_indices:list, good_frame:int) -> np.ndarray:
 
     """
     Takes in freemocap skeleton data and translates the skeleton to the origin, and then rotates the data 

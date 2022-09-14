@@ -14,7 +14,7 @@ def butter_lowpass_filter(data:np.ndarray, cutoff:float, sampling_rate:int, orde
     return y
 
 
-def filter_freemocap_data(freemocap_marker_data:np.ndarray, cutoff:float, sampling_rate:int, order:int):
+def filter_freemocap_data(freemocap_marker_data:np.ndarray, cutoff:float, sampling_rate:int, order:int) -> np.ndarray:
     """ Take in a 3d skeleton numpy array and run a low pass butterworth filter on each marker in the data"""
     num_frames = freemocap_marker_data.shape[0]
     num_markers = freemocap_marker_data.shape[1]
