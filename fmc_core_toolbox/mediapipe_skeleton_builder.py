@@ -1,4 +1,5 @@
 from rich.progress import track 
+
 mediapipe_indices = [
     'nose',
     'left_eye_inner',
@@ -42,6 +43,40 @@ def slice_mediapipe_data(mediapipe_full_skeleton_data, num_pose_joints):
 
     return mediapipe_pose_data
 
+
+def return_indices_of_joints(list_of_indices, list_of_joint_names):
+
+    indices = []
+    for name in list_of_joint_names:
+        this_name_index = list_of_indices.index(name)
+        indices.append(this_name_index)
+    
+    return indices
+
+def return_XYZ_coordinates_of_markers(freemocap_data, indices_list,frame):
+
+        XYZ_coordinates = []
+        for index in indices_list:
+            this_joint_coordinate = freemocap_data[frame,index,:]
+            XYZ_coordinates.append(this_joint_coordinate)
+
+        return XYZ_coordinates
+
+    
+def build_virtual_trunk_marker(freemocap_data,list_of_indices, trunk_joint_connection,frame):
+        trunk_marker_indices = return_indices_of_joints(list_of_indices, trunk_joint_connection)
+
+        trunk_XYZ_coordinates = return_XYZ_coordinates_of_markers(freemocap_data,trunk_marker_indices,frame)
+
+        trunk_proximal = (trunk_XYZ_coordinates[0] + trunk_XYZ_coordinates[1])/2
+        trunk_distal = (trunk_XYZ_coordinates[2] + trunk_XYZ_coordinates[3])/2
+
+        return trunk_proximal, trunk_distal
+
+
+    
+ 
+
 def build_mediapipe_skeleton(mediapipe_pose_data,segment_dataframe, mediapipe_indices):
     """ This function takes in the mediapipe pose data array and the segment_conn_len_perc_dataframe. 
         For each frame of data, it loops through each segment we want to find and identifies the names
@@ -52,63 +87,17 @@ def build_mediapipe_skeleton(mediapipe_pose_data,segment_dataframe, mediapipe_in
         And then that dictionary gets saved to a list for each frame. By the end of the function, you 
         have a list that contains the skeleton segment XYZ coordinates for each frame."""
 
-    def build_mediapipe_virtual_markers(mediapipe_indices,frame):
-        def mediapipe_index_finder(list_of_joint_names):
-
-            indices = []
-            for name in list_of_joint_names:
-                this_name_index = mediapipe_indices.index(name)
-                indices.append(this_name_index)
-            
-            return indices
-        
-        def mediapipe_XYZ_finder(indices_list):
-
-                XYZ_coordinates = []
-                for index in indices_list:
-                    this_joint_coordinate = mediapipe_pose_data[frame,index,:]
-                    XYZ_coordinates.append(this_joint_coordinate)
-
-                return XYZ_coordinates
-
-            
-        def build_virtual_trunk_marker(trunk_joint_connection,mediapipe_indices):
-                trunk_indices = mediapipe_index_finder(trunk_joint_connection)
-
-                trunk_XYZ_coordinates = mediapipe_XYZ_finder(trunk_indices)
-
-                trunk_proximal = (trunk_XYZ_coordinates[0] + trunk_XYZ_coordinates[1])/2
-                trunk_distal = (trunk_XYZ_coordinates[2] + trunk_XYZ_coordinates[3])/2
-
-                return trunk_proximal, trunk_distal
-        
-        def build_virtual_foot_marker(foot_joint_connection, mediapipe_indices):
-                foot_indices = mediapipe_index_finder(foot_joint_connection)
-
-                foot_XYZ_coordinates = mediapipe_XYZ_finder(foot_indices)
-
-                foot_virtual_marker = (foot_XYZ_coordinates[0] + foot_XYZ_coordinates[1])/2
-
-                return foot_virtual_marker
-
-        trunk_joint_connection = ['left_shoulder', 'right_shoulder', 'left_hip', 'right_hip']
-
-        left_foot_joint_connection = ['left_heel','left_ankle']
-        right_foot_joint_connection = ['right_heel','right_ankle']
-
-        trunk_virtual_markers = build_virtual_trunk_marker(trunk_joint_connection,mediapipe_indices)
-        left_foot_virtual_marker = build_virtual_foot_marker(left_foot_joint_connection,mediapipe_indices)
-        right_foot_virtual_marker = build_virtual_foot_marker(right_foot_joint_connection,mediapipe_indices)
-    
-        return trunk_virtual_markers, left_foot_virtual_marker, right_foot_virtual_marker
 
     num_frames = mediapipe_pose_data.shape[0]
     num_frame_range = range(num_frames)
 
     mediapipe_frame_segment_joint_XYZ = [] #empty list to hold all the skeleton XYZ coordinates/frame
-    for frame in track(num_frame_range, description= 'Building a MediaPipe Skeleton'): #NOTE: need to change frame_range to numFrames 2/09/2022 - AC
 
-        trunk_virtual_markers, left_foot_virtual_marker, right_foot_virtual_marker = build_mediapipe_virtual_markers(mediapipe_indices,frame)
+    
+    for frame in track(num_frame_range, description= 'Building a MediaPipe Skeleton'): 
+
+        trunk_joint_connection = ['left_shoulder', 'right_shoulder', 'left_hip', 'right_hip']
+        trunk_virtual_markers = build_virtual_trunk_marker(mediapipe_pose_data, mediapipe_indices, trunk_joint_connection,frame)    
 
         mediapipe_pose_skeleton_coordinates = {}
         for segment,segment_info in segment_dataframe.iterrows(): #iterate through the data frame by the segment name and all the info for that segment
