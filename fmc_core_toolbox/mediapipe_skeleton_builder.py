@@ -42,7 +42,7 @@ def slice_mediapipe_data(mediapipe_full_skeleton_data, num_pose_joints):
 
     return mediapipe_pose_data
 
-def build_mediapipe_skeleton(mediapipe_pose_data,segment_dataframe, mediapipe_indices, num_frame_range):
+def build_mediapipe_skeleton(mediapipe_pose_data,segment_dataframe, mediapipe_indices):
     """ This function takes in the mediapipe pose data array and the segment_conn_len_perc_dataframe. 
         For each frame of data, it loops through each segment we want to find and identifies the names
         of the proximal and distal joints of that segment. Then it searches the mediapipe_indices list
@@ -102,6 +102,8 @@ def build_mediapipe_skeleton(mediapipe_pose_data,segment_dataframe, mediapipe_in
     
         return trunk_virtual_markers, left_foot_virtual_marker, right_foot_virtual_marker
 
+    num_frames = mediapipe_pose_data.shape[0]
+    num_frame_range = range(num_frames)
 
     mediapipe_frame_segment_joint_XYZ = [] #empty list to hold all the skeleton XYZ coordinates/frame
     for frame in track(num_frame_range, description= 'Building a MediaPipe Skeleton'): #NOTE: need to change frame_range to numFrames 2/09/2022 - AC
