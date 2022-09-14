@@ -242,6 +242,7 @@ def align_skeleton_with_origin(skeleton_data, skeleton_indices, good_frame, debu
     right_heel_index = skeleton_indices.index('right_heel')
     
     origin = np.array([0, 0, 0])
+    
     x_axis = np.array([1, 0, 0])
     y_axis = np.array([0, 1, 0])
     z_axis = np.array([0, 0, 1])
@@ -250,9 +251,7 @@ def align_skeleton_with_origin(skeleton_data, skeleton_indices, good_frame, debu
     y_vector = create_vector(origin,y_axis)
     z_vector = create_vector(origin,z_axis)
 
- 
-    num_frames = skeleton_data.shape[0]
-  
+
     ## Translate the data such that the midpoint between the two feet is at the origin 
     hip_translated_mid_foot_XYZ = calculate_mid_foot_XYZ_coordinate(skeleton_data[good_frame,:,:],left_heel_index, right_heel_index)
     foot_translated_skeleton_data = translate_skeleton_to_origin(hip_translated_mid_foot_XYZ,skeleton_data)
