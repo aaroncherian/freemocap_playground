@@ -130,7 +130,7 @@ def rotate_skeleton_to_vector(reference_vector, vector_to_rotate_to, original_sk
 
 
 
-def align_skeleton_with_origin(skeleton_data, skeleton_indices, good_frame):
+def align_skeleton_with_origin(skeleton_data:np.ndarray, skeleton_indices:list, good_frame:int):
 
     """
     Takes in freemocap skeleton data and translates the skeleton to the origin, and then rotates the data 
