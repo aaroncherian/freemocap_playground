@@ -10,9 +10,9 @@ def build_anthropometric_dataframe(segments,joint_connections,segment_COM_length
     segment_conn_len_perc_dataframe = df.set_index('Segment_Name')
     return segment_conn_len_perc_dataframe
 
-def run(skeleton_data, pose_estimation_skeleton, anthropometric_info_dataframe):
+def run(freemocap_marker_data_array, pose_estimation_skeleton:list, anthropometric_info_dataframe):
 
-    num_frames = skeleton_data.shape[0]
+    num_frames = freemocap_marker_data_array.shape[0]
     num_frame_range = range(num_frames)
     num_segments = len(anthropometric_info_dataframe)
 
@@ -32,11 +32,11 @@ if __name__ == '__main__':
     sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0' #name of the sessionID folder
 
     data_array_path = freemocap_data_folder_path/sessionID/'DataArrays'
-    skeleton_data = np.load(data_array_path/'mediaPipeSkel_3d_smoothed.npy')
+    freemocap_marker_data_array = np.load(data_array_path/'mediaPipeSkel_3d_smoothed.npy')
 
     anthropometric_info_dataframe = build_anthropometric_dataframe(segments,joint_connections,segment_COM_lengths,segment_COM_percentages)
-    skelcoordinates_frame_segment_joint_XYZ = build_mediapipe_skeleton(skeleton_data,anthropometric_info_dataframe,mediapipe_indices)
-    segment_COM_frame_dict,segment_COM_frame_imgPoint_XYZ,totalBodyCOM_frame_XYZ = run(skeleton_data,skelcoordinates_frame_segment_joint_XYZ, anthropometric_info_dataframe) 
+    skelcoordinates_frame_segment_joint_XYZ = build_mediapipe_skeleton(freemocap_marker_data_array,anthropometric_info_dataframe,mediapipe_indices)
+    segment_COM_frame_dict,segment_COM_frame_imgPoint_XYZ,totalBodyCOM_frame_XYZ = run(freemocap_marker_data_array,skelcoordinates_frame_segment_joint_XYZ, anthropometric_info_dataframe) 
 
 
 f = 2
