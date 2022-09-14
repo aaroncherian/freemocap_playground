@@ -1,3 +1,9 @@
+#values for segment weight and segment mass percentages taken from Winter anthropometry tables
+#https://imgur.com/a/aD74j
+#Winter, D.A. (2005) Biomechanics and Motor Control of Human Movement. 3rd Edition, John Wiley & Sons, Inc., Hoboken.
+
+
+
 segments = [
 'head',
 'trunk',
