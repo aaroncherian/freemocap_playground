@@ -44,11 +44,11 @@ def calculate_mid_foot_XYZ_coordinate(single_frame_skeleton_data,left_heel_index
 
     return mid_foot_XYZ_coordinates
 
-def calculate_translation_distance(skeleton_point_coordinate):
-    """Take a skeleton point coordinate and calculate its distance to the origin"""
+# def calculate_translation_distance(skeleton_point_coordinate):
+#     """Take a skeleton point coordinate and calculate its distance to the origin"""
 
-    translation_distance = skeleton_point_coordinate - [0,0,0]
-    return translation_distance 
+#     translation_distance = skeleton_point_coordinate - [0,0,0]
+#     return translation_distance 
 
 
 def translate_skeleton_frame(rotated_skeleton_data_frame, translation_distance):
@@ -56,6 +56,16 @@ def translate_skeleton_frame(rotated_skeleton_data_frame, translation_distance):
 
     translated_skeleton_frame = rotated_skeleton_data_frame - translation_distance
     return translated_skeleton_frame
+
+def translate_skeleton_to_origin(point_to_translate, original_skeleton_data):
+    num_frames = skeleton_data.shape[0]
+
+    translated_skeleton_data = np.zeros(original_skeleton_data.shape)
+
+    for frame in track (range(num_frames)):
+        translated_skeleton_data[frame,:,:] = translate_skeleton_frame(skeleton_data[frame,:,:],point_to_translate)
+
+    return translated_skeleton_data
 
 def calculate_skewed_symmetric_cross_product(cross_product_vector):
     #needed in the calculate_rotation_matrix function 
@@ -91,6 +101,31 @@ def rotate_skeleton_frame(this_frame_aligned_skeleton_data, rotation_matrix):
         this_frame_rotated_skeleton[i,:] = rotate_point(this_frame_aligned_skeleton_data[i,:],rotation_matrix)
 
     return this_frame_rotated_skeleton
+
+def rotate_skeleton_to_vector(reference_vector, vector_to_rotate_to, original_skeleton_np_array):
+    """ 
+    Find the rotation matrix needed to rotate the 'reference vector' to match the 'vector_to_rotate_to', and 
+    rotate the entire skeleton with that matrix.
+
+        Input: 
+            Reference Vector: The vector on the skeleton that you want to rotate/base the rotation matrix on 
+            Vector_to_rotate_to: The vector that you want to align the skeleton too (i.e. the x-axis/y-axis etc.)
+            Original skeleton data: The freemocap data you want to rotate
+        Output:
+            rotated_skeleton_data: A numpy data array of your rotated skeleton
+
+    """
+
+    num_frames = original_skeleton_np_array.shape[0]
+    reference_unit_vector = calculate_unit_vector(reference_vector)
+    rotation_matrix = calculate_rotation_matrix(reference_unit_vector, vector_to_rotate_to)
+
+    rotated_skeleton_data_array = np.zeros(skeleton_data.shape)
+    for frame in track(range(num_frames)):
+        rotated_skeleton_data_array [frame,:,:] = rotate_skeleton_frame(original_skeleton_np_array[frame,:,:],rotation_matrix)
+
+    return rotated_skeleton_data_array
+
 
 
 def plot_all_skeletons(raw_skeleton_data,origin_translated_skeleton_data,y_aligned_skeleton_data,spine_aligned_skeleton_data, good_frame):
@@ -217,45 +252,25 @@ def align_skeleton_with_origin(skeleton_data, skeleton_indices, good_frame, debu
 
  
     num_frames = skeleton_data.shape[0]
-    ## Translate the raw data such that the midpoint of the hips is over the origin 
-    raw_mid_hip_XYZ = calculate_mid_hip_XYZ_coordinates(skeleton_data[good_frame,:,:], left_hip_index,right_hip_index)
-    mid_hip_translation_distance = calculate_translation_distance(raw_mid_hip_XYZ) #get distance between hip midpoint and origin
-
-    hip_translated_skeleton_data = np.zeros(skeleton_data.shape)
-    for frame in track(range(num_frames)):
-        hip_translated_skeleton_data[frame,:,:] = translate_skeleton_frame(skeleton_data[frame,:,:],mid_hip_translation_distance) #translate the skeleton data for each frame  
-
-    
-    ## Now translate the data upwards, such that the midpoint between the two feet is at the origin 
-    hip_translated_mid_foot_XYZ = calculate_mid_foot_XYZ_coordinate(hip_translated_skeleton_data[good_frame,:,:],left_heel_index, right_heel_index)
-    mid_foot_translated_distance = calculate_translation_distance(hip_translated_mid_foot_XYZ)
-
-    foot_translated_skeleton_data = np.zeros(skeleton_data.shape)
-    for frame in track (range(num_frames)):
-        foot_translated_skeleton_data[frame,:,:] = translate_skeleton_frame(hip_translated_skeleton_data[frame,:,:],mid_foot_translated_distance)
+  
+    ## Translate the data such that the midpoint between the two feet is at the origin 
+    hip_translated_mid_foot_XYZ = calculate_mid_foot_XYZ_coordinate(skeleton_data[good_frame,:,:],left_heel_index, right_heel_index)
+    foot_translated_skeleton_data = translate_skeleton_to_origin(hip_translated_mid_foot_XYZ,skeleton_data)
 
     # Rotate the skeleton to face the +y direction
     heel_vector_origin = foot_translated_skeleton_data[good_frame,right_heel_index,:]
     heel_vector = create_vector(heel_vector_origin ,foot_translated_skeleton_data[good_frame,left_heel_index,:])
 
-    foot_translated_heel_unit_vector = calculate_unit_vector(heel_vector)
-    rotation_matrix_to_align_skeleton_with_positive_y = calculate_rotation_matrix(foot_translated_heel_unit_vector,-1*x_vector)
 
-    y_aligned_skeleton_data = np.zeros(skeleton_data.shape)
-    for frame in track(range(num_frames)):
-        y_aligned_skeleton_data [frame,:,:] = rotate_skeleton_frame(foot_translated_skeleton_data[frame,:,:],rotation_matrix_to_align_skeleton_with_positive_y)
+    y_aligned_skeleton_data = rotate_skeleton_to_vector(heel_vector,-1*x_vector,foot_translated_skeleton_data)
 
     #Rotating the skeleton so that the spine is aligned with +z
     y_aligned_mid_hip_XYZ = calculate_mid_hip_XYZ_coordinates(y_aligned_skeleton_data[good_frame,:,:],left_hip_index,right_hip_index)
     y_aligned_mid_shoulder_XYZ = calculate_shoulder_center_XYZ_coordinates(y_aligned_skeleton_data[good_frame,:,:], left_shoulder_index, right_shoulder_index)
+    
     y_aligned_spine_vector = create_vector(y_aligned_mid_hip_XYZ,y_aligned_mid_shoulder_XYZ)
-    y_aligned_spine_unit_vector = calculate_unit_vector(y_aligned_spine_vector)
-
-    rotation_matrix_to_align_spine = calculate_rotation_matrix(y_aligned_spine_unit_vector,z_vector)
-
-    spine_aligned_skeleton_data = np.zeros(skeleton_data.shape)
-    for frame in track(range(num_frames)):
-        spine_aligned_skeleton_data [frame,:,:] = rotate_skeleton_frame(y_aligned_skeleton_data[frame,:,:],rotation_matrix_to_align_spine)
+    
+    spine_aligned_skeleton_data = rotate_skeleton_to_vector(y_aligned_spine_vector,z_vector,y_aligned_skeleton_data)
 
     if debug:
         plot_all_skeletons(skeleton_data,foot_translated_skeleton_data,y_aligned_skeleton_data,spine_aligned_skeleton_data,good_frame)
