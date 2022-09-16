@@ -57,7 +57,7 @@ def translate_skeleton_frame(rotated_skeleton_data_frame, translation_distance):
     return translated_skeleton_frame
 
 def translate_skeleton_to_origin(point_to_translate, original_skeleton_data):
-    num_frames = skeleton_data.shape[0]
+    num_frames = original_skeleton_data.shape[0]
 
     translated_skeleton_data = np.zeros(original_skeleton_data.shape)
 
@@ -119,7 +119,7 @@ def rotate_skeleton_to_vector(reference_vector:np.ndarray, vector_to_rotate_to:n
     reference_unit_vector = calculate_unit_vector(reference_vector)
     rotation_matrix = calculate_rotation_matrix(reference_unit_vector, vector_to_rotate_to)
 
-    rotated_skeleton_data_array = np.zeros(skeleton_data.shape)
+    rotated_skeleton_data_array = np.zeros(original_skeleton_np_array.shape)
     for frame in track(range(num_frames), description = 'Rotating Skeleton'):
         rotated_skeleton_data_array [frame,:,:] = rotate_skeleton_frame(original_skeleton_np_array[frame,:,:],rotation_matrix)
 
@@ -193,11 +193,11 @@ if __name__ == '__main__':
     from pathlib import Path
     from debugging_plot_tools import plot_all_skeletons 
 
-    freemocap_data_folder_path = Path(r'D:\freemocap2022\FreeMocap_Data')
-    sessionID = 'sesh_2022-05-09_12_20_23'
+    freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
+    sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
 
     freemocap_data_array_folder_path = freemocap_data_folder_path/sessionID/'DataArrays'
-    skeleton_data_path = freemocap_data_array_folder_path/'mediaPipeSkel_3d_smoothed.npy' 
+    skeleton_data_path = freemocap_data_array_folder_path/'mediaPipeSkel_3d_filtered.npy' 
 
     skeleton_data = np.load(skeleton_data_path)
     skeleton_indices = mediapipe_indices
