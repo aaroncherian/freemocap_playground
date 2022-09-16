@@ -40,7 +40,7 @@ class skeleton_data_holder:
          
     def load_skeleton_XYZ_data(self, path_to_data_array_folder, skeleton_type):
 
-        skeleton_XYZ_file_name = '{}_origin_aligned_skeleton_3D.npy'.format(skeleton_type)
+        skeleton_XYZ_file_name = 'mediaPipeSkel_3d_origin_aligned.npy'.format(skeleton_type)
         skeleton_XYZ_data = np.load(path_to_data_array_folder/skeleton_XYZ_file_name)
 
         return skeleton_XYZ_data
@@ -102,8 +102,10 @@ class video_loader:
         return video_frames_to_plot    
 
     def create_synced_vid_path(self,path_to_freemocap_data_folder,sessionID):
-        synced_video_name = sessionID + '_annotated_video_1.mp4'
-        synced_vid_path = path_to_freemocap_data_folder/sessionID/'Annotated_Videos'/synced_video_name
+        #synced_video_name = sessionID + '_annotated_video_1.mp4'
+        #synced_vid_path = path_to_freemocap_data_folder/sessionID/'Annotated_Videos'/synced_video_name
+        synced_video_name = sessionID + '_synced_Cam1.mp4'
+        synced_vid_path = path_to_freemocap_data_folder/sessionID/'SyncedVideos'/synced_video_name
         return synced_vid_path
 
     def load_video_capture_object(self,synced_vid_path):
@@ -550,9 +552,9 @@ if __name__ == '__main__':
     #sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
     #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 
-    session_one_info = {'sessionID':'sesh_2022-05-24_15_55_40_JSM_T1_BOS','skeleton_type':'mediapipe'}
-
-    #session_one_info = {'sessionID':'sesh_2022-05-24_16_10_46_JSM_T1_WalkRun','skeleton_type':'mediapipe'}
+    #session_one_info = {'sessionID':'sesh_2022-05-24_15_55_40_JSM_T1_BOS','skeleton_type':'mediapipe'}
+    
+    session_one_info = {'sessionID':'sesh_2022-06-28_13_08_48','skeleton_type':'mediapipe'}
     #session_two_info = {'sessionID':'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun','skeleton_type':'qualisys'}
 
     stance = 'natural'
@@ -582,7 +584,7 @@ if __name__ == '__main__':
 
         #num_frame_range = range(4500,6800)
         
-        mediapipe_num_frame_range = range(0,500)
+        mediapipe_num_frame_range = range(0,300)
         
 
 
