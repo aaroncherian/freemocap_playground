@@ -40,28 +40,28 @@ class skeleton_data_holder:
          
     def load_skeleton_XYZ_data(self, path_to_data_array_folder, skeleton_type):
 
-        skeleton_XYZ_file_name = '{}_origin_aligned_skeleton_3D.npy'.format(skeleton_type)
+        skeleton_XYZ_file_name = 'mediaPipeSkel_3d_origin_aligned.npy'.format(skeleton_type)
         skeleton_XYZ_data = np.load(path_to_data_array_folder/skeleton_XYZ_file_name)
 
         return skeleton_XYZ_data
     
     def load_total_body_COM_XYZ_data(self,path_to_data_array_folder):
 
-        total_body_COM_file_name = 'origin_aligned_totalBodyCOM_frame_XYZ.npy'
+        total_body_COM_file_name = 'totalBodyCOM_frame_XYZ.npy'
         total_body_COM_data = np.load(path_to_data_array_folder/total_body_COM_file_name)
 
         return total_body_COM_data
     
     def load_segment_COM_XYZ_data(self,path_to_data_array_folder):
 
-        segment_COM_file_name = 'origin_aligned_segmentedCOM_frame_joint_XYZ.npy'
+        segment_COM_file_name = 'segmentedCOM_frame_joint_XYZ.npy'
         segment_COM_XYZ_data = np.load(path_to_data_array_folder/segment_COM_file_name)
 
         return segment_COM_XYZ_data
 
     def load_skeleton_connections_data(self, path_to_data_array_folder,skeleton_type):
 
-        skeleton_connections_file_name = 'origin_aligned_{}_Skelcoordinates_frame_segment_joint_XYZ.pkl'.format(skeleton_type)
+        skeleton_connections_file_name = 'mediapipe_skeleton_segments_dict.pkl'.format(skeleton_type)
     
         open_file = open(path_to_data_array_folder/skeleton_connections_file_name, "rb")
         skel_connections_XYZ = pickle.load(open_file)
@@ -102,8 +102,10 @@ class video_loader:
         return video_frames_to_plot    
 
     def create_synced_vid_path(self,path_to_freemocap_data_folder,sessionID):
-        synced_video_name = sessionID + '_annotated_video_1.mp4'
-        synced_vid_path = path_to_freemocap_data_folder/sessionID/'Annotated_Videos'/synced_video_name
+        #synced_video_name = sessionID + '_annotated_video_1.mp4'
+        #synced_vid_path = path_to_freemocap_data_folder/sessionID/'Annotated_Videos'/synced_video_name
+        synced_video_name = sessionID + '_synced_Cam1.mp4'
+        synced_vid_path = path_to_freemocap_data_folder/sessionID/'SyncedVideos'/synced_video_name
         return synced_vid_path
 
     def load_video_capture_object(self,synced_vid_path):
@@ -215,7 +217,7 @@ class COM_plot_creator:
         print('Starting Frame Animation') 
         ani = FuncAnimation(figure, self.animate, frames= freemocap_plotting_data.num_frames_to_plot, interval=.1, repeat=False, fargs = (video_frames_to_plot,), init_func= self.animation_init)
         writervideo = animation.FFMpegWriter(fps=output_video_fps)
-        ani.save(freemocap_session_path/'qualysis_{}.mp4'.format(self.stance), writer=writervideo)
+        ani.save(freemocap_session_path/'medaipipe_testing_{}.mp4'.format(self.stance), writer=writervideo)
         print('Animation has been saved to {}'.format(freemocap_session_path))
         f=2
 
@@ -544,19 +546,16 @@ if __name__ == '__main__':
     if this_computer_name == 'DESKTOP-F5LCT4Q':
         #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
         #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
-         path_to_freemocap_data_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
+        #path_to_freemocap_data_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
+        path_to_freemocap_data_folder = Path(r'D:\freemocap2022\FreeMocap_Data')
 
     #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0' #name of the sessionID folder
     #sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
     #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 
-<<<<<<< Updated upstream
-    session_one_info = {'sessionID':'sesh_2022-05-24_15_10_49_JSM_T2_slackline','skeleton_type':'mediapipe'}
-=======
-    session_one_info = {'sessionID':'sesh_2022-09-19_09_42_11','skeleton_type':'mediapipe'}
->>>>>>> Stashed changes
-
-    #session_one_info = {'sessionID':'sesh_2022-05-24_16_10_46_JSM_T1_WalkRun','skeleton_type':'mediapipe'}
+    #session_one_info = {'sessionID':'sesh_2022-05-24_15_55_40_JSM_T1_BOS','skeleton_type':'mediapipe'}
+    
+    session_one_info = {'sessionID':'sesh_2022-09-19_13_56_34','skeleton_type':'mediapipe'}
     #session_two_info = {'sessionID':'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun','skeleton_type':'qualisys'}
 
     stance = 'natural'
@@ -586,11 +585,9 @@ if __name__ == '__main__':
 
         #num_frame_range = range(4500,6800)
         
-<<<<<<< Updated upstream
-        mediapipe_num_frame_range = range(0,7136)
-=======
-        mediapipe_num_frame_range = range(0,1171)
->>>>>>> Stashed changes
+        #mediapipe_num_frame_range = range(0,1171)
+        mediapipe_num_frame_range = range(0,1621)
+        
         
 
 
