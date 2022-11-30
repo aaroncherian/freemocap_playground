@@ -555,7 +555,7 @@ if __name__ == '__main__':
 
     #session_one_info = {'sessionID':'sesh_2022-05-24_15_55_40_JSM_T1_BOS','skeleton_type':'mediapipe'}
     
-    session_one_info = {'sessionID':'sesh_2022-09-19_13_56_34','skeleton_type':'mediapipe'}
+    session_one_info = {'sessionID':'sesh_2022-09-29_17_29_310','skeleton_type':'mediapipe'}
     #session_two_info = {'sessionID':'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun','skeleton_type':'qualisys'}
 
     stance = 'natural'
@@ -586,7 +586,7 @@ if __name__ == '__main__':
         #num_frame_range = range(4500,6800)
         
         #mediapipe_num_frame_range = range(0,1171)
-        mediapipe_num_frame_range = range(0,1621)
+        mediapipe_num_frame_range = range(0,1200)
         
         
 

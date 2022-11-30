@@ -62,7 +62,7 @@ def translate_skeleton_to_origin(point_to_translate, original_skeleton_data):
     translated_skeleton_data = np.zeros(original_skeleton_data.shape)
 
     for frame in track (range(num_frames), description = 'Translating Skeleton'):
-        translated_skeleton_data[frame,:,:] = translate_skeleton_frame(skeleton_data[frame,:,:],point_to_translate)
+        translated_skeleton_data[frame,:,:] = translate_skeleton_frame(original_skeleton_data[frame,:,:],point_to_translate)
 
     return translated_skeleton_data
 

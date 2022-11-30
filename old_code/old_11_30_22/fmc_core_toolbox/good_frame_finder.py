@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
     freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
 
-    sessionID = 'sesh_2022-05-24_16_10_46_JSM_T1_WalkRun'
+    sessionID = 'sesh_2022-09-21_15_11_23'
 
     freemocap_data_array_folder_path = freemocap_data_folder_path/ sessionID /'DataArrays'
 

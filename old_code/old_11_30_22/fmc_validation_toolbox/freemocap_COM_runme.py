@@ -22,7 +22,7 @@ def run(skeleton_data,freemocap_data_array_path):
     num_frame_range = range(num_frames)
 
 
-    skeleton_file_path = freemocap_data_array_path/'origin_aligned_Skelcoordinates_frame_segment_joint_XYZ.pkl'
+    skeleton_file_path = freemocap_data_array_path/'origin_aligned_Skelcoordinates_frame_segment_joint_XYZ.pkl'.format(skeleton_type)
     segmentCOM_data_path = freemocap_data_array_path/'origin_aligned_segmentedCOM_frame_joint_XYZ.npy'
     totalBodyCOM_data_path = freemocap_data_array_path/'origin_aligned_totalBodyCOM_frame_XYZ.npy'
 

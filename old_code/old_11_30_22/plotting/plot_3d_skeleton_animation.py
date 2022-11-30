@@ -98,5 +98,5 @@ if __name__ == '__main__':
     data_array_path = freemocap_data_folder_path/sessionID/'DataArrays'
     freemocap_marker_data_array = np.load(data_array_path/'mediaPipeSkel_3d_origin_aligned.npy')
 
-    skeleton_scatter_plot_vid = SkeletonAnimation(freemocap_marker_data_array,freemocap_data_folder_path/sessionID,'skeleton_3d_scatter.mp4')
+    skeleton_scatter_plot_vid = SkeletonAnimation(freemocap_marker_data_array[:,0:33,:],freemocap_data_folder_path/sessionID,'skeleton_3d_scatter.mp4')
     skeleton_scatter_plot_vid.run()
