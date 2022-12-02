@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-class FreeMoCapData():
+class FreeMoCapDataLoader():
     def __init__(self, path_to_freemocap_directory:Path, session_folder_name:str):
         self.path_to_session_folder = path_to_freemocap_directory/session_folder_name
 
