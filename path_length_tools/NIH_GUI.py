@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QMainWindow, QGridLayout, QWidget, QApplication
 
 from freemocap_utils.GUI_widgets.skeleton_view_widget import SkeletonViewWidget
 from freemocap_utils.GUI_widgets.slider_widget import FrameCountSlider
+from freemocap_utils.GUI_widgets.video_capture_widget import VideoCapture
 
 
 class MainWindow(QMainWindow):
@@ -23,6 +24,9 @@ class MainWindow(QMainWindow):
 
         self.skeleton_view_widget = SkeletonViewWidget()
         layout.addWidget(self.skeleton_view_widget)
+
+        self.camera_view_widget = VideoCapture()
+        layout.addWidget(self.camera_view_widget)
 
         self.connect_signals_to_slots()
 
