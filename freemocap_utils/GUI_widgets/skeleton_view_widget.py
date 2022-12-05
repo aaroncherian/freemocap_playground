@@ -94,14 +94,14 @@ class SkeletonViewWidget(QWidget):
         self.fig.figure.canvas.draw_idle()
 
     def plot_skeleton_bones(self,frame_number):
-            this_frame_skeleton_data = self.mediapipe_skeleton[frame_number]
-            for connection in this_frame_skeleton_data.keys():
-                line_start_point = this_frame_skeleton_data[connection][0] 
-                line_end_point = this_frame_skeleton_data[connection][1]
-                
-                bone_x,bone_y,bone_z = [line_start_point[0],line_end_point[0]],[line_start_point[1],line_end_point[1]],[line_start_point[2],line_end_point[2]] 
+        this_frame_skeleton_data = self.mediapipe_skeleton[frame_number]
+        for connection in this_frame_skeleton_data.keys():
+            line_start_point = this_frame_skeleton_data[connection][0] 
+            line_end_point = this_frame_skeleton_data[connection][1]
+            
+            bone_x,bone_y,bone_z = [line_start_point[0],line_end_point[0]],[line_start_point[1],line_end_point[1]],[line_start_point[2],line_end_point[2]] 
 
-                self.ax.plot(bone_x,bone_y,bone_z)
+            self.ax.plot(bone_x,bone_y,bone_z)
 
     def get_x_y_z_data(self, frame_number:int):
         skel_x = self.skel3d_data[frame_number,:,0]
