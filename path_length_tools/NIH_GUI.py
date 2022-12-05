@@ -1,5 +1,5 @@
 
-from PyQt6.QtWidgets import QMainWindow, QGridLayout, QWidget, QApplication, QHBoxLayout
+from PyQt6.QtWidgets import QMainWindow, QGridLayout, QWidget, QApplication, QHBoxLayout,QVBoxLayout
 
 from freemocap_utils.GUI_widgets.skeleton_view_widget import SkeletonViewWidget
 from freemocap_utils.GUI_widgets.slider_widget import FrameCountSlider
@@ -16,17 +16,24 @@ class MainWindow(QMainWindow):
 
         widget = QWidget()
 
-        widget.setLayout(layout)
-        self.setCentralWidget(widget)
+
+        slider_and_skeleton_layout = QVBoxLayout()
 
         self.frame_count_slider = FrameCountSlider()
-        layout.addWidget(self.frame_count_slider)
+        slider_and_skeleton_layout.addWidget(self.frame_count_slider)
 
         self.skeleton_view_widget = SkeletonViewWidget()
-        layout.addWidget(self.skeleton_view_widget)
+        self.skeleton_view_widget.setFixedSize(self.skeleton_view_widget.size())
+        slider_and_skeleton_layout.addWidget(self.skeleton_view_widget)
+        
+        layout.addLayout(slider_and_skeleton_layout)
 
         self.camera_view_widget = VideoCapture()
         layout.addWidget(self.camera_view_widget)
+        self.camera_view_widget.setFixedSize(self.skeleton_view_widget.size())
+
+        widget.setLayout(layout)
+        self.setCentralWidget(widget)
 
         self.connect_signals_to_slots()
 
