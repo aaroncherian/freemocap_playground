@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QMainWindow, QGridLayout, QWidget, QApplication, QHB
 from freemocap_utils.GUI_widgets.skeleton_view_widget import SkeletonViewWidget
 from freemocap_utils.GUI_widgets.slider_widget import FrameCountSlider
 from freemocap_utils.GUI_widgets.video_capture_widget import VideoCapture
-
+from freemocap_utils.GUI_widgets.NIH_widgets.frame_marking_widget import FrameMarker
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -12,7 +12,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("My App")
 
-        layout = QHBoxLayout()
+        layout = QVBoxLayout()
 
         widget = QWidget()
 
@@ -26,16 +26,28 @@ class MainWindow(QMainWindow):
         self.skeleton_view_widget.setFixedSize(self.skeleton_view_widget.size())
         slider_and_skeleton_layout.addWidget(self.skeleton_view_widget)
         
-        layout.addLayout(slider_and_skeleton_layout)
+        # layout.addLayout(slider_and_skeleton_layout)
 
         self.camera_view_widget = VideoCapture()
-        layout.addWidget(self.camera_view_widget)
+        # layout.addWidget(self.camera_view_widget)
         self.camera_view_widget.setFixedSize(self.skeleton_view_widget.size())
+
+        skeleton_plot_and_video_layout = QHBoxLayout()
+        skeleton_plot_and_video_layout.addLayout(slider_and_skeleton_layout)
+        skeleton_plot_and_video_layout.addWidget(self.camera_view_widget)
+
+        layout.addLayout(skeleton_plot_and_video_layout)
+
+        self.frame_marking_widget = FrameMarker()
+        layout.addWidget(self.frame_marking_widget)
+        self.frame_marking_widget.setFixedSize(640,200)
 
         widget.setLayout(layout)
         self.setCentralWidget(widget)
 
         self.connect_signals_to_slots()
+
+        self.setFixedSize(layout.sizeHint())
 
     def connect_signals_to_slots(self):
         self.frame_count_slider.slider.valueChanged.connect(lambda: self.skeleton_view_widget.replot(self.frame_count_slider.slider.value()))
@@ -53,5 +65,6 @@ if __name__ == "__main__":
 
     app = QApplication([])
     win = MainWindow()
+
     win.show()
     app.exec()
