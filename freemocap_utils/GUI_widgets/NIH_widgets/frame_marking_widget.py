@@ -1,8 +1,10 @@
 from PyQt6.QtWidgets import QWidget,QVBoxLayout, QComboBox, QLineEdit, QFormLayout, QPushButton, QLabel, QHBoxLayout, QTableWidget, QTableWidgetItem
 from PyQt6.QtGui import QIntValidator
+from PyQt6.QtCore import pyqtSignal
 
 
 class FrameMarker(QWidget):
+    conditions_dict_updated_signal = pyqtSignal()
     def __init__(self):
         super().__init__()
 
@@ -58,6 +60,10 @@ class FrameMarker(QWidget):
             this_end_frame = self.condition_widget_dictionary[condition][1]
             self.saved_conditions_table.setItem(row_count,0,QTableWidgetItem(str(this_start_frame)))
             self.saved_conditions_table.setItem(row_count,1,QTableWidgetItem(str(this_end_frame)))
+
+        self.conditions_dict_updated_signal.emit()
+    
+
 
         f = 2
 

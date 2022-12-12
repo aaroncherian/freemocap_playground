@@ -5,6 +5,7 @@ from freemocap_utils.GUI_widgets.skeleton_view_widget import SkeletonViewWidget
 from freemocap_utils.GUI_widgets.slider_widget import FrameCountSlider
 from freemocap_utils.GUI_widgets.video_capture_widget import VideoCapture
 from freemocap_utils.GUI_widgets.NIH_widgets.frame_marking_widget import FrameMarker
+from freemocap_utils.GUI_widgets.saving_data_analysis_widget import SavingDataAnalysisWidget
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -42,6 +43,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.frame_marking_widget)
         self.frame_marking_widget.setFixedSize(640,200)
 
+        self.saving_data_widget = SavingDataAnalysisWidget()
+        layout.addWidget(self.saving_data_widget)
+
         widget.setLayout(layout)
         self.setCentralWidget(widget)
 
@@ -55,7 +59,9 @@ class MainWindow(QMainWindow):
         self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.frame_count_slider.set_slider_range(self.skeleton_view_widget.num_frames))
         self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.camera_view_widget.video_loader.videoLoadButton.setEnabled(True))
         self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.camera_view_widget.video_loader.set_session_folder_path(self.skeleton_view_widget.session_folder_path))
+        self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.saving_data_widget.set_session_folder_path(self.skeleton_view_widget.session_folder_path))
 
+        self.frame_marking_widget.conditions_dict_updated_signal.connect(lambda: self.saving_data_widget.set_conditions_dictionary(self.frame_marking_widget.condition_widget_dictionary))
  
         self.frame_count_slider.slider.valueChanged.connect(lambda: self.camera_view_widget.set_frame(self.frame_count_slider.slider.value()) if (self.camera_view_widget.video_loader.video_is_loaded) else NotImplemented)
 
