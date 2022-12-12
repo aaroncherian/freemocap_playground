@@ -5,8 +5,9 @@ from pathlib import Path
 
 path_to_freemocap_folder = Path(r'D:\ValidationStudy_aaron\FreeMoCap_Data')
 sessionID = 'sesh_2022-11-02_13_55_55_atc_nih_balance'
+path_to_session_folder = path_to_freemocap_folder/sessionID
 
-loaded_freemocap_data = FreeMoCapDataLoader(path_to_freemocap_folder,sessionID)
+loaded_freemocap_data = FreeMoCapDataLoader(path_to_session_folder)
 
 freemocap_total_COM_data = loaded_freemocap_data.load_total_body_COM_data()
 test_num_frame_range = range(1000,5000)

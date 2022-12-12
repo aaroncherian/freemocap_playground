@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 
 class FreeMoCapDataLoader():
-    def __init__(self, path_to_freemocap_directory:Path, session_folder_name:str):
-        self.path_to_session_folder = path_to_freemocap_directory/session_folder_name
+    def __init__(self, path_to_session_folder:Path):
+        self.path_to_session_folder = path_to_session_folder
 
     def load_mediapipe_body_data(self):
         self.path_to_mediapipe_body_data = self.path_to_session_folder/DATA_FOLDER_NAME/MEDIAPIPE_3D_BODY_FILE_NAME
