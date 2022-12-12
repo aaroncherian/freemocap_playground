@@ -2,6 +2,8 @@ from freemocap_utils.freemocap_data_loader import FreeMoCapDataLoader
 from PyQt6.QtWidgets import QWidget,QVBoxLayout, QLineEdit, QPushButton ,QFormLayout, QLabel
 from path_length_tools import PathLengthCalculator
 
+import numpy as np
+
 from pathlib import Path
 import json
 
@@ -40,6 +42,8 @@ class BalanceAssessmentWidget(QWidget):
         path_length_dictionary = self.calculate_path_lengths(self.condition_frames_dictionary)
         # self.save_condition_path_lengths(path_length_dictionary, self.path_to_data_analysis_folder)
         self.path_length_results.setText(str(path_length_dictionary))
+        velocity_dictionary = self.calculate_velocities(self.condition_frames_dictionary)
+        f = 2
 
     def load_COM_data(self, path_to_session_folder:Path):
         loaded_freemocap_data = FreeMoCapDataLoader(path_to_session_folder)
@@ -60,7 +64,14 @@ class BalanceAssessmentWidget(QWidget):
         out_file = open(json_file_name,'w')
 
         json.dump(path_length_dictionary, out_file)
+    
+    def calculate_velocities(self, condition_dictionary):
+        velocity_dictionary = {}
 
+        for condition in condition_dictionary:
+            this_condition_frame_range = range(condition_dictionary[condition][0],condition_dictionary[condition][1])
+            velocity_dictionary[condition] = self.path_length_calculator.calculate_velocity(this_condition_frame_range)
+        return velocity_dictionary
             
 
     

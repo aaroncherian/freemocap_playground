@@ -19,6 +19,11 @@ class PathLengthCalculator():
         return np.sqrt((point1[0]-point2[0])**2 + (point1[1]-point2[1])**2 + (point1[2]-point2[2])**2)
 
     def get_path_length(self,num_frame_range):
-        sliced_freemocap_data = self.slice_data(self.freemocap_data,num_frame_range)
-        self.path_length = self.calculate_path_length(sliced_freemocap_data)
+        self.sliced_freemocap_data = self.slice_data(self.freemocap_data,num_frame_range)
+        self.path_length = self.calculate_path_length(self.sliced_freemocap_data)
         return self.path_length
+
+    def calculate_velocity(self, num_frame_range):
+        sliced_freemocap_data = self.slice_data(self.freemocap_data,num_frame_range)
+        velocity_data = np.diff(sliced_freemocap_data[:,0])
+        return velocity_data 
