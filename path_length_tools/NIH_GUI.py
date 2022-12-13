@@ -9,6 +9,9 @@ from freemocap_utils.GUI_widgets.saving_data_analysis_widget import SavingDataAn
 from freemocap_utils.GUI_widgets.NIH_widgets.balance_assessment_widget import BalanceAssessmentWidget
 
 from pathlib import Path
+
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -45,11 +48,11 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.frame_marking_widget)
         self.frame_marking_widget.setFixedSize(640,200)
 
-        self.saving_data_widget = SavingDataAnalysisWidget()
-        # layout.addWidget(self.saving_data_widget)
-
         self.balance_assessment_widget = BalanceAssessmentWidget()
         layout.addWidget(self.balance_assessment_widget)
+
+        self.saving_data_widget = SavingDataAnalysisWidget()
+        layout.addWidget(self.saving_data_widget)
 
         widget.setLayout(layout)
         self.setCentralWidget(widget)
@@ -69,6 +72,10 @@ class MainWindow(QMainWindow):
         self.frame_marking_widget.conditions_dict_updated_signal.connect(lambda: self.balance_assessment_widget.set_conditions_frames_dictionary(self.frame_marking_widget.condition_widget_dictionary))
 
         self.frame_count_slider.slider.valueChanged.connect(lambda: self.camera_view_widget.set_frame(self.frame_count_slider.slider.value()) if (self.camera_view_widget.video_loader.video_is_loaded) else NotImplemented)
+        
+        self.balance_assessment_widget.run_button_clicked_signal.connect(self.show_histograms)
+        self.balance_assessment_widget.run_button_clicked_signal.connect(lambda: self.saving_data_widget.set_conditions_path_length_dictionary(self.balance_assessment_widget.path_length_dictionary))
+        self.balance_assessment_widget.run_button_clicked_signal.connect(lambda: self.saving_data_widget.set_histogram_figure(self.window.histogram_plots.figure))
 
     def set_session_folder_path(self,session_folder_path:Path):
         self.session_folder_path = session_folder_path
@@ -78,6 +85,114 @@ class MainWindow(QMainWindow):
     
     def set_condition_frames_dictionary(self, condition_frames_dictionary:dict):
         self.condition_frames_dictionary = condition_frames_dictionary
+
+    def show_histograms(self):
+        self.window = HistogramWindow(self.balance_assessment_widget.velocity_dictionary)
+        self.window.show()
+
+# class HistogramWindow(QMainWindow):
+#     def __init__(self, velocities_dict:dict, parent = None):
+#         super().__init__()
+#         self.layout = QVBoxLayout()
+        
+#         self.widget = QWidget()
+#         self.widget.setLayout(self.layout)
+#         self.setCentralWidget(self.widget)
+
+#         self.velocities_dict = velocities_dict
+#         self.setWindowTitle("Window22222")
+#         self.create_subplots()
+        
+
+
+#     def create_subplots(self):
+#         self.histogram_plots = Mpl3DPlotCanvas()
+
+#         ylimit = 120
+#         hist_range = (-.5,.5)
+#         num_bins = 100
+#         alpha_val = .75
+
+#         self.ax = self.histogram_plots.figure.axes[0]
+#         self.ax.hist(self.velocities_dict['Eyes Open/Flat Ground'], bins = num_bins, range = hist_range,label = 'Eyes Open/Flat Ground', alpha = alpha_val)
+
+#         # num_rows = len(self.velocities_dict)
+#         # for count, condition in enumerate(self.velocities_dict, start=1):
+#         #     ax = self.histogram_plots.fig.add_subplot(num_rows,1,count)
+#         #     ax.set_title(condition)
+#         #     ax.set_ylim(0,ylimit)
+
+#         #     ax.hist(self.velocities_dict[condition], bins = num_bins, range = hist_range,label = condition, alpha = alpha_val)
+
+#         self.histogram_plots.figure.canvas.draw_idle()
+
+#         self.layout.addWidget(self.histogram_plots)
+
+        
+
+
+
+
+# class Mpl3DPlotCanvas(FigureCanvasQTAgg):
+
+#     def __init__(self, parent=None, width=4, height=4, dpi=100):
+#         fig = Figure(figsize=(width, height), dpi=dpi)
+#         self.axes = fig.add_subplot(111)
+#         super(Mpl3DPlotCanvas, self).__init__(fig)
+
+            
+
+
+class HistogramWindow(QMainWindow):
+    def __init__(self, velocities_dict:dict, parent = None):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        
+        self.widget = QWidget()
+        self.widget.setLayout(self.layout)
+        self.setCentralWidget(self.widget)
+
+        self.velocities_dict = velocities_dict
+        self.setWindowTitle("Window22222")
+        self.create_subplots()
+        
+
+
+    def create_subplots(self):
+        self.histogram_plots = Mpl3DPlotCanvas()
+
+        ylimit = 120
+        hist_range = (-.5,.5)
+        num_bins = 100
+        alpha_val = .75
+
+        num_rows = len(self.velocities_dict)
+        for count, condition in enumerate(self.velocities_dict, start=1):
+            self.ax = self.histogram_plots.figure.add_subplot(num_rows,1,count)
+            self.ax.set_title(condition)
+            self.ax.set_ylim(0,ylimit)
+
+            # self.ax.plot(self.velocities_dict[condition])
+
+            self.ax.hist(self.velocities_dict[condition], bins = num_bins, range = hist_range,label = condition, alpha = alpha_val)
+            self.histogram_plots.figure.canvas.draw_idle()
+
+        
+        # self.histogram_plots.figure.savefig('temp.png')
+        self.layout.addWidget(self.histogram_plots)
+
+        
+
+
+
+
+class Mpl3DPlotCanvas(FigureCanvasQTAgg):
+
+    def __init__(self, parent=None, width=4, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        super(Mpl3DPlotCanvas, self).__init__(fig)
+
+            
 
     
 

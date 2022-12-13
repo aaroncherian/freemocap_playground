@@ -7,9 +7,13 @@ import numpy as np
 from pathlib import Path
 import json
 
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
 
+from PyQt6.QtCore import pyqtSignal
 
 class BalanceAssessmentWidget(QWidget):
+    run_button_clicked_signal = pyqtSignal()
     def __init__(self):
         super().__init__()
 
@@ -39,10 +43,11 @@ class BalanceAssessmentWidget(QWidget):
     def run_COM_analysis(self):
         self.total_body_COM_data = self.load_COM_data(self.path_to_session_folder)
         self.path_length_calculator = PathLengthCalculator.PathLengthCalculator(self.total_body_COM_data)
-        path_length_dictionary = self.calculate_path_lengths(self.condition_frames_dictionary)
+        self.path_length_dictionary = self.calculate_path_lengths(self.condition_frames_dictionary)
         # self.save_condition_path_lengths(path_length_dictionary, self.path_to_data_analysis_folder)
-        self.path_length_results.setText(str(path_length_dictionary))
-        velocity_dictionary = self.calculate_velocities(self.condition_frames_dictionary)
+        self.path_length_results.setText(str(self.path_length_dictionary))
+        self.velocity_dictionary = self.calculate_velocities(self.condition_frames_dictionary)
+        self.run_button_clicked_signal.emit()
         f = 2
 
     def load_COM_data(self, path_to_session_folder:Path):
@@ -72,6 +77,8 @@ class BalanceAssessmentWidget(QWidget):
             this_condition_frame_range = range(condition_dictionary[condition][0],condition_dictionary[condition][1])
             velocity_dictionary[condition] = self.path_length_calculator.calculate_velocity(this_condition_frame_range)
         return velocity_dictionary
-            
+
+
+
 
     
