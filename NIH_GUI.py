@@ -1,17 +1,19 @@
 
-from PyQt6.QtWidgets import QMainWindow, QGridLayout, QWidget, QApplication, QHBoxLayout,QVBoxLayout
+from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QHBoxLayout,QVBoxLayout
 
 from freemocap_utils.GUI_widgets.skeleton_view_widget import SkeletonViewWidget
 from freemocap_utils.GUI_widgets.slider_widget import FrameCountSlider
 from freemocap_utils.GUI_widgets.video_capture_widget import VideoCapture
 from freemocap_utils.GUI_widgets.NIH_widgets.frame_marking_widget import FrameMarker
-from freemocap_utils.GUI_widgets.saving_data_analysis_widget import SavingDataAnalysisWidget
+from freemocap_utils.GUI_widgets.NIH_widgets.saving_data_analysis_widget import SavingDataAnalysisWidget
 from freemocap_utils.GUI_widgets.NIH_widgets.balance_assessment_widget import BalanceAssessmentWidget
 
 from pathlib import Path
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -32,10 +34,8 @@ class MainWindow(QMainWindow):
         self.skeleton_view_widget.setFixedSize(self.skeleton_view_widget.size())
         slider_and_skeleton_layout.addWidget(self.skeleton_view_widget)
         
-        # layout.addLayout(slider_and_skeleton_layout)
-
         self.camera_view_widget = VideoCapture()
-        # layout.addWidget(self.camera_view_widget)
+
         self.camera_view_widget.setFixedSize(self.skeleton_view_widget.size())
 
         skeleton_plot_and_video_layout = QHBoxLayout()
@@ -90,59 +90,6 @@ class MainWindow(QMainWindow):
         self.window = HistogramWindow(self.balance_assessment_widget.velocity_dictionary)
         self.window.show()
 
-# class HistogramWindow(QMainWindow):
-#     def __init__(self, velocities_dict:dict, parent = None):
-#         super().__init__()
-#         self.layout = QVBoxLayout()
-        
-#         self.widget = QWidget()
-#         self.widget.setLayout(self.layout)
-#         self.setCentralWidget(self.widget)
-
-#         self.velocities_dict = velocities_dict
-#         self.setWindowTitle("Window22222")
-#         self.create_subplots()
-        
-
-
-#     def create_subplots(self):
-#         self.histogram_plots = Mpl3DPlotCanvas()
-
-#         ylimit = 120
-#         hist_range = (-.5,.5)
-#         num_bins = 100
-#         alpha_val = .75
-
-#         self.ax = self.histogram_plots.figure.axes[0]
-#         self.ax.hist(self.velocities_dict['Eyes Open/Flat Ground'], bins = num_bins, range = hist_range,label = 'Eyes Open/Flat Ground', alpha = alpha_val)
-
-#         # num_rows = len(self.velocities_dict)
-#         # for count, condition in enumerate(self.velocities_dict, start=1):
-#         #     ax = self.histogram_plots.fig.add_subplot(num_rows,1,count)
-#         #     ax.set_title(condition)
-#         #     ax.set_ylim(0,ylimit)
-
-#         #     ax.hist(self.velocities_dict[condition], bins = num_bins, range = hist_range,label = condition, alpha = alpha_val)
-
-#         self.histogram_plots.figure.canvas.draw_idle()
-
-#         self.layout.addWidget(self.histogram_plots)
-
-        
-
-
-
-
-# class Mpl3DPlotCanvas(FigureCanvasQTAgg):
-
-#     def __init__(self, parent=None, width=4, height=4, dpi=100):
-#         fig = Figure(figsize=(width, height), dpi=dpi)
-#         self.axes = fig.add_subplot(111)
-#         super(Mpl3DPlotCanvas, self).__init__(fig)
-
-            
-
-
 class HistogramWindow(QMainWindow):
     def __init__(self, velocities_dict:dict, parent = None):
         super().__init__()
@@ -163,7 +110,7 @@ class HistogramWindow(QMainWindow):
 
         ylimit = 120
         hist_range = (-.5,.5)
-        num_bins = 100
+        num_bins = 75
         alpha_val = .75
 
         num_rows = len(self.velocities_dict)
@@ -182,10 +129,6 @@ class HistogramWindow(QMainWindow):
         self.layout.addWidget(self.histogram_plots)
 
         
-
-
-
-
 class Mpl3DPlotCanvas(FigureCanvasQTAgg):
 
     def __init__(self, parent=None, width=4, height=4, dpi=100):

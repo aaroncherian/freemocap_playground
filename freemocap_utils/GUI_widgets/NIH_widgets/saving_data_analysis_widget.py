@@ -1,7 +1,6 @@
 
 
 from PyQt6.QtWidgets import QWidget,QVBoxLayout, QLineEdit, QPushButton ,QFormLayout, QLabel
-from PyQt6.QtCore import pyqtSignal
 
 from pathlib import Path
 import json
