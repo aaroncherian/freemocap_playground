@@ -1,6 +1,6 @@
 from freemocap_utils.freemocap_data_loader import FreeMoCapDataLoader
-from PyQt6.QtWidgets import QWidget,QVBoxLayout, QLineEdit, QPushButton ,QFormLayout, QLabel
-from path_length_tools import PathLengthCalculator
+from PyQt6.QtWidgets import QWidget,QVBoxLayout, QPushButton, QLabel
+from freemocap_utils.GUI_widgets.NIH_widgets.path_length_tools import PathLengthCalculator
 
 import numpy as np
 
