@@ -17,6 +17,7 @@ class FrameMarker(QWidget):
         self.conditions_box= QComboBox()
 
         self.conditions_box.addItems(['Eyes Open/Solid Ground', 'Eyes Closed/Solid Ground', 'Eyes Open/Foam', 'Eyes Closed/Foam'])
+        self.conditions_box.currentTextChanged.connect(self.reset_start_and_end_frames)
         
         conditions_layout.addWidget(self.conditions_box)
 
@@ -63,6 +64,9 @@ class FrameMarker(QWidget):
 
         self.conditions_dict_updated_signal.emit()
     
+    def reset_start_and_end_frames(self):
+        self.starting_frame.setText(None)
+        self.ending_frame.setText(None)
 
 
         f = 2
