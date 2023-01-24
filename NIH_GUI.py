@@ -76,7 +76,7 @@ class MainWindow(QMainWindow):
         self.balance_assessment_widget.run_button_clicked_signal.connect(self.show_histograms)
         self.balance_assessment_widget.run_button_clicked_signal.connect(lambda: self.saving_data_widget.set_conditions_path_length_dictionary(self.balance_assessment_widget.path_length_dictionary))
         self.balance_assessment_widget.run_button_clicked_signal.connect(lambda: self.saving_data_widget.set_histogram_figure(self.window.histogram_plots.figure))
-
+        self.balance_assessment_widget.run_button_clicked_signal.connect(lambda: self.saving_data_widget.set_velocity_dictionary(self.balance_assessment_widget.velocity_dictionary))
     def set_session_folder_path(self,session_folder_path:Path):
         self.session_folder_path = session_folder_path
         self.camera_view_widget.video_loader.set_session_folder_path(self.skeleton_view_widget.session_folder_path)

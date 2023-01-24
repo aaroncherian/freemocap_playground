@@ -7,6 +7,8 @@ import json
 
 import datetime
 
+import pandas as pd
+
 class SavingDataAnalysisWidget(QWidget):
     def __init__(self):
         super().__init__()
@@ -41,11 +43,19 @@ class SavingDataAnalysisWidget(QWidget):
     def set_histogram_figure(self,histogram_figure):
         self.histogram_figure = histogram_figure
 
+    def set_velocity_dictionary(self, velocity_dictionary):
+        self.velocity_dictionary = velocity_dictionary
+
+    def format_data_json(self,condition_frame_intervals_dictionary, path_length_dictionary):
+        dict_to_save = {'Frame Intervals':condition_frame_intervals_dictionary, 'Path Lengths:': path_length_dictionary}
+        return dict_to_save
+
     def save_data_out(self):
         saved_folder_name = self.saved_folder_name_entry.text()
         self.saved_data_analysis_path = self.create_folder_to_save_data(saved_folder_name)
-        self.save_data_json(self.condition_frame_intervals_dictionary,'condition_frame_intervals.json',self.saved_data_analysis_path)
-        self.save_data_json(self.conditions_path_length_dictionary, 'condition_path_lengths.json', self.saved_data_analysis_path)
+        formatted_condition_data_dict = self.format_data_json(self.condition_frame_intervals_dictionary,self.conditions_path_length_dictionary)
+        self.save_data_json(formatted_condition_data_dict, 'condition_data.json', self.saved_data_analysis_path)
+        self.save_velocity_dict_as_csv(self.velocity_dictionary,'condition_velocities.csv',self.saved_data_analysis_path)
         self.save_plot(self.histogram_figure,self.saved_data_analysis_path)
 
 
@@ -68,7 +78,15 @@ class SavingDataAnalysisWidget(QWidget):
         json_file_name = save_folder_path/json_name
         out_file = open(json_file_name,'w')
 
-        json.dump(dict_for_json, out_file)
+        json.dump(dict_for_json,out_file, indent=1)
+
+
+    def save_velocity_dict_as_csv(self, velocity_dict:dict, csv_name:str, save_folder_path:Path):
+
+        velocity_dataframe = pd.DataFrame({ key:pd.Series(value) for key, value in velocity_dict.items() })
+        velocity_dataframe.to_csv(save_folder_path/csv_name)
+
+        f = 2
 
     def save_plot(self,figure,save_folder_path:Path):
         figure.savefig(str(save_folder_path/'velocity_histogram.png'))
