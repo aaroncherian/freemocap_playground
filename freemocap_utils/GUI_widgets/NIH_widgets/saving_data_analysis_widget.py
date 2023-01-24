@@ -29,6 +29,7 @@ class SavingDataAnalysisWidget(QWidget):
 
         self.save_data_button = QPushButton('Save out data analysis results')
         self.save_data_button.clicked.connect(self.save_data_out)
+        self.save_data_button.setEnabled(False)
         self._layout.addWidget(self.save_data_button)
 
     def set_session_folder_path(self, session_folder_path):

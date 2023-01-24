@@ -38,6 +38,7 @@ class FrameMarker(QWidget):
 
         self.save_condition_button = QPushButton('Save Frame Interval For This Condition')
         self.save_condition_button.pressed.connect(self.save_conditions_to_table)
+        self.save_condition_button.setEnabled(False)
         conditions_layout.addWidget(self.save_condition_button)
 
         self._layout.addLayout(conditions_layout)

@@ -65,7 +65,7 @@ class MainWindow(QMainWindow):
         self.frame_count_slider.slider.valueChanged.connect(lambda: self.skeleton_view_widget.replot(self.frame_count_slider.slider.value()))
 
         self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.frame_count_slider.set_slider_range(self.skeleton_view_widget.num_frames))
-        self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.camera_view_widget.video_loader.videoLoadButton.setEnabled(True))
+        self.skeleton_view_widget.session_folder_loaded_signal.connect(self.enable_buttons)
         self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.set_session_folder_path(self.skeleton_view_widget.session_folder_path))
 
         self.frame_marking_widget.conditions_dict_updated_signal.connect(lambda: self.saving_data_widget.set_conditions_frames_dictionary(self.frame_marking_widget.condition_widget_dictionary))
@@ -77,11 +77,18 @@ class MainWindow(QMainWindow):
         self.balance_assessment_widget.run_button_clicked_signal.connect(lambda: self.saving_data_widget.set_conditions_path_length_dictionary(self.balance_assessment_widget.path_length_dictionary))
         self.balance_assessment_widget.run_button_clicked_signal.connect(lambda: self.saving_data_widget.set_histogram_figure(self.window.histogram_plots.figure))
         self.balance_assessment_widget.run_button_clicked_signal.connect(lambda: self.saving_data_widget.set_velocity_dictionary(self.balance_assessment_widget.velocity_dictionary))
+    
     def set_session_folder_path(self,session_folder_path:Path):
         self.session_folder_path = session_folder_path
         self.camera_view_widget.video_loader.set_session_folder_path(self.skeleton_view_widget.session_folder_path)
         self.saving_data_widget.set_session_folder_path(self.skeleton_view_widget.session_folder_path)
         self.balance_assessment_widget.set_session_folder_path(self.skeleton_view_widget.session_folder_path)
+    
+    def enable_buttons(self):
+        self.balance_assessment_widget.run_path_length_analysis_button.setEnabled(True)
+        self.camera_view_widget.video_loader.videoLoadButton.setEnabled(True)
+        self.frame_marking_widget.save_condition_button.setEnabled(True)
+        self.saving_data_widget.save_data_button.setEnabled(True)
     
     def set_condition_frames_dictionary(self, condition_frames_dictionary:dict):
         self.condition_frames_dictionary = condition_frames_dictionary

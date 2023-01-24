@@ -20,9 +20,10 @@ class BalanceAssessmentWidget(QWidget):
         self._layout = QVBoxLayout()
         self.setLayout(self._layout)
 
-        run_path_length_analysis_button = QPushButton('Run balance assessment')
-        run_path_length_analysis_button.clicked.connect(self.run_COM_analysis)
-        self._layout.addWidget(run_path_length_analysis_button)
+        self.run_path_length_analysis_button = QPushButton('Run balance assessment')
+        self.run_path_length_analysis_button.clicked.connect(self.run_COM_analysis)
+        self.run_path_length_analysis_button.setEnabled(False)
+        self._layout.addWidget(self.run_path_length_analysis_button)
 
         self.path_length_results = QLabel()
         self._layout.addWidget(self.path_length_results)
