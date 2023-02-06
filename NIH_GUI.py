@@ -106,6 +106,11 @@ class HistogramWindow(QMainWindow):
         self.widget.setLayout(self.layout)
         self.setCentralWidget(self.widget)
 
+        x_array_list = [item[0] for item in velocities_dict.values()] #grab the X dimension of each condition to plot 
+        conditions_list = list(velocities_dict.keys())
+
+        velocities_dict = dict(zip(conditions_list,x_array_list))
+
         self.velocities_dict = velocities_dict
         self.setWindowTitle("Window22222")
         self.create_subplots()

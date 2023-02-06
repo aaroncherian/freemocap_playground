@@ -27,5 +27,11 @@ class PathLengthCalculator():
 
     def calculate_velocity(self, num_frame_range):
         sliced_freemocap_data = self.slice_data(self.freemocap_data,num_frame_range)
-        velocity_data = np.diff(sliced_freemocap_data[:,0])
+        velocity_data = []
+
+        for dimension in range(3):
+            velocity_data.append(np.diff(sliced_freemocap_data[:,dimension]))
+        # x_velocity_data = np.diff(sliced_freemocap_data[:,0])
+        # y_velocity_data = np.diff(sliced_freemocap_data[:,1])
+
         return velocity_data 

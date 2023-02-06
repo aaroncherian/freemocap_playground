@@ -56,7 +56,7 @@ class SavingDataAnalysisWidget(QWidget):
         self.saved_data_analysis_path = self.create_folder_to_save_data(saved_folder_name)
         formatted_condition_data_dict = self.format_data_json(self.condition_frame_intervals_dictionary,self.conditions_path_length_dictionary)
         self.save_data_json(formatted_condition_data_dict, 'condition_data.json', self.saved_data_analysis_path)
-        self.save_velocity_dict_as_csv(self.velocity_dictionary,'condition_velocities.csv',self.saved_data_analysis_path)
+        self.save_velocity_dict_as_csv(self.velocity_dictionary,self.saved_data_analysis_path)
         self.save_plot(self.histogram_figure,self.saved_data_analysis_path)
 
 
@@ -82,10 +82,15 @@ class SavingDataAnalysisWidget(QWidget):
         json.dump(dict_for_json,out_file, indent=1)
 
 
-    def save_velocity_dict_as_csv(self, velocity_dict:dict, csv_name:str, save_folder_path:Path):
-
-        velocity_dataframe = pd.DataFrame({ key:pd.Series(value) for key, value in velocity_dict.items() })
-        velocity_dataframe.to_csv(save_folder_path/csv_name)
+    def save_velocity_dict_as_csv(self, velocity_dict:dict, save_folder_path:Path):
+        
+        for count,dimension in enumerate(['x','y', 'z']):
+            this_dimension_array_list = [item[count] for item in velocity_dict.values()] #grab the X dimension of each condition to plot 
+            conditions_list = list(velocity_dict.keys())
+            
+            this_dimension_velocity_dict = dict(zip(conditions_list,this_dimension_array_list))
+            velocity_dataframe = pd.DataFrame({ key:pd.Series(value) for key, value in this_dimension_velocity_dict.items() })
+            velocity_dataframe.to_csv(save_folder_path/f'condition_velocities_{dimension}.csv')
 
         f = 2
 

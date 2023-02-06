@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./old_code/old_8_2"
+    ]
+}

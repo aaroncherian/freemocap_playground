@@ -30,7 +30,9 @@ if this_computer_name == 'DESKTOP-V3D343U':
 elif this_computer_name == 'DESKTOP-F5LCT4Q':
     #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
     #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+    #freemocap_validation_data_path = Path(r'D:\ValidationStudy_aaron\FreeMoCap_Data')
     freemocap_validation_data_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
+
 else:
     #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
     freemocap_validation_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
@@ -41,11 +43,12 @@ else:
 #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 #sessionID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS'
 
-sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
+sessionID = 'sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 
 #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
-save_path = Path(r'C:\Users\aaron\Documents\HumonLab\DynamicWalking2022\comparison_graphics')
+#save_path = Path(r'D:\ValidationStudy_aaron\FreeMoCap_Data\sesh_2022-11-02_13_55_55_atc_nih_balance\data_analysis\analysis_2023-01-27_16_38_20')
 
+save_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data\sesh_2022-05-24_16_02_53_JSM_T1_NIH\data_analysis\analysis_2023-01-30_13_12_51')
 
 
 
@@ -55,7 +58,10 @@ run_type = 'mediapipe'
 # run_type = 'freemocap'
 stance = 'natural'
 
-name = '{}_{}_sway.png'.format(run_type, stance)
+title = 'COM_X_Y_EC_SG'
+
+name = f'{title}.png'
+#name = '{}_{}_sway.png'.format(run_type, stance)
 save_image = save_path/name
 
 #num_frame_range = range(9900,12000)
@@ -69,15 +75,12 @@ ax_range = 300
 
 
 if run_type == 'mediapipe':
-    from plot_with_classes import skeleton_COM_Plot
+    from old_code.old_8_2.plot_with_classes import skeleton_COM_Plot
 
     if stance == 'natural':
         #num_frame_range = range(9500,12000)
-
         #num_frame_range = range(0,1550)
-
-        num_frame_range = range(473,1373)
-
+        num_frame_range = range(2750,4400)
         ax_range = 300
 
 
@@ -96,7 +99,7 @@ if run_type == 'mediapipe':
 
     camera_fps = 60
     COM_plot = skeleton_COM_Plot(freemocap_validation_data_path,sessionID,num_frame_range, camera_fps, output_video_fps, tail_length, stance = 'natural', static_plot=True)
-    title_text = 'FreeMoCap/MediaPipe Right Leg Stance Sway'
+    title_text = title
 
     left_heel_index = 29
     left_toe_index = 31
@@ -311,7 +314,7 @@ elif stance == 'right_leg':
 
 
 
-#figure.savefig(save_image, transparent = 'True')
+figure.savefig(save_image)
 plt.show()
 
 f=2
