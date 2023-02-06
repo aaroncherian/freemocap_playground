@@ -88,16 +88,16 @@ for index in range(len(mediapipe_indices)):
     y_ax = figure.add_subplot(312)
     z_ax = figure.add_subplot(313)
 
-    # for count,joint_data in enumerate(mediapipe_joint_data_dict.values()):
-    #     x_ax.plot(joint_data[:,index,0], label = labels[count])
-    #     y_ax.plot(joint_data[:,index,1], label = labels[count])
-    #     z_ax.plot(joint_data[:,index,2], label = labels[count])
+    for count,joint_data in enumerate(mediapipe_joint_data_dict.values()):
+        x_ax.plot(joint_data[:,index,0], label = labels[count])
+        y_ax.plot(joint_data[:,index,1], label = labels[count])
+        z_ax.plot(joint_data[:,index,2], label = labels[count])
 
     
-    for count,joint_diff in enumerate(differences_list):
-        x_ax.plot(joint_diff[:,index,0], label = labels[count])
-        y_ax.plot(joint_diff[:,index,1], label = labels[count])
-        z_ax.plot(joint_diff[:,index,2], label = labels[count])
+    # for count,joint_diff in enumerate(differences_list):
+    #     x_ax.plot(joint_diff[:,index,0], label = labels[count])
+    #     y_ax.plot(joint_diff[:,index,1], label = labels[count])
+    #     z_ax.plot(joint_diff[:,index,2], label = labels[count])
 
 
     x_ax.legend()

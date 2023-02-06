@@ -91,7 +91,7 @@ maximums_two_window = [x for x in maximums_two[0] if x in frame_window]
 
 
 
-maximums_difference = np.sort([abs(y -x) for x,y in zip(maximums_one_window, maximums_two_window)])
+maximums_difference = np.sort([abs(y -x) for x,y in zip(pd.DataFrame(maximums_one_window), maximums_two_window)])
 # A = fft(session_two_left_shoulder[0:6620])
 
 median = np.median(maximums_difference)
