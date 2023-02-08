@@ -8,8 +8,34 @@ from freemocap_utils.mediapipe_skeleton_builder import mediapipe_indices
 from freemocap_utils import freemocap_data_loader
 import sys
 
+import numpy as np
 import matplotlib.pyplot as plt
 
+
+qualisys_indices = [
+'head',
+'left_ear',
+'right_ear',
+'cspine',
+'left_shoulder',
+'right_shoulder',
+'left_elbow',
+'right_elbow',
+'left_wrist',
+'right_wrist',
+'left_index',
+'right_index',
+'left_hip',
+'right_hip',
+'left_knee',
+'right_knee',
+'left_ankle',
+'right_ankle',
+'left_heel',
+'right_heel',
+'left_foot_index',
+'right_foot_index',
+]
 class plotWindow():
     def __init__(self, parent=None):
         self.app = QApplication(sys.argv)
@@ -51,8 +77,18 @@ class plotWindow():
 
 path_to_data_folder = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data')
 
-sessionID_list = ['sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_JSM_T1_WalkRun']
-labels = ['front', 'front_side','front_side_back']
+sessionID_list = ['sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_WalkRun_front_back','sesh_2022-05-24_16_10_46_JSM_T1_WalkRun']
+labels = ['front', 'front_side','front_back','front_side_back']
+
+# sessionID_list = ['sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_JSM_T1_WalkRun']
+# labels = ['front', 'front_side','front_side_back']
+
+path_to_qualysis_session_folder = Path(r"D:\ValidationStudy_numCams\FreeMoCap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
+#qualisys_data = np.load(path_to_qualysis_session_folder/'DataArrays'/'qualisys_origin_aligned_skeleton_3D.npy')
+qualisys_data = np.load(path_to_qualysis_session_folder/'DataArrays'/'downsampled_qualisys_3D.npy')
+samples = qualisys_data.shape[0]
+
+qualisys_sliced = qualisys_data[0:5243,:,:]
 
 
 
@@ -64,17 +100,17 @@ mediapipe_joint_data_dict = {}
 
 for count,session_data in enumerate(freemocap_sessions_dict.values()):
     mediapipe_data = session_data.load_mediapipe_body_data()
-    mediapipe_joint_data = mediapipe_data[2000:6000,:,:]
+    mediapipe_joint_data = mediapipe_data[1157:6400,:,:]
     mediapipe_joint_data_dict[count] = mediapipe_joint_data
 
 
-baseline_session = 'front_side_back'
-baseline_session_index = labels.index(baseline_session)
+# baseline_session = 'front_side_back'
+# baseline_session_index = labels.index(baseline_session)
 
-differences_list = []
-for count, joint_data in enumerate(mediapipe_joint_data_dict.values()):
-    if not baseline_session_index == count:
-        differences_list.append(joint_data-mediapipe_joint_data_dict[baseline_session_index])
+# differences_list = []
+# for count, joint_data in enumerate(mediapipe_joint_data_dict.values()):
+#     if not baseline_session_index == count:
+#         differences_list.append(joint_data-mediapipe_joint_data_dict[baseline_session_index])
 
 
 plot_win = plotWindow()
@@ -89,11 +125,17 @@ for index in range(len(mediapipe_indices)):
     z_ax = figure.add_subplot(313)
 
     for count,joint_data in enumerate(mediapipe_joint_data_dict.values()):
-        x_ax.plot(joint_data[:,index,0], label = labels[count])
-        y_ax.plot(joint_data[:,index,1], label = labels[count])
-        z_ax.plot(joint_data[:,index,2], label = labels[count])
+        x_ax.plot(joint_data[:,index,0]-joint_data[0,index,0], label = labels[count], alpha = .7)
+        y_ax.plot(joint_data[:,index,1]-joint_data[0,index,1], label = labels[count], alpha = .7)
+        z_ax.plot(joint_data[:,index,2]-joint_data[0,index,2], label = labels[count], alpha = .7)
 
-    
+    if joint_to_plot in qualisys_indices:
+        qual_index = qualisys_indices.index(joint_to_plot)
+        x_ax.plot(qualisys_sliced[:,qual_index,0]- qualisys_sliced[0,qual_index,0], label = 'Qualisys',  color = 'black', linewidth = 2)
+        y_ax.plot(qualisys_sliced[:,qual_index,1]- qualisys_sliced[0,qual_index,1], label = 'Qualisys',  color = 'black',linewidth = 2)
+        z_ax.plot(qualisys_sliced[:,qual_index,2]- qualisys_sliced[0,qual_index,2], label = 'Qualisys',  color = 'black',linewidth = 2)
+
+
     # for count,joint_diff in enumerate(differences_list):
     #     x_ax.plot(joint_diff[:,index,0], label = labels[count])
     #     y_ax.plot(joint_diff[:,index,1], label = labels[count])
@@ -101,6 +143,9 @@ for index in range(len(mediapipe_indices)):
 
 
     x_ax.legend()
+    y_ax.legend()
+    z_ax.legend()
+
     x_ax.set_ylabel('X Axis Position (mm)')
     y_ax.set_ylabel('Y Axis Position (mm)')
     z_ax.set_ylabel('Z Axis Position (mm)')
