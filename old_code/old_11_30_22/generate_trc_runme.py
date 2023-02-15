@@ -10,18 +10,21 @@ from fmc_validation_toolbox import good_frame_finder, skeleton_y_up_alignment, c
 
 this_computer_name = socket.gethostname()
 
-if this_computer_name == 'DESKTOP-F5LCT4Q':
-    #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
-    freemocap_data_folder_path = Path(r'D:\freemocap2022\FreeMocap_Data')
-    #freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
-else:
-    freemocap_data_folder_path = Path(r'C:\Users\Aaron\Documents\sessions\FreeMocap_Data')
+# if this_computer_name == 'DESKTOP-F5LCT4Q':
+#     #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+#     freemocap_data_folder_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+#     #freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
+# else:
+#     freemocap_data_folder_path = Path(r'C:\Users\Aaron\Documents\sessions\FreeMocap_Data')
 
 #sessionID = 'sesh_2022-05-12_15_13_02'  
 #sessionID = 'sesh_2022-06-28_12_55_34'
 
 #sessionID = 'sesh_2022-05-24_16_10_46_JSM_T1_WalkRun'
-sessionID ='sesh_2022-09-29_17_29_31'
+
+freemocap_data_folder_path = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data')
+
+sessionID = 'sesh_2022-05-24_16_10_46_JSM_T1_WalkRun'
 data_array_folder = 'DataArrays'
 array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
 

@@ -81,13 +81,13 @@ if __name__ == '__main__':
 
     from mediapipe_skeleton_builder import mediapipe_indices, slice_mediapipe_data   
 
-    freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
+    freemocap_data_folder_path = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data')
 
 
-    sessionID = 'sesh_2022-05-24_15_55_40_JSM_T1_BOS'
+    sessionID = 'sesh_2022-05-24_16_10_46_JSM_T1_WalkRun'
     data_array_folder = 'DataArrays'
-    array_name = 'mediaPipeSkel_3d_filtered.npy'
-    trc_save_name = 'trc_test.trc'
+    array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
+    trc_save_name = 'freemocap_walking.trc'
 
 
     data_array_folder_path = freemocap_data_folder_path / sessionID / data_array_folder

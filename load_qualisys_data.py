@@ -40,21 +40,24 @@ qualisys_joint_index = qualisys_indices.index(joint_to_plot)
 mediapipe_joint_index = mediapipe_indices.index(joint_to_plot)
 
 
-path_to_qualysis_session_folder = Path(r"D:\ValidationStudy_numCams\FreeMoCap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
-qualisys_data = np.load(path_to_qualysis_session_folder/'DataArrays'/'qualisys_origin_aligned_skeleton_3D.npy')
+path_to_qualisys_session_folder = Path(r"D:\ValidationStudy_numCams\FreeMoCap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
+# path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS")
+qualisys_data = np.load(path_to_qualisys_session_folder/'DataArrays'/'downsampled_qualisys_3D.npy')
 
 path_to_freemocap_session_folder = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data\sesh_2022-05-24_16_10_46_JSM_T1_WalkRun')
+# path_to_freemocap_session_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\sesh_2022-05-24_15_55_40_JSM_T1_BOS')
 freemocap_data = np.load(path_to_freemocap_session_folder/'DataArrays'/'mediaPipeSkel_3d_origin_aligned.npy')
 
 
-samples = qualisys_data.shape[0]
+#samples = qualisys_data.shape[0]
 q = 10
-samples_decimated = int(samples/q)
+#samples_decimated = int(samples/q)
 
 
-this_joint_qual = qualisys_data[:,qualisys_joint_index,0]
+#this_joint_qual = qualisys_data[:,qualisys_joint_index,0]
 
-qualisys_timeseries = signal.decimate(this_joint_qual,10)
+#qualisys_timeseries = signal.decimate(this_joint_qual,10)
+qualisys_timeseries = qualisys_data[:,qualisys_joint_index,0]
 freemocap_timeseries = freemocap_data[:,mediapipe_joint_index,0]
 
 if qualisys_timeseries.shape[0] > freemocap_timeseries.shape[0]:
@@ -78,8 +81,12 @@ def shift_for_maximum_correlation(x, y):
     print(f"Best lag: {lag}")
     if lag < 0:
         y = y.iloc[abs(lag):].reset_index(drop=True)
+        print(f'Using FreeMoCap from {abs(lag)} onwards')
     else:
         x = x.iloc[lag:].reset_index(drop=True)
+        print(f'Using Qualisys from {abs(lag)} onwards')
+    x = x - x.iloc[0]
+    y = y - y.iloc[0]
     return x, y
     
 def correlation(x, y):
@@ -92,13 +99,13 @@ def plot_correlation(x, y, text):
     ax.plot(x,label = 'qualisys')
     ax.plot(y,label = 'freemocap')
 
-    plt.title(f"Correlation {text}: {correlation(x, y)}")
+    #plt.title(f"Correlation {text}: {correlation(x, y)}")
     plt.legend(loc="best")
     plt.show()
 
 
 shifted_x, shifted_y = shift_for_maximum_correlation(pd.DataFrame(qualisys_timeseries), pd.DataFrame(freemocap_timeseries))
-#plot_correlation(shifted_x, shifted_y, text="after shifting")
+plot_correlation(shifted_x, shifted_y, text="after shifting")
 f = 2
 
 ##---scipy time correlation

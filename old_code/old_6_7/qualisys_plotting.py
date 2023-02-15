@@ -27,6 +27,7 @@ mediapipe_data_path = this_freemocap_data_path / 'mediaPipeSkel_3d_smoothed.npy'
 qualisys_data_path = this_freemocap_data_path/'qualisysData_3d.mat'
 
 qualysis_mat_file = sio.loadmat(qualisys_data_path)
+
 qualisysSkel_fr_mar_dim = qualysis_mat_file['skeleton_fr_mar_dim_reorg'] 
 
 

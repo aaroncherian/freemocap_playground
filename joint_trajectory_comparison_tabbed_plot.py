@@ -75,20 +75,24 @@ class plotWindow():
 
 
 
-path_to_data_folder = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data')
+# path_to_data_folder = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data')
 
-sessionID_list = ['sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_WalkRun_front_back','sesh_2022-05-24_16_10_46_JSM_T1_WalkRun']
-labels = ['front', 'front_side','front_back','front_side_back']
+# sessionID_list = ['sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_WalkRun_front_back','sesh_2022-05-24_16_10_46_JSM_T1_WalkRun']
+# labels = ['front', 'front_side','front_back','front_side_back']
 
+path_to_data_folder = Path(r'D:\ValidationStudy2022\FreeMoCap_Data')
+sessionID_list = ['sesh_2022-05-24_15_55_40_JSM_T1_BOS']
+labels = ['FreeMoCap']
 # sessionID_list = ['sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_JSM_T1_WalkRun']
 # labels = ['front', 'front_side','front_side_back']
 
-path_to_qualysis_session_folder = Path(r"D:\ValidationStudy_numCams\FreeMoCap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
+#path_to_qualysis_session_folder = Path(r"D:\ValidationStudy_numCams\FreeMoCap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
 #qualisys_data = np.load(path_to_qualysis_session_folder/'DataArrays'/'qualisys_origin_aligned_skeleton_3D.npy')
-qualisys_data = np.load(path_to_qualysis_session_folder/'DataArrays'/'downsampled_qualisys_3D.npy')
+path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS")
+qualisys_data = np.load(path_to_qualisys_session_folder/'DataArrays'/'downsampled_qualisys_3D.npy')
 samples = qualisys_data.shape[0]
 
-qualisys_sliced = qualisys_data[0:5243,:,:]
+qualisys_sliced = qualisys_data[:,:,:]
 
 
 
@@ -99,8 +103,8 @@ for count,sessionID in enumerate(sessionID_list):
 mediapipe_joint_data_dict = {}
 
 for count,session_data in enumerate(freemocap_sessions_dict.values()):
-    mediapipe_data = session_data.load_mediapipe_body_data()
-    mediapipe_joint_data = mediapipe_data[1157:6400,:,:]
+    mediapipe_data = session_data.load_mediapipe_body_data() 
+    mediapipe_joint_data = mediapipe_data[:,:,:]
     mediapipe_joint_data_dict[count] = mediapipe_joint_data
 
 
