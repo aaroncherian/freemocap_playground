@@ -172,19 +172,20 @@ else:
     #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
     freemocap_data_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
-session_ID = 'qualisys_sesh_2022-05-24_15_10_49_JSM_T2_slackline'
+session_ID = 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 debug = True
 #frame_to_use = 2000
 freemocap_data_array_path = freemocap_data_folder_path/session_ID/'DataArrays'
 
-qualisys_data_path = freemocap_data_array_path/'qualisys_markers_3d.mat'
-qualisys_mat_file = sio.loadmat(qualisys_data_path)
-qualisys_data = qualisys_mat_file['mat_data_reshaped']
+qualisys_data = np.load(freemocap_data_array_path/'qualisys_markers_3d.npy')
+# qualisys_data_path = freemocap_data_array_path/'qualisys_markers_3d.mat'
+# qualisys_mat_file = sio.loadmat(qualisys_data_path)
+# qualisys_data = qualisys_mat_file['mat_data_reshaped']
 
-#qualisys_data = np.load(freemocap_data_array_path/'qualisys_markers_3d.npy')
-#qualisys_mat = sio.loadmat(freemocap_data_array_path/'qualisys_markers_3d.mat')
+# #qualisys_data = np.load(freemocap_data_array_path/'qualisys_markers_3d.npy')
+# #qualisys_mat = sio.loadmat(freemocap_data_array_path/'qualisys_markers_3d.mat')
 
-#qualisys_data = qualisys_mat['mat_data_reshaped']
+# #qualisys_data = qualisys_mat['mat_data_reshaped']
 
 qualisys_skel_save_path = freemocap_data_array_path/'qualisysSkel_3d.npy'
 

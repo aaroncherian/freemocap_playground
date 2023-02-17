@@ -16,7 +16,7 @@ from datetime import datetime
 
 
 #from fmc_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices
-#from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
+# from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
 
 from skeleton_data_holder import SkeletonDataHolder
 import scipy.io as sio
@@ -314,9 +314,9 @@ if __name__ == '__main__':
     #sessionID = 'sesh_2022-05-12_15_13_02' #name of the sessionID folder
     #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
     #skeleton_to_plot = 'mediapipe' #for a future situation where we want to rotate openpose/dlc skeletons 
-    session_info = {'sessionID': 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH', 'skeleton_type': 'mediapipe'}
+    session_info = {'sessionID': 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH', 'skeleton_type': 'qualisys'}
     #good_frame = 276
-    good_frame = 81
+    good_frame = 14631
     debug = True
     freemocap_data_array_folder_path = freemocap_data_folder_path/session_info['sessionID']/'DataArrays'
 

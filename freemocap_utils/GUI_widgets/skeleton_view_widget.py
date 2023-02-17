@@ -23,9 +23,9 @@ class SkeletonViewWidget(QWidget):
         self._layout = QVBoxLayout()
         self.setLayout(self._layout)
 
-        self.folder_open_button = QPushButton('Load a session folder',self)
-        self._layout.addWidget(self.folder_open_button)
-        self.folder_open_button.clicked.connect(self.open_folder_dialog)
+        # self.folder_open_button = QPushButton('Load a session folder',self)
+        # self._layout.addWidget(self.folder_open_button)
+        # self.folder_open_button.clicked.connect(self.open_folder_dialog)
 
         self.fig,self.ax = self.initialize_skeleton_plot()
         self._layout.addWidget(self.fig)
@@ -33,50 +33,51 @@ class SkeletonViewWidget(QWidget):
         self.session_folder_path = None
         
 
-    def open_folder_dialog(self):
+    # def open_folder_dialog(self):
         
-        self.folder_diag = QFileDialog()
-        self.session_folder_path  = QFileDialog.getExistingDirectory(None,"Choose a session")
+    #     self.folder_diag = QFileDialog()
+    #     self.session_folder_path  = QFileDialog.getExistingDirectory(None,"Choose a session")
 
-        if self.session_folder_path:
-            self.session_folder_path = Path(self.session_folder_path)
+    #     if self.session_folder_path:
+    #         self.session_folder_path = Path(self.session_folder_path)
 
         
-        #data_array_folder = 'output_data'
-        data_array_folder = 'DataArrays'
-        array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
-        #array_name = 'mediaPipeSkel_3d.npy'
-        #array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
-        #array_name = 'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
+    #     #data_array_folder = 'output_data'
+    #     data_array_folder = 'DataArrays'
+    #     array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
+    #     #array_name = 'mediaPipeSkel_3d.npy'
+    #     #array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
+    #     #array_name = 'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
         
-        skeleton_data_folder_path = self.session_folder_path / data_array_folder/array_name
-        self.skel3d_data = np.load(skeleton_data_folder_path)
+    #     skeleton_data_folder_path = self.session_folder_path / data_array_folder/array_name
+    #     self.skeleton_3d_data = np.load(skeleton_data_folder_path)
 
 
-        self.mediapipe_skeleton = build_skeleton(self.skel3d_data,mediapipe_indices,mediapipe_connections)
+    #     self.mediapipe_skeleton = build_skeleton(self.skeleton_3d_data,mediapipe_indices,mediapipe_connections)
 
-        self.num_frames = self.skel3d_data.shape[0]
-        # self.reset_slider()
-        self.reset_skeleton_3d_plot()
-        self.session_folder_loaded_signal.emit()
-
+    #     self.num_frames = self.skeleton_3d_data.shape[0]
+    #     # self.reset_slider()
+    #     self.reset_skeleton_3d_plot()
+    #     self.session_folder_loaded_signal.emit()
             
     def initialize_skeleton_plot(self):
         fig = Mpl3DPlotCanvas(self, width=5, height=4, dpi=100)
         ax = fig.figure.axes[0]
         return fig, ax
 
-    def reset_skeleton_3d_plot(self):
+    def reset_skeleton_3d_plot(self,skeleton_3d_data:np.ndarray, mediapipe_skeleton):
+        self.skeleton_3d_data = skeleton_3d_data
+        self.mediapipe_skeleton = mediapipe_skeleton
         self.ax.cla()
-        self.calculate_axes_means(self.skel3d_data)
+        self.calculate_axes_means(self.skeleton_3d_data)
         self.skel_x,self.skel_y,self.skel_z = self.get_x_y_z_data(0)
         self.plot_skel(0,self.skel_x,self.skel_y,self.skel_z)
 
 
-    def reset_slider(self):
-        self.slider_max = self.num_frames -1
-        self.slider.setValue(0)
-        self.slider.setMaximum(self.slider_max)
+    # def reset_slider(self):
+    #     self.slider_max = self.num_frames -1
+    #     self.slider.setValue(0)
+    #     self.slider.setMaximum(self.slider_max)
 
     def calculate_axes_means(self,skeleton_3d_data):
         self.mx_skel = np.nanmean(skeleton_3d_data[:,0:33,0])
@@ -104,9 +105,9 @@ class SkeletonViewWidget(QWidget):
             self.ax.plot(bone_x,bone_y,bone_z)
 
     def get_x_y_z_data(self, frame_number:int):
-        skel_x = self.skel3d_data[frame_number,:,0]
-        skel_y = self.skel3d_data[frame_number,:,1]
-        skel_z = self.skel3d_data[frame_number,:,2]
+        skel_x = self.skeleton_3d_data[frame_number,:,0]
+        skel_y = self.skeleton_3d_data[frame_number,:,1]
+        skel_z = self.skeleton_3d_data[frame_number,:,2]
 
         return skel_x,skel_y,skel_z
 

@@ -1,5 +1,5 @@
 
-from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QHBoxLayout,QVBoxLayout
+from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QHBoxLayout,QVBoxLayout, QPushButton, QFileDialog
 
 from freemocap_utils.GUI_widgets.skeleton_view_widget import SkeletonViewWidget
 from freemocap_utils.GUI_widgets.slider_widget import FrameCountSlider
@@ -7,13 +7,14 @@ from freemocap_utils.GUI_widgets.video_capture_widget import VideoCapture
 from freemocap_utils.GUI_widgets.NIH_widgets.frame_marking_widget import FrameMarker
 from freemocap_utils.GUI_widgets.NIH_widgets.saving_data_analysis_widget import SavingDataAnalysisWidget
 from freemocap_utils.GUI_widgets.NIH_widgets.balance_assessment_widget import BalanceAssessmentWidget
+from freemocap_utils.mediapipe_skeleton_builder import build_skeleton, mediapipe_connections, mediapipe_indices
 
 from pathlib import Path
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
-
+import numpy as np
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -29,6 +30,10 @@ class MainWindow(QMainWindow):
 
         self.frame_count_slider = FrameCountSlider()
         slider_and_skeleton_layout.addWidget(self.frame_count_slider)
+
+        self.folder_open_button = QPushButton('Load a session folder',self)
+        slider_and_skeleton_layout.addWidget(self.folder_open_button)
+        self.folder_open_button.clicked.connect(self.open_folder_dialog)
 
         self.skeleton_view_widget = SkeletonViewWidget()
         self.skeleton_view_widget.setFixedSize(self.skeleton_view_widget.size())
@@ -61,12 +66,15 @@ class MainWindow(QMainWindow):
 
         # self.setFixedSize(layout.sizeHint())
 
+
+
     def connect_signals_to_slots(self):
         self.frame_count_slider.slider.valueChanged.connect(lambda: self.skeleton_view_widget.replot(self.frame_count_slider.slider.value()))
 
-        self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.frame_count_slider.set_slider_range(self.skeleton_view_widget.num_frames))
-        self.skeleton_view_widget.session_folder_loaded_signal.connect(self.enable_buttons)
-        self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.set_session_folder_path(self.skeleton_view_widget.session_folder_path))
+        
+        # self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.frame_count_slider.set_slider_range(self.skeleton_view_widget.num_frames))
+        # self.skeleton_view_widget.session_folder_loaded_signal.connect(self.enable_buttons)
+        # self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.set_session_folder_path(self.skeleton_view_widget.session_folder_path))
 
         self.frame_marking_widget.conditions_dict_updated_signal.connect(lambda: self.saving_data_widget.set_conditions_frames_dictionary(self.frame_marking_widget.condition_widget_dictionary))
         self.frame_marking_widget.conditions_dict_updated_signal.connect(lambda: self.balance_assessment_widget.set_conditions_frames_dictionary(self.frame_marking_widget.condition_widget_dictionary))
@@ -78,11 +86,47 @@ class MainWindow(QMainWindow):
         self.balance_assessment_widget.run_button_clicked_signal.connect(lambda: self.saving_data_widget.set_histogram_figure(self.window.histogram_plots.figure))
         self.balance_assessment_widget.run_button_clicked_signal.connect(lambda: self.saving_data_widget.set_velocity_dictionary(self.balance_assessment_widget.velocity_dictionary))
     
-    def set_session_folder_path(self,session_folder_path:Path):
-        self.session_folder_path = session_folder_path
-        self.camera_view_widget.video_loader.set_session_folder_path(self.skeleton_view_widget.session_folder_path)
-        self.saving_data_widget.set_session_folder_path(self.skeleton_view_widget.session_folder_path)
-        self.balance_assessment_widget.set_session_folder_path(self.skeleton_view_widget.session_folder_path)
+    def _handle_session_folder_loaded(self):
+        self.frame_count_slider.set_slider_range(self.num_frames)
+        self.enable_buttons()
+        self.set_session_folder_path()
+
+    def open_folder_dialog(self):
+        
+        self.folder_diag = QFileDialog()
+        self.session_folder_path  = QFileDialog.getExistingDirectory(None,"Choose a session")
+
+        if self.session_folder_path:
+            self.session_folder_path = Path(self.session_folder_path)
+
+        
+        #data_array_folder = 'output_data'
+        data_array_folder = 'DataArrays'
+        array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
+        #array_name = 'mediaPipeSkel_3d.npy'
+        #array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
+        #array_name = 'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
+        
+        skeleton_data_folder_path = self.session_folder_path / data_array_folder/array_name
+        self.skel3d_data = np.load(skeleton_data_folder_path)
+
+        self.build_mediapipe_skeleton()
+
+    def build_mediapipe_skeleton(self):
+
+        self.mediapipe_skeleton = build_skeleton(self.skel3d_data,mediapipe_indices,mediapipe_connections)
+
+        self.num_frames = self.skel3d_data.shape[0]
+        # self.reset_slider()
+        self.skeleton_view_widget.reset_skeleton_3d_plot(self.skel3d_data, self.mediapipe_skeleton)
+        #self.reset_skeleton_3d_plot()
+        #self.session_folder_loaded_signal.emit()
+        self._handle_session_folder_loaded()
+    
+    def set_session_folder_path(self):
+        self.camera_view_widget.video_loader.set_session_folder_path(self.session_folder_path)
+        self.saving_data_widget.set_session_folder_path(self.session_folder_path)
+        self.balance_assessment_widget.set_session_folder_path(self.session_folder_path)
     
     def enable_buttons(self):
         self.balance_assessment_widget.run_path_length_analysis_button.setEnabled(True)

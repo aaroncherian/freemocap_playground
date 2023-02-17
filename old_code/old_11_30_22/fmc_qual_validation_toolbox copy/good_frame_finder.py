@@ -165,7 +165,7 @@ if __name__ == '__main__':
         #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
         freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
 
-    session_info = {'sessionID': 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH', 'skeleton_type': 'mediapipe'} #name of the sessionID folder    
+    session_info = {'sessionID': 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH', 'skeleton_type': 'qualisys'} #name of the sessionID folder    
 
     #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
     #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
