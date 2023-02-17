@@ -71,11 +71,6 @@ class MainWindow(QMainWindow):
     def connect_signals_to_slots(self):
         self.frame_count_slider.slider.valueChanged.connect(lambda: self.skeleton_view_widget.replot(self.frame_count_slider.slider.value()))
 
-        
-        # self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.frame_count_slider.set_slider_range(self.skeleton_view_widget.num_frames))
-        # self.skeleton_view_widget.session_folder_loaded_signal.connect(self.enable_buttons)
-        # self.skeleton_view_widget.session_folder_loaded_signal.connect(lambda: self.set_session_folder_path(self.skeleton_view_widget.session_folder_path))
-
         self.frame_marking_widget.conditions_dict_updated_signal.connect(lambda: self.saving_data_widget.set_conditions_frames_dictionary(self.frame_marking_widget.condition_widget_dictionary))
         self.frame_marking_widget.conditions_dict_updated_signal.connect(lambda: self.balance_assessment_widget.set_conditions_frames_dictionary(self.frame_marking_widget.condition_widget_dictionary))
 

@@ -36,6 +36,32 @@ mediapipe_indices = ['nose',
     'left_foot_index',
     'right_foot_index']
 
+qualisys_indices = [
+'head',
+'left_ear',
+'right_ear',
+'cspine',
+'left_shoulder',
+'right_shoulder',
+'left_elbow',
+'right_elbow',
+'left_wrist',
+'right_wrist',
+'left_index',
+'right_index',
+'left_hip',
+'right_hip',
+'left_knee',
+'right_knee',
+'left_ankle',
+'right_ankle',
+'left_heel',
+'right_heel',
+'left_foot_index',
+'right_foot_index',
+]
+
+
 mediapipe_connections = {'shoulders':['left_shoulder','right_shoulder'],
     'hips':['left_hip','right_hip'],
     'torso_left': ['left_shoulder','left_hip'],
@@ -53,6 +79,7 @@ mediapipe_connections = {'shoulders':['left_shoulder','right_shoulder'],
     'right_lower_leg':['right_knee','right_ankle'],
     'right_heel_connection':['right_ankle','right_heel'],
     'right_foot':['right_heel','right_foot_index']}
+
 
 reprojection_error_mediapipe_connections = {'left_upper_arm':['left_shoulder','left_elbow'],
     'left_lower_arm':['left_elbow','left_wrist'],
@@ -96,10 +123,6 @@ def build_skeleton(skel_3d_data,pose_estimation_markers,pose_estimation_connecti
 
     return skeleton_connection_coordinates
     f = 2
-
-def get_mediapipe_indices(joint_center:str):
-    return mediapipe_indices.index(joint_center)
-
 
 
 if __name__ == '__main__':
