@@ -57,8 +57,8 @@ def filter_skeleton(skeleton_3d_data, cutoff, sampling_rate, order):
     return filtered_data
 
 
-path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH")
-#path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS")
+#path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH")
+path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS")
 qualisys_data = np.load(path_to_qualisys_session_folder/'DataArrays'/'qualisys_origin_aligned_skeleton_3D.npy')
 interpolated_qualisys_data = interpolate_freemocap_data(qualisys_data)
 
@@ -109,7 +109,7 @@ for dimension,ax in enumerate(ax_list):
 plt.show()
 
 
-np.save(path_to_qualisys_session_folder/'DataArrays'/'downsampled_qualisys_3D.npy',downsampled_qualisys_data)
+#np.save(path_to_qualisys_session_folder/'DataArrays'/'downsampled_qualisys_3D.npy',downsampled_qualisys_data)
 
 
 f = 2

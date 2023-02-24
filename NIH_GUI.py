@@ -1,5 +1,5 @@
 
-from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QHBoxLayout,QVBoxLayout, QPushButton, QFileDialog
+from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QHBoxLayout,QVBoxLayout, QPushButton, QFileDialog, QRadioButton
 
 from freemocap_utils.GUI_widgets.skeleton_view_widget import SkeletonViewWidget
 from freemocap_utils.GUI_widgets.slider_widget import FrameCountSlider
@@ -7,7 +7,7 @@ from freemocap_utils.GUI_widgets.video_capture_widget import VideoCapture
 from freemocap_utils.GUI_widgets.NIH_widgets.frame_marking_widget import FrameMarker
 from freemocap_utils.GUI_widgets.NIH_widgets.saving_data_analysis_widget import SavingDataAnalysisWidget
 from freemocap_utils.GUI_widgets.NIH_widgets.balance_assessment_widget import BalanceAssessmentWidget
-from freemocap_utils.mediapipe_skeleton_builder import build_skeleton, mediapipe_connections, mediapipe_indices
+from freemocap_utils.mediapipe_skeleton_builder import build_skeleton, mediapipe_connections, mediapipe_indices, qualisys_indices
 
 from pathlib import Path
 
@@ -34,6 +34,13 @@ class MainWindow(QMainWindow):
         self.folder_open_button = QPushButton('Load a session folder',self)
         slider_and_skeleton_layout.addWidget(self.folder_open_button)
         self.folder_open_button.clicked.connect(self.open_folder_dialog)
+
+        self.freemocap_radio = QRadioButton('Load FreeMoCap Data')
+        self.freemocap_radio.setChecked(True)
+        slider_and_skeleton_layout.addWidget(self.freemocap_radio)
+        self.qualisys_radio = QRadioButton('Load Qualisys Data')
+        slider_and_skeleton_layout.addWidget(self.qualisys_radio)
+
 
         self.skeleton_view_widget = SkeletonViewWidget()
         self.skeleton_view_widget.setFixedSize(self.skeleton_view_widget.size())
@@ -94,22 +101,29 @@ class MainWindow(QMainWindow):
         if self.session_folder_path:
             self.session_folder_path = Path(self.session_folder_path)
 
-        
-        #data_array_folder = 'output_data'
         data_array_folder = 'DataArrays'
-        array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
+
+        if self.freemocap_radio.isChecked():
+        #data_array_folder = 'output_data'
+            #marker_data_array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
+            marker_data_array_name = 'freemocap_data_resized.npy'
+            markers_to_use = mediapipe_indices
+        elif self.qualisys_radio.isChecked():
+            marker_data_array_name = 'downsampled_qualisys_3D.npy'
+            markers_to_use = qualisys_indices
         #array_name = 'mediaPipeSkel_3d.npy'
         #array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
         #array_name = 'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
         
-        skeleton_data_folder_path = self.session_folder_path / data_array_folder/array_name
+        skeleton_data_folder_path = self.session_folder_path / data_array_folder/marker_data_array_name
         self.skel3d_data = np.load(skeleton_data_folder_path)
 
-        self.build_mediapipe_skeleton()
+        self.build_mediapipe_skeleton(markers_to_use)
 
-    def build_mediapipe_skeleton(self):
+    def build_mediapipe_skeleton(self, markers_to_use:list):
 
-        self.mediapipe_skeleton = build_skeleton(self.skel3d_data,mediapipe_indices,mediapipe_connections)
+        #self.mediapipe_skeleton = build_skeleton(self.skel3d_data,mediapipe_indices,mediapipe_connections)
+        self.mediapipe_skeleton = build_skeleton(self.skel3d_data,markers_to_use,mediapipe_connections)
 
         self.num_frames = self.skel3d_data.shape[0]
         # self.reset_slider()

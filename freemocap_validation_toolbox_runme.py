@@ -16,10 +16,10 @@ from scipy.optimize import minimize
 import scipy.io as sio
 
 
-from fmc_validation_toolbox import good_frame_finder, skeleton_origin_alignment, time_syncing, freemocap_COM_runme, mediapipe_COM_plotting
+from fmc_qual_validation_toolbox import good_frame_finder, skeleton_origin_alignment, time_syncing, freemocap_COM_runme, mediapipe_COM_plotting
 
-from fmc_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices, slice_mediapipe_data
-from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
+from fmc_qual_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices, slice_mediapipe_data
+from fmc_qual_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
 
 this_computer_name = socket.gethostname()
 

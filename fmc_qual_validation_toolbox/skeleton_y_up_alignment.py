@@ -1,12 +1,27 @@
-
-from pathlib import Path 
-
+from distutils.log import debug
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+from pathlib import Path 
+import socket
+import pickle
 from rich.progress import track
+import cv2
+from matplotlib.animation import FuncAnimation
+import matplotlib.animation as animation
+import matplotlib.ticker as mticker
+import sys 
+from datetime import datetime
 
-from old_code.old_11_30_22.fmc_core_toolbox.skeleton_data_holder import SkeletonDataHolder
 
+
+#from fmc_validation_toolbox.mediapipe_skeleton_builder import mediapipe_indices
+#from fmc_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
+
+from fmc_validation_toolbox.skeleton_data_holder import SkeletonDataHolder
+
+#from skeleton_data_holder import SkeletonDataHolder
+import scipy.io as sio
 
 
 def create_vector(point1,point2): 
@@ -14,10 +29,10 @@ def create_vector(point1,point2):
     vector = point2 - point1
     return vector
 
-def calculate_translation_distance(skeleton_point_coordinate):
-    """Take a skeleton point coordinate and calculate its distance to the origin"""
+def calculate_translation_distance(skeleton_right_heel):
+    """Take in the right heel point, and calculate the distance between the right heel and the origin"""
 
-    translation_distance = skeleton_point_coordinate - [0,0,0]
+    translation_distance = skeleton_right_heel - [0,0,0]
     return translation_distance 
 
 
@@ -28,7 +43,6 @@ def translate_skeleton_frame(rotated_skeleton_data_frame, translation_distance):
     return translated_skeleton_frame
 
 def calculate_skewed_symmetric_cross_product(cross_product_vector):
-    #needed in the calculate_rotation_matrix function 
     skew_symmetric_cross_product = np.array([[0, -cross_product_vector[2], cross_product_vector[1]],
                                              [cross_product_vector[2], 0, -cross_product_vector[0]],
                                              [-cross_product_vector[1], cross_product_vector[0], 0]])
@@ -63,74 +77,102 @@ def rotate_skeleton_frame(this_frame_aligned_skeleton_data, rotation_matrix):
     return this_frame_rotated_skeleton
 
 
-def align_skeleton_with_origin( skeleton_data, skeleton_indices, good_frame, debug = False):
+def align_skeleton_with_origin(session_info:dict, this_freemocap_data_array_path:str, skeleton_data, skeleton_indices ,good_frame, debug = False):
 
-    """
-    Takes in freemocap skeleton data and translates the skeleton to the origin, and then rotates the data 
-    so that the skeleton is facing the +y direction and standing in the +z direction
+    #sessionID = session_info['sessionID']
+    skeleton_type_to_plot = session_info['skeleton_type']
+    save_file = this_freemocap_data_array_path/'{}_origin_aligned_skeleton_3D.npy'.format(skeleton_type_to_plot)
 
-    Input:
-        skeleton data: a 3D numpy array of skeleton data in freemocap format
-        skeleton indices: a list of joints being tracked by mediapipe/your 2d pose estimator
-        good frame: the frame that you want to base the rotation on (can be entered manually, 
-                    or use the 'good_frame_finder.py' to calculate it)
-        debug: If 'True', display a plot of the raw data and the 3 main alignment stages
-
-    Output:
-        spine aligned skeleton data: a 3d numpy array of the origin aligned data in freemocap format 
-    """
 
     origin = np.array([0, 0, 0])
     x_axis = np.array([1, 0, 0])
     y_axis = np.array([0, 1, 0])
-    z_axis = np.array([0, 0, 1])
+    z_axis = np.array([0, 0, -1])
 
     x_vector = create_vector(origin,x_axis)
     y_vector = create_vector(origin,y_axis)
     z_vector = create_vector(origin,z_axis)
 
+    #origin_normal = create_normal_vector(x_vector,y_vector) #create a normal vector to the origin (basically the z axis)
     origin_normal_unit_vector = z_vector  #note - this is kinda unncessary because the origin normal unit vector == original normal vector 
 
     num_frames = skeleton_data.shape[0]
 
-    #Put the raw, unaligned skeleton data in the SkeletonDataHolder class 
+    #Original Raw Data
     raw_skeleton_holder = SkeletonDataHolder(skeleton_data, skeleton_indices, good_frame)
 
-    ## Translate the raw data such that the midpoint of the hips is over the origin 
-    raw_mid_hip_XYZ = raw_skeleton_holder.mid_hip_XYZ #hip midpoint of the raw data 
-    mid_hip_translation_distance = calculate_translation_distance(raw_mid_hip_XYZ) #get distance between hip midpoint and origin
+    raw_good_frame_skeleton_data = raw_skeleton_holder.good_frame_skeleton_data
+    raw_mid_hip_XYZ = raw_skeleton_holder.mid_hip_XYZ
+    raw_spine_unit_vector = raw_skeleton_holder.spine_unit_vector
 
+    #Translating Data
+    mid_hip_translation_distance = calculate_translation_distance(raw_mid_hip_XYZ)
     hip_translated_skeleton_data = np.zeros(skeleton_data.shape)
+    foot_translated_skeleton_data = hip_translated_skeleton_data.copy()
+
     for frame in track(range(num_frames)):
         hip_translated_skeleton_data[frame,:,:] = translate_skeleton_frame(skeleton_data[frame,:,:],mid_hip_translation_distance) #translate the skeleton data for each frame  
+
     hip_translated_skeleton_holder = SkeletonDataHolder(hip_translated_skeleton_data, skeleton_indices, good_frame)
-    
-    ## Now translate the data upwards, such that the midpoint between the two feet is at the origin 
     hip_translated_mid_foot_XYZ = hip_translated_skeleton_holder.mid_foot_XYZ
+
     mid_foot_translated_distance = calculate_translation_distance(hip_translated_mid_foot_XYZ)
 
-    foot_translated_skeleton_data = np.zeros(skeleton_data.shape)
     for frame in track (range(num_frames)):
         foot_translated_skeleton_data[frame,:,:] = translate_skeleton_frame(hip_translated_skeleton_data[frame,:,:],mid_foot_translated_distance)
-    foot_translated_skeleton_holder = SkeletonDataHolder(foot_translated_skeleton_data, skeleton_indices, good_frame)
 
-    # Rotate the skeleton to face the +y direction
+    foot_translated_skeleton_holder = SkeletonDataHolder(foot_translated_skeleton_data, skeleton_indices, good_frame)
+    foot_translated_good_frame_skeleton_data = foot_translated_skeleton_holder.good_frame_skeleton_data 
+
+    foot_translated_mid_hip_XYZ = foot_translated_skeleton_holder.mid_hip_XYZ
+    foot_translated_spine_unit_vector = foot_translated_skeleton_holder.spine_unit_vector
+
     foot_translated_heel_unit_vector = foot_translated_skeleton_holder.heel_unit_vector
+    foot_translated_heel_vector_origin = foot_translated_skeleton_holder.heel_vector_origin
+
+    #Rotating for +y alignment
+
     rotation_matrix_to_align_skeleton_with_positive_y = calculate_rotation_matrix(foot_translated_heel_unit_vector,-1*x_vector)
 
     y_aligned_skeleton_data = np.zeros(skeleton_data.shape)
+
     for frame in track(range(num_frames)):
         y_aligned_skeleton_data [frame,:,:] = rotate_skeleton_frame(foot_translated_skeleton_data[frame,:,:],rotation_matrix_to_align_skeleton_with_positive_y)
+
     y_aligned_skeleton_holder = SkeletonDataHolder(y_aligned_skeleton_data, skeleton_indices, good_frame)
-  
-    #Rotating the skeleton so that the spine is aligned with +z
+    y_aligned_good_frame_skeleton_data = y_aligned_skeleton_holder.good_frame_skeleton_data
+
+    y_aligned_mid_hip_XYZ = y_aligned_skeleton_holder.mid_hip_XYZ
     y_aligned_spine_unit_vector = y_aligned_skeleton_holder.spine_unit_vector
-    rotation_matrix_to_align_spine = calculate_rotation_matrix(y_aligned_spine_unit_vector,origin_normal_unit_vector)
+
+    y_aligned_heel_unit_vector = y_aligned_skeleton_holder.heel_unit_vector
+    y_aligned_heel_vector_origin = y_aligned_skeleton_holder.heel_vector_origin
+
+    #Rotating for spine alignment
 
     spine_aligned_skeleton_data = np.zeros(skeleton_data.shape)
+
+    rotation_matrix_to_align_spine = calculate_rotation_matrix(y_aligned_spine_unit_vector,y_vector)
+
     for frame in track(range(num_frames)):
         spine_aligned_skeleton_data [frame,:,:] = rotate_skeleton_frame(y_aligned_skeleton_data[frame,:,:],rotation_matrix_to_align_spine)
+
     spine_aligned_skeleton_holder = SkeletonDataHolder(spine_aligned_skeleton_data, skeleton_indices, good_frame)
+    spine_aligned_good_frame_skeleton_data = spine_aligned_skeleton_holder.good_frame_skeleton_data
+
+    spine_aligned_mid_hip_XYZ = spine_aligned_skeleton_holder.mid_hip_XYZ
+    spine_aligned_spine_unit_vector = spine_aligned_skeleton_holder.spine_unit_vector
+
+    spine_aligned_heel_unit_vector = spine_aligned_skeleton_holder.heel_unit_vector
+    spine_aligned_heel_vector_origin = spine_aligned_skeleton_holder.heel_vector_origin
+
+
+    if skeleton_type_to_plot == 'qualisys':
+        print('saving qualisys aligned data')
+        #np.save(save_file,y_aligned_skeleton_data)
+    elif skeleton_type_to_plot == 'mediapipe':  
+        print('saving mediapipe aligned data')  
+        #np.save(save_file,spine_aligned_skeleton_data)
 
 
     if debug:
@@ -141,9 +183,9 @@ def align_skeleton_with_origin( skeleton_data, skeleton_indices, good_frame, deb
 
                 Origin_X,Origin_Y,Origin_Z = zip(origin)
 
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Xvector_X,Xvector_Y,Xvector_Z,arrow_length_ratio=0.1,color='r', label = 'X-axis')
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Yvector_X,Yvector_Y,Yvector_Z,arrow_length_ratio=0.1,color='g', label = 'Y-axis')
-                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Zvector_X,Zvector_Y,Zvector_Z,arrow_length_ratio=0.1,color='b', label = 'Z-axis')            
+                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Zvector_X,Zvector_Y,Zvector_Z,arrow_length_ratio=0.1,color='r', label = 'Z-axis')
+                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Xvector_X,Xvector_Y,Xvector_Z,arrow_length_ratio=0.1,color='g', label = 'X-axis')
+                plot_ax.quiver(Origin_X,Origin_Y,Origin_Z,Yvector_X,Yvector_Y,Yvector_Z,arrow_length_ratio=0.1,color='b', label = 'Y-axis')
             
             def set_axes_ranges(plot_ax,skeleton_data, ax_range):
 
@@ -164,6 +206,7 @@ def align_skeleton_with_origin( skeleton_data, skeleton_indices, good_frame, deb
             def plot_heel_unit_vector(plot_ax,skeleton_heel_unit_vector, heel_vector_origin_XYZ):
 
                 origin_heel_x, origin_heel_y, origin_heel_z = zip(heel_vector_origin_XYZ)
+
                 skeleton_heel_unit_x, skeleton_heel_unit_y, skeleton_heel_unit_z = zip(skeleton_heel_unit_vector*500)
 
                 plot_ax.quiver(origin_heel_x,origin_heel_y,origin_heel_z, skeleton_heel_unit_x,skeleton_heel_unit_y,skeleton_heel_unit_z,arrow_length_ratio=0.1,color='orange')
@@ -175,77 +218,84 @@ def align_skeleton_with_origin( skeleton_data, skeleton_indices, good_frame, deb
             ax3 = figure.add_subplot(223,projection = '3d')
             ax4 = figure.add_subplot(224,projection = '3d')
 
-            axes_list = [ax1,ax2,ax3,ax4]
-
             ax1.set_title('Original Skeleton')
             ax2.set_title('Skeleton Translated to Origin')
-            ax3.set_title('Skeleton Rotated to Make +Y Forwards')
-            ax4.set_title('Skeleton Rotated to Make +Z Up')
+            ax3.set_title('Skeleton Rotated to Make +Z Forwards')
+            ax4.set_title('Skeleton Rotated to Make +Y Up')
 
-      
-
-            #grab the skeleton data for each plot for the frame we are plotting
-            raw_good_frame_skeleton_data = raw_skeleton_holder.good_frame_skeleton_data
-            foot_translated_good_frame_skeleton_data = foot_translated_skeleton_holder.good_frame_skeleton_data
-            y_aligned_good_frame_skeleton_data = y_aligned_skeleton_holder.good_frame_skeleton_data
-            spine_aligned_good_frame_skeleton_data = spine_aligned_skeleton_holder.good_frame_skeleton_data 
-            good_frame_data_arrays_list = [raw_good_frame_skeleton_data,foot_translated_good_frame_skeleton_data, y_aligned_good_frame_skeleton_data, spine_aligned_good_frame_skeleton_data]
-            
             ax_range = 1800
-            for ax,skeleton_data_array in zip(axes_list,good_frame_data_arrays_list):
-                set_axes_ranges(ax,skeleton_data_array,ax_range)
-                plot_origin_vectors(ax,x_vector,y_vector,z_vector,origin)
-                ax.scatter(skeleton_data_array[:,0], skeleton_data_array[:,1], skeleton_data_array[:,2], c = 'r')
 
-            ##Plot the spine vector on ax1
-            # raw_spine_unit_vector = raw_skeleton_holder.spine_unit_vector
-            # plot_spine_unit_vector(ax1,raw_good_frame_skeleton_data,raw_mid_hip_XYZ,raw_spine_unit_vector)
+            set_axes_ranges(ax1,raw_good_frame_skeleton_data,ax_range)
+            ax1.scatter(raw_good_frame_skeleton_data[:,0],raw_good_frame_skeleton_data[:,1],raw_good_frame_skeleton_data[:,2],c='r')
+            plot_origin_vectors(ax1,x_vector,y_vector,z_vector,origin)
+            plot_spine_unit_vector(ax1,raw_good_frame_skeleton_data,raw_mid_hip_XYZ,raw_spine_unit_vector)
 
-            #Plot the heel vector on ax2    
-            foot_translated_heel_vector_origin = foot_translated_skeleton_holder.heel_vector_origin
+            set_axes_ranges(ax2,foot_translated_good_frame_skeleton_data,ax_range)
+            plot_origin_vectors(ax2,x_vector,y_vector,z_vector,origin)
+            ax2.scatter(foot_translated_good_frame_skeleton_data[:,0],foot_translated_good_frame_skeleton_data[:,1],foot_translated_good_frame_skeleton_data[:,2],c='r')
             plot_heel_unit_vector(ax2,foot_translated_heel_unit_vector,foot_translated_heel_vector_origin)
 
-            #Plot the spine and heel vectors on ax3
-            y_aligned_heel_unit_vector = y_aligned_skeleton_holder.heel_unit_vector
-            y_aligned_heel_vector_origin = y_aligned_skeleton_holder.heel_vector_origin
-            y_aligned_mid_hip_XYZ = y_aligned_skeleton_holder.mid_hip_XYZ
+            set_axes_ranges(ax3,y_aligned_good_frame_skeleton_data,ax_range)
+            plot_origin_vectors(ax3,x_vector,y_vector,z_vector,origin)
+            ax3.scatter(y_aligned_good_frame_skeleton_data[:,0],y_aligned_good_frame_skeleton_data[:,1],y_aligned_good_frame_skeleton_data[:,2],c='r')
             plot_heel_unit_vector(ax3,y_aligned_heel_unit_vector,y_aligned_heel_vector_origin)
             plot_spine_unit_vector(ax3,y_aligned_good_frame_skeleton_data,y_aligned_mid_hip_XYZ,y_aligned_spine_unit_vector)
+            ax3.legend()
 
-
-            #Plot the spine and heel vectors on ax4
-            spine_aligned_mid_hip_XYZ = spine_aligned_skeleton_holder.mid_hip_XYZ
-            spine_aligned_spine_unit_vector = spine_aligned_skeleton_holder.spine_unit_vector
-            spine_aligned_heel_unit_vector = spine_aligned_skeleton_holder.heel_unit_vector
-            spine_aligned_heel_vector_origin = spine_aligned_skeleton_holder.heel_vector_origin
+            set_axes_ranges(ax4,spine_aligned_good_frame_skeleton_data,ax_range)
+            plot_origin_vectors(ax4,x_vector,y_vector,z_vector,origin)
+            ax4.scatter(spine_aligned_good_frame_skeleton_data[:,0],spine_aligned_good_frame_skeleton_data[:,1],spine_aligned_good_frame_skeleton_data[:,2],c='r')
             plot_heel_unit_vector(ax4,spine_aligned_heel_unit_vector,spine_aligned_heel_vector_origin)
             plot_spine_unit_vector(ax4,spine_aligned_good_frame_skeleton_data,spine_aligned_mid_hip_XYZ,spine_aligned_spine_unit_vector)
 
-            ax3.legend()
-            ax4.legend()
-
             plt.show()
     
+    #print('Origin aligned skeleton data saved to: ' + str(save_file))
     return spine_aligned_skeleton_data
-
 
 
 if __name__ == '__main__':
 
     from mediapipe_skeleton_builder import mediapipe_indices
+    from qualisys_skeleton_builder import qualisys_indices
+    
+    this_computer_name = socket.gethostname()
 
-    freemocap_data_folder_path = Path(r'D:\freemocap2022\FreeMocap_Data')
-    sessionID = 'sesh_2022-05-09_12_20_23'
+    if this_computer_name == 'DESKTOP-V3D343U':
+        freemocap_validation_data_path = Path(r"I:\My Drive\HuMoN_Research_Lab\FreeMoCap_Stuff\FreeMoCap_Balance_Validation\data")
+    elif this_computer_name == 'DESKTOP-F5LCT4Q':
+        #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
+        #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+        freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
+    else:
+        #freemocap_validation_data_path = Path(r"C:\Users\kiley\Documents\HumonLab\SampleFMC_Data\FreeMocap_Data-20220216T173514Z-001\FreeMocap_Data")
+        freemocap_data_folder_path = Path(r"C:\Users\Rontc\Documents\HumonLab\ValidationStudy")
 
-    freemocap_data_array_folder_path = freemocap_data_folder_path/sessionID/'DataArrays'
-    skeleton_data_path = freemocap_data_array_folder_path/'mediaPipeSkel_3d_smoothed.npy' 
+    
+    #sessionID = 'session_SER_1_20_22'    
+    #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
 
-    skeleton_data = np.load(skeleton_data_path)
-    skeleton_indices = mediapipe_indices
+    #sessionID = 'sesh_2022-05-12_15_13_02' #name of the sessionID folder
+    #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
+    #skeleton_to_plot = 'mediapipe' #for a future situation where we want to rotate openpose/dlc skeletons 
+    session_info = {'sessionID': 'sesh_2022-05-24_15_55_40_JSM_T1_BOS', 'skeleton_type': 'mediapipe'}
+    #good_frame = 276
+    good_frame = 81
+    debug = True
+    freemocap_data_array_folder_path = freemocap_data_folder_path/session_info['sessionID']/'DataArrays'
+
+    if session_info['skeleton_type'] == 'mediapipe':
+            skeleton_data_path = freemocap_data_array_folder_path/'mediaPipeSkel_3d_smoothed.npy' 
+            skeleton_data = np.load(skeleton_data_path)
+            skeleton_indices = mediapipe_indices
+
+    elif session_info['skeleton_type'] == 'qualisys':
+            skeleton_data_path = freemocap_data_array_folder_path/'qualisysSkel_3d.npy'
+            skeleton_data = np.load(skeleton_data_path)
+            skeleton_indices = qualisys_indices
+       
+
+    align_skeleton_with_origin(session_info, freemocap_data_array_folder_path, skeleton_data,skeleton_indices, good_frame, debug = True)
 
 
-    good_frame = 81 #a random number
-
-    origin_aligned_skeleton_data = align_skeleton_with_origin(skeleton_data,skeleton_indices, good_frame, debug = True)
-
-    f = 2
+f = 2

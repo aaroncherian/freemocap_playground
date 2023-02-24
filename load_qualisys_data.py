@@ -40,7 +40,7 @@ qualisys_joint_index = qualisys_indices.index(joint_to_plot)
 mediapipe_joint_index = mediapipe_indices.index(joint_to_plot)
 
 
-path_to_qualisys_session_folder = Path(r"D:\ValidationStudy_numCams\FreeMoCap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
+#path_to_qualisys_session_folder = Path(r"D:\ValidationStudy_numCams\FreeMoCap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
 # path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS")
 path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH")
 qualisys_data = np.load(path_to_qualisys_session_folder/'DataArrays'/'downsampled_qualisys_3D.npy')
