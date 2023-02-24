@@ -4,9 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib
 matplotlib.use("Qt5Agg")
-import matplotlib.pyplot as plt
 
-import csv 
 
 path_to_qualisys_analysis_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH\data_analysis\analysis_2023-02-21_14_56_38')
 path_to_freemocap_analysis_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\sesh_2022-05-24_16_02_53_JSM_T1_NIH\data_analysis\analysis_2023-02-22_11_03_32_6HZ')
@@ -51,5 +49,5 @@ for dimension in ['x','y','z']:
     plt.show()
 
 
-    fig.savefig(path_to_freemocap_analysis_folder/f'combined_violin_plot_{dimension}.png')
+    #fig.savefig(path_to_freemocap_analysis_folder/f'combined_violin_plot_{dimension}.png')
     f = 2

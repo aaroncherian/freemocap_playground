@@ -54,7 +54,7 @@ freemocap_framerate = 29.970857503650052
 
 
 time_old = np.arange(0,freemocap_data.shape[0]/freemocap_framerate,1/freemocap_framerate) #use shape/framerate to get the exact number of frames as in the data
-time_new = np.arange(0,freemocap_data.shape[0]/freemocap_framerate,1/25)se_new)
+time_new = np.arange(0,freemocap_data.shape[0]/freemocap_framerate,1/25)
 
 
 path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
