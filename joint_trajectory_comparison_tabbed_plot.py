@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+
 qualisys_indices = [
 'head',
 'left_ear',
@@ -75,21 +76,21 @@ class plotWindow():
 
 
 
-# path_to_data_folder = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data')
+path_to_data_folder = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data')
 
-# sessionID_list = ['sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_WalkRun_front_back','sesh_2022-05-24_16_10_46_JSM_T1_WalkRun']
-# labels = ['front', 'front_side','front_back','front_side_back']
+sessionID_list = ['sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_WalkRun_front_back','sesh_2022-05-24_16_10_46_JSM_T1_WalkRun']
+labels = ['front', 'front_side','front_back','front_side_back']
 
-path_to_data_folder = Path(r'D:\ValidationStudy2022\FreeMoCap_Data')
-sessionID_list = ['sesh_2022-05-24_15_55_40_JSM_T1_BOS']
-labels = ['FreeMoCap']
+# path_to_data_folder = Path(r'D:\ValidationStudy2022\FreeMoCap_Data')
+# sessionID_list = ['sesh_2022-05-24_15_55_40_JSM_T1_BOS']
+# labels = ['FreeMoCap']
 # sessionID_list = ['sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_JSM_T1_WalkRun']
 # labels = ['front', 'front_side','front_side_back']
 
 #path_to_qualysis_session_folder = Path(r"D:\ValidationStudy_numCams\FreeMoCap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
 #qualisys_data = np.load(path_to_qualysis_session_folder/'DataArrays'/'qualisys_origin_aligned_skeleton_3D.npy')
-path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS")
-qualisys_data = np.load(path_to_qualisys_session_folder/'DataArrays'/'downsampled_qualisys_3D.npy')
+path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
+qualisys_data = np.load(path_to_qualisys_session_folder/'DataArrays'/'qualisys_marker_data_29Hz.npy')
 samples = qualisys_data.shape[0]
 
 qualisys_sliced = qualisys_data[:,:,:]
@@ -104,8 +105,9 @@ mediapipe_joint_data_dict = {}
 
 for count,session_data in enumerate(freemocap_sessions_dict.values()):
     mediapipe_data = session_data.load_mediapipe_body_data() 
-    mediapipe_joint_data = mediapipe_data[:,:,:]
+    mediapipe_joint_data = mediapipe_data[1162:6621,:,:]
     mediapipe_joint_data_dict[count] = mediapipe_joint_data
+
 
 
 # baseline_session = 'front_side_back'
@@ -128,17 +130,18 @@ for index in range(len(mediapipe_indices)):
     y_ax = figure.add_subplot(312)
     z_ax = figure.add_subplot(313)
 
-    for count,joint_data in enumerate(mediapipe_joint_data_dict.values()):
-        x_ax.plot(joint_data[:,index,0]-joint_data[0,index,0], label = labels[count], alpha = .7)
-        y_ax.plot(joint_data[:,index,1]-joint_data[0,index,1], label = labels[count], alpha = .7)
-        z_ax.plot(joint_data[:,index,2]-joint_data[0,index,2], label = labels[count], alpha = .7)
-
+    
     if joint_to_plot in qualisys_indices:
         qual_index = qualisys_indices.index(joint_to_plot)
-        x_ax.plot(qualisys_sliced[:,qual_index,0]- qualisys_sliced[0,qual_index,0], label = 'Qualisys',  color = 'black', linewidth = 2)
-        y_ax.plot(qualisys_sliced[:,qual_index,1]- qualisys_sliced[0,qual_index,1], label = 'Qualisys',  color = 'black',linewidth = 2)
-        z_ax.plot(qualisys_sliced[:,qual_index,2]- qualisys_sliced[0,qual_index,2], label = 'Qualisys',  color = 'black',linewidth = 2)
+        x_ax.plot(qualisys_sliced[:,qual_index,0]- qualisys_sliced[0,qual_index,0], label = 'Qualisys',  color = 'black', linewidth = 2, alpha = 1)
+        y_ax.plot(qualisys_sliced[:,qual_index,1]- qualisys_sliced[0,qual_index,1], label = 'Qualisys',  color = 'black',linewidth = 2,alpha = 1)
+        z_ax.plot(qualisys_sliced[:,qual_index,2]- qualisys_sliced[0,qual_index,2], label = 'Qualisys',  color = 'black',linewidth = 2,alpha = 1)
 
+
+    for count,joint_data in enumerate(mediapipe_joint_data_dict.values()):
+        x_ax.plot(joint_data[:,index,0]-joint_data[0,index,0], label = labels[count], alpha = .3)
+        y_ax.plot(joint_data[:,index,1]-joint_data[0,index,1], label = labels[count], alpha = .3)
+        z_ax.plot(joint_data[:,index,2]-joint_data[0,index,2], label = labels[count], alpha = .3)
 
     # for count,joint_diff in enumerate(differences_list):
     #     x_ax.plot(joint_diff[:,index,0], label = labels[count])

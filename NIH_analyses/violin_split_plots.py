@@ -35,14 +35,14 @@ for dimension in ['x','y','z']:
     df_merged = pd.concat([df_freemocap,df_qual], ignore_index=False, sort = False)
 
     df_melted = pd.melt(df_merged, id_vars = 'System', value_vars = ['Eyes Open/Solid Ground', 'Eyes Closed/Solid Ground', 'Eyes Open/Foam', 'Eyes Closed/Foam'], var_name = 'Condition', value_name = 'COM_Velocity')
-    ax = sns.violinplot(data = df_melted, x = 'Condition', y = 'COM_Velocity', hue = 'System', split = True, cut = 1, inner = 'quart',palette={"freemocap": "b", "qualisys": ".85"} )
+    ax = sns.violinplot(data = df_melted, x = 'Condition', y = 'COM_Velocity', hue = 'System', split = True, inner = 'quart',palette={"freemocap": "b", "qualisys": ".85"} )
 
     sns.despine(left=True)
     
     ax.set_xlabel('Condition')
     ax.set_ylabel(f'COM {dimension} Velocity')
     ax.set_title(f'COM {dimension} Velocity vs. Condition')
-
+    ax.set_ylim([-2,2])
     fig = ax.get_figure()
 
 

@@ -51,20 +51,17 @@ for system,path in zip(['freemocap', 'qualisys'],path_list):
 df_merged = pd.concat([condition_dataframe_dict['freemocap'],condition_dataframe_dict['qualisys']], ignore_index=False, sort = False)
 
 df_melted = pd.melt(df_merged, id_vars = 'System', value_vars = ['EO/SG', 'EC/SG', 'EO/FG', 'EC/FG'], var_name = 'Condition', value_name = 'COM_Speed')
-ax = sns.violinplot(data = df_melted, x = 'Condition', y = 'COM_Speed', hue = 'System', split = True, cut = 1, inner = 'quart',palette={"freemocap": "b", "qualisys": ".85"} )
+ax = sns.violinplot(data = df_melted, x = 'Condition', y = 'COM_Speed', hue = 'System', split = True, cut = 0, inner = 'quart', palette={"freemocap": "b", "qualisys": ".85"} )
 
 sns.despine(left=True)
 
 ax.set_xlabel('Condition')
 ax.set_ylabel(f'COM Speed')
 ax.set_title(f'COM Speed vs. Condition')
-
 fig = ax.get_figure()
-
 
 plt.show()
 f = 2
-
 fig.savefig(freemocap_session_path/f'combined_violin_plot_speed.png')
 
 
