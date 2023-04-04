@@ -55,6 +55,10 @@ def detect_zero_crossings(marker_velocity_data:np.ndarray, search_range=2, show_
         else:
             toe_off_frames.append(min_abs_velocity_index)
 
+        #to account for the np diff removes the first frame
+        heel_strike_frames_adjusted = [frame + 1 for frame in heel_strike_frames]
+        toe_off_frames_adjusted = [frame + 1 for frame in toe_off_frames]
+
     return heel_strike_frames, toe_off_frames
 
 def plot_event_frames(marker_position_data:np.ndarray, marker_velocity_data:np.ndarray, heel_strike_frames, toe_off_frames):
@@ -117,7 +121,7 @@ def calculate_step_lengths(marker_position_data:np.ndarray, event_frames:list):
         next_event_frame = int(event_frames[frame+1]) 
         step_end_frame = next_event_frame - 1
         step_frames = list(range(current_event_frame,step_end_frame))
-        step_data = marker_position_data[step_frames]
+        step_data = marker_position_data[step_frames] - marker_position[step_frames][0] #zero it out
         step_data_dict[count] = step_data
 
     return step_data_dict
