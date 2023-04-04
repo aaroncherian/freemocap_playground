@@ -163,10 +163,11 @@ if __name__ == '__main__':
     if this_computer_name == 'DESKTOP-F5LCT4Q':
         #freemocap_validation_data_path = Path(r"C:\Users\aaron\Documents\HumonLab\Spring2022\ValidationStudy\FreeMocap_Data")
         #freemocap_validation_data_path = Path(r'D:\freemocap2022\FreeMocap_Data')
-        freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
+        #freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
+        freemocap_data_folder_path = Path(r'D:\sample_data\FreeMoCap_Data')
 
-    session_info = {'sessionID': 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH', 'skeleton_type': 'qualisys'} #name of the sessionID folder    
-
+    #session_info = {'sessionID': 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH', 'skeleton_type': 'qualisys'} #name of the sessionID folder    
+    session_info = {'sessionID': 'pre_alpha_session_2023-03-02-16_43_12', 'skeleton_type': 'mediapipe'}
     #sessionID = 'sesh_2022-05-03_13_43_00_JSM_treadmill_day2_t0'
     #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_NIH'
     #sessionID = 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun'

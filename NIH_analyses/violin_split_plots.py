@@ -6,8 +6,8 @@ import matplotlib
 matplotlib.use("Qt5Agg")
 
 
-path_to_qualisys_analysis_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH\data_analysis\analysis_2023-02-21_14_56_38')
-path_to_freemocap_analysis_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\sesh_2022-05-24_16_02_53_JSM_T1_NIH\data_analysis\analysis_2023-02-22_11_03_32_6HZ')
+path_to_qualisys_analysis_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH\data_analysis\analysis_2023-03-14_11_23_07')
+path_to_freemocap_analysis_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\sesh_2022-05-24_16_02_53_JSM_T1_NIH\data_analysis\analysis_2023-03-13_12_58_36_2Hz')
 
 # velocity_csv = f'condition_velocities_x.csv'
 # path_to_qual_csv = path_to_qualisys_analysis_folder/velocity_csv
@@ -42,12 +42,12 @@ for dimension in ['x','y','z']:
     ax.set_xlabel('Condition')
     ax.set_ylabel(f'COM {dimension} Velocity')
     ax.set_title(f'COM {dimension} Velocity vs. Condition')
-    ax.set_ylim([-2,2])
+    ax.set_ylim([-1,1])
     fig = ax.get_figure()
 
 
     plt.show()
 
 
-    #fig.savefig(path_to_freemocap_analysis_folder/f'combined_violin_plot_{dimension}.png')
+    fig.savefig(path_to_freemocap_analysis_folder/f'combined_violin_plot_{dimension}.png')
     f = 2

@@ -76,11 +76,14 @@ class plotWindow():
 
 
 
-path_to_data_folder = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data')
+# path_to_data_folder = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data')
 
-sessionID_list = ['sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_WalkRun_front_back','sesh_2022-05-24_16_10_46_JSM_T1_WalkRun']
-labels = ['front', 'front_side','front_back','front_side_back']
+# sessionID_list = ['sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_WalkRun_front_back','sesh_2022-05-24_16_10_46_JSM_T1_WalkRun']
+# labels = ['front', 'front_side','front_back','front_side_back']
 
+path_to_data_folder = Path(r'C:\Users\aaron\FreeMocap_Data\recording_sessions')
+sessionID_list = ['recording_15_19_00_gmt-4__brit_baseline','recording_15_20_51_gmt-4__brit_half_inch','recording_15_22_56_gmt-4__brit_one_inch','recording_15_24_58_gmt-4__brit_two_inch']
+labels = ['baseline', 'half inch lift','one inch lift', 'two inch lift']
 # path_to_data_folder = Path(r'D:\ValidationStudy2022\FreeMoCap_Data')
 # sessionID_list = ['sesh_2022-05-24_15_55_40_JSM_T1_BOS']
 # labels = ['FreeMoCap']
@@ -105,7 +108,7 @@ mediapipe_joint_data_dict = {}
 
 for count,session_data in enumerate(freemocap_sessions_dict.values()):
     mediapipe_data = session_data.load_mediapipe_body_data() 
-    mediapipe_joint_data = mediapipe_data[1162:6621,:,:]
+    mediapipe_joint_data = mediapipe_data[:,:,:]
     mediapipe_joint_data_dict[count] = mediapipe_joint_data
 
 
@@ -131,11 +134,11 @@ for index in range(len(mediapipe_indices)):
     z_ax = figure.add_subplot(313)
 
     
-    if joint_to_plot in qualisys_indices:
-        qual_index = qualisys_indices.index(joint_to_plot)
-        x_ax.plot(qualisys_sliced[:,qual_index,0]- qualisys_sliced[0,qual_index,0], label = 'Qualisys',  color = 'black', linewidth = 2, alpha = 1)
-        y_ax.plot(qualisys_sliced[:,qual_index,1]- qualisys_sliced[0,qual_index,1], label = 'Qualisys',  color = 'black',linewidth = 2,alpha = 1)
-        z_ax.plot(qualisys_sliced[:,qual_index,2]- qualisys_sliced[0,qual_index,2], label = 'Qualisys',  color = 'black',linewidth = 2,alpha = 1)
+    # if joint_to_plot in qualisys_indices:
+    #     qual_index = qualisys_indices.index(joint_to_plot)
+    #     x_ax.plot(qualisys_sliced[:,qual_index,0]- qualisys_sliced[0,qual_index,0], label = 'Qualisys',  color = 'black', linewidth = 2, alpha = 1)
+    #     y_ax.plot(qualisys_sliced[:,qual_index,1]- qualisys_sliced[0,qual_index,1], label = 'Qualisys',  color = 'black',linewidth = 2,alpha = 1)
+    #     z_ax.plot(qualisys_sliced[:,qual_index,2]- qualisys_sliced[0,qual_index,2], label = 'Qualisys',  color = 'black',linewidth = 2,alpha = 1)
 
 
     for count,joint_data in enumerate(mediapipe_joint_data_dict.values()):

@@ -35,17 +35,17 @@ qualisys_indices = [
 
 
 
-path_to_data_folder = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data')
+path_to_data_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
 
-sessionID_list = ['sesh_2022-05-24_16_10_46_JSM_T1_WalkRun','sesh_2022-05-24_16_10_46_WalkRun_front','sesh_2022-05-24_16_10_46_WalkRun_front_side','sesh_2022-05-24_16_10_46_WalkRun_front_back']
-joint_to_plot = 'right_wrist'
+sessionID_list = ['sesh_2022-05-24_16_02_53_JSM_T1_NIH',]
+#joint_to_plot = 'right_wrist'
 
 labels = ['front_side_back', 'front', 'front_side', 'front_back']
 
-qualisys_joint_index = qualisys_indices.index(joint_to_plot)
+#qualisys_joint_index = qualisys_indices.index(joint_to_plot)
 path_to_qualysis_session_folder = Path(r"D:\ValidationStudy_numCams\FreeMoCap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
 #qualisys_data = np.load(path_to_qualysis_session_folder/'DataArrays'/'qualisys_origin_aligned_skeleton_3D.npy')
-qualisys_data = np.load(path_to_qualysis_session_folder/'DataArrays'/'downsampled_qualisys_3D.npy')
+qualisys_data = np.load(path_to_qualysis_session_folder/'DataArrays'/'totalBodyCOM_frame_XYZ.npy')
 samples = qualisys_data.shape[0]
 
 qualisys_sliced = qualisys_data[0:5243,:,:]

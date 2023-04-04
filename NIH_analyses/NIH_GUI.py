@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
             marker_data_array_name = 'freemocap_data_resized.npy'
             markers_to_use = mediapipe_indices
         elif self.qualisys_radio.isChecked():
-            marker_data_array_name = 'downsampled_qualisys_3D.npy'
+            marker_data_array_name = 'qualisys_marker_data_29Hz_2_cutoff.npy'
             markers_to_use = qualisys_indices
         #array_name = 'mediaPipeSkel_3d.npy'
         #array_name = 'mediaPipeSkel_3d_origin_aligned.npy'

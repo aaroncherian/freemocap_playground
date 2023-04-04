@@ -6,10 +6,10 @@ import seaborn as sns
 import pandas as pd
 
 freemocap_path_lengths = pd.DataFrame({
-  "Eyes Open/Solid Ground": 0.17767209079046525,
-  "Eyes Closed/Solid Ground": 0.2290439249113198,
-  "Eyes Open/Foam": 0.23463957463731774,
-  "Eyes Closed/Foam": 0.27424361761227967,
+  "Eyes Open/Solid Ground": 0.1379251899786079,
+  "Eyes Closed/Solid Ground": 0.18927688802780013,
+  "Eyes Open/Foam": 0.1879743847599051,
+  "Eyes Closed/Foam": 0.2398103734605103,
   "System": 'freemocap'
  }, index = [0])
 
@@ -27,22 +27,22 @@ df_melted = pd.melt(df_merged, id_vars = 'System', value_vars = ['Eyes Open/Soli
 
 sns.set_theme(style="whitegrid")
 
-# ax = sns.barplot(
-#     data=df_melted,
-#     x="Condition", y="COM_Path_Length", hue="System",
-#     errorbar="sd", palette="dark", alpha = .6,
-# )
-
-
-# for i in ax.containers:
-#     ax.bar_label(i,
-
-
-ax = sns.lineplot(
+ax = sns.barplot(
     data=df_melted,
     x="Condition", y="COM_Path_Length", hue="System",
-    errorbar="sd", palette="dark", alpha=.6
+    errorbar="sd", palette="dark", alpha = .6,
 )
+
+
+for i in ax.containers:
+    ax.bar_label(i,)
+
+
+# ax = sns.lineplot(
+#     data=df_melted,
+#     x="Condition", y="COM_Path_Length", hue="System",
+#     errorbar="sd", palette="dark", alpha=.6
+# )
 
 sns.despine(left=True)
 ax.set(ylabel = 'Center of Mass Path Length (mm)')

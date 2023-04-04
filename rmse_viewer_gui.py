@@ -72,6 +72,10 @@ class RMSEViewerGUI(QMainWindow):
     def zero_data(self):
         self.freemocap_data = self.freemocap_data[:,:,:] - self.freemocap_data[0,:,:]
         self.qualisys_data = self.qualisys_data[:,:,:] - self.qualisys_data[0,:,:]
+    
+        # difference = abs(np.nanmean(self.freemocap_data[:,:,:]) - np.nanmean(self.qualisys_data[:,:,:]))
+        # self.freemocap_data = self.freemocap_data[:,:,:] -difference
+        # self.qualisys_data = self.qualisys_data[:,:,:] - difference
 
 path_to_freemocap_session_folder = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data\sesh_2022-05-24_16_10_46_JSM_T1_WalkRun')
 freemocap_data = np.load(path_to_freemocap_session_folder/'DataArrays'/'mediaPipeSkel_3d_origin_aligned.npy')
