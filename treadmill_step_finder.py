@@ -15,9 +15,14 @@ from scipy.interpolate import interp1d
 # freemocap_marker_position = freemocap_all_marker_data[:,joint_index,direction] *-1
 # freemocap_marker_velocity = np.diff(freemocap_marker_position,axis = 0)
 
-def load_all_markers(path_to_data:Path):
-    all_marker_data = np.load(path_to_data)
-    return all_marker_data
+def load_marker_position_and_velocity(path_to_data:Path, joint_to_use:str, axis_to_use:int):
+    marker_data = np.load(path_to_data)
+    
+    marker_data[:,:,0] = marker_data[:,:,0] *-1
+
+    marker_position, marker_velocity = load_specific_marker_data(marker_data=marker_data, joint_to_use=joint_to_use,axis_to_use = axis_to_use)
+
+    return marker_position,marker_velocity
 
 def load_specific_marker_data(marker_data:np.ndarray, joint_to_use:str, axis_to_use:int):
     #for axis to use, 0 = x axis, 1 = y axis, 2 = z axis
@@ -25,6 +30,7 @@ def load_specific_marker_data(marker_data:np.ndarray, joint_to_use:str, axis_to_
     marker_position_3d = marker_data[:, joint_index, :]
     marker_position_1d = marker_position_3d[:,axis_to_use]
     marker_velocity_1d = np.diff(marker_position_1d, axis = 0)
+    marker_velocity_1d = np.append(0,marker_velocity_1d)
 
     return marker_position_1d, marker_velocity_1d
 
@@ -58,8 +64,8 @@ def detect_zero_crossings(marker_velocity_data:np.ndarray, search_range=2, show_
             toe_off_frames.append(min_abs_velocity_index)
 
         #to account for the np diff removes the first frame
-        heel_strike_frames_adjusted = [frame + 1 for frame in heel_strike_frames]
-        toe_off_frames_adjusted = [frame + 1 for frame in toe_off_frames]
+        # heel_strike_frames_adjusted = [frame + 1 for frame in heel_strike_frames]
+        # toe_off_frames_adjusted = [frame + 1 for frame in toe_off_frames]
 
     return heel_strike_frames, toe_off_frames
 
@@ -123,18 +129,20 @@ def calculate_step_lengths(marker_position_data:np.ndarray, event_frames:list):
         next_event_frame = int(event_frames[frame+1]) 
         step_end_frame = next_event_frame - 1
         step_frames = list(range(current_event_frame,step_end_frame))
-        step_data = marker_position_data[step_frames] - marker_position[step_frames][0] #zero it out
+        step_data = marker_position_data[step_frames]
+        # step_data = marker_position_data[step_frames] - marker_position[step_frames][0] #zero it out
         step_data_dict[count] = step_data
 
     return step_data_dict
 
-def calculate_step_trajectory_avg_and_std(step_data_dict:dict):
+def calculate_step_trajectory_stats(step_data_dict:dict):
     step_data_mean = np.mean(list(step_data_dict.values()),axis = 0)
     step_data_std = np.std(list(step_data_dict.values()),axis = 0)    
+    step_data_median = np.median(list(step_data_dict.values()),axis = 0)
 
-    return step_data_mean, step_data_std
+    return step_data_mean, step_data_median,step_data_std
 
-def plot_avg_step_trajectory(step_data_mean:np.ndarray,step_data_std:np.ndarray,step_data_dict:dict):
+def plot_avg_step_trajectory(step_data_mean:np.ndarray,step_data_median:np.ndarray, step_data_std:np.ndarray,step_data_dict:dict):
 
     figure = plt.figure()
     position_ax = figure.add_subplot(111)
@@ -147,9 +155,11 @@ def plot_avg_step_trajectory(step_data_mean:np.ndarray,step_data_std:np.ndarray,
     for step_num in step_data_dict.keys():
         position_ax.plot(x,step_data_dict[step_num], alpha = .3, color = 'grey')
 
-    position_ax.plot(x,step_data_mean, color = 'k')
+    position_ax.plot(x,step_data_mean, color = 'k', label = 'mean')
     position_ax.fill_between(x,step_data_mean-step_data_std, step_data_mean + step_data_std, color = 'g', alpha = .2)
-
+    
+    position_ax.plot(x,step_data_median, color = 'k', linestyle ='--', label= 'median')
+    position_ax.legend()
     plt.show()
 
 def plot_all_recording_means(recordings_step_mean_dict:dict):
@@ -165,6 +175,11 @@ def plot_all_recording_means(recordings_step_mean_dict:dict):
     position_ax.legend()
     plt.show()
 
+def calculate_average_step_length(marker_position, event_frames):
+    step_data_dict = calculate_step_lengths(marker_position_data=marker_position, event_frames=event_frames)
+    resampled_data_dict = resample_step_data_dict(step_data_dict=step_data_dict, num_resampled_points=100)
+    step_data_mean, step_data_median, step_data_std = calculate_step_trajectory_stats(step_data_dict=resampled_data_dict)
+    return step_data_mean, step_data_median, step_data_std, resampled_data_dict
 
 def plot_x_vs_z(x_mean_step:np.ndarray,z_mean_step:np.ndarray):
     figure = plt.figure()
@@ -174,62 +189,88 @@ def plot_x_vs_z(x_mean_step:np.ndarray,z_mean_step:np.ndarray):
     position_ax.set_xlabel('X Position (mm)')
 
     position_ax.plot(x_mean_step,z_mean_step)
+    
+    num_frames = len(x_mean_step)
+    midpoint_frame = int(num_frames/2)
+    
+    position_ax.scatter(x_mean_step[0],z_mean_step[0], color = 'b', marker = 'p')
+    position_ax.scatter(x_mean_step[-1],z_mean_step[-1], color = 'r', marker = 'o')
+    position_ax.scatter(x_mean_step[midpoint_frame],z_mean_step[midpoint_frame], color = 'm', marker = 'h')
     plt.show()
 
+def plot_all_saggittal(x_dict,z_dict):
+    
+    figure = plt.figure()
+    position_ax = figure.add_subplot(111)
+    position_ax.set_title(f'{joint_to_use} Average Step Trajectory')
+    position_ax.set_ylabel('Z Position (mm)')
+    position_ax.set_xlabel('X Position (mm)')
+
+    for x_mean_key in x_dict.keys():
+        position_ax.plot(x_dict[x_mean_key],z_dict[x_mean_key], label = x_mean_key)
+    position_ax.legend()
+    
+    # num_frames = len(x_mean_step)
+    # midpoint_frame = int(num_frames/2)
+    
+    # position_ax.scatter(x_mean_step[0],z_mean_step[0], color = 'b', marker = 'p')
+    # position_ax.scatter(x_mean_step[-1],z_mean_step[-1], color = 'r', marker = 'o')
+    # position_ax.scatter(x_mean_step[midpoint_frame],z_mean_step[midpoint_frame], color = 'm', marker = 'h')
+    plt.show()
+    
 
 if __name__ == '__main__':
-    path_to_recording_folder = Path(r'C:\Users\aaron\FreeMocap_Data\recording_sessions')
+    path_to_recording_folder = Path(r'C:\Users\Aaron\Documents\freemocap_sessions\recordings')
 
     session_id_list = ['recording_15_19_00_gmt-4__brit_baseline','recording_15_20_51_gmt-4__brit_half_inch', 'recording_15_22_56_gmt-4__brit_one_inch','recording_15_24_58_gmt-4__brit_two_inch']
     label_list = ['baseline', 'half inch lift', 'one inch lift', 'two inch lift']
-    joint_to_use = 'left_heel'
     
+    # session_id_list = ['recording_15_19_00_gmt-4__brit_baseline']
+    # label_list = ['baseline']
+    joint_to_use = 'left_heel'
     step_data_mean_dict = {}
     step_data_std_dict = {}
+    step_data_median_dict = {}
 
+    step_data_mean_dict_z = {}
 
-    def calculate_average_step_length(marker_data, joint_to_use, axis_to_use, event_frames):
-        marker_position, marker_velocity = load_specific_marker_data(marker_data=marker_data, joint_to_use=joint_to_use,axis_to_use = axis_to_use)
-        step_data_dict = calculate_step_lengths(marker_position_data=marker_position, event_frames=event_frames)
-        resampled_data_dict = resample_step_data_dict(step_data_dict=step_data_dict, num_resampled_points=100)
-        step_data_mean, step_data_std = calculate_step_trajectory_avg_and_std(step_data_dict=resampled_data_dict)
-        return step_data_mean, step_data_std
-
+        
 
     for session_id, label in zip(session_id_list, label_list):
         path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz_transformed.npy'
 
-        freemocap_data = load_all_markers(path_to_data=path_to_data)
-
-        marker_position, marker_velocity = load_specific_marker_data(marker_data = freemocap_data, joint_to_use=joint_to_use,axis_to_use = 0)
-        heel_strike_frames, toe_off_frames = detect_zero_crossings(marker_velocity_data=marker_velocity,search_range=2)
-        # plot_event_frames(marker_position_data=marker_position, marker_velocity_data=marker_velocity, heel_strike_frames=heel_strike_frames, toe_off_frames=toe_off_frames)
-
-        step_data_dict = calculate_step_lengths(marker_position_data=marker_position, event_frames=heel_strike_frames)
-        resampled_data_dict = resample_step_data_dict(step_data_dict=step_data_dict, num_resampled_points=100)
-
-        step_data_mean, step_data_std = calculate_step_trajectory_avg_and_std(step_data_dict=resampled_data_dict)
-        # plot_avg_step_trajectory(step_data_mean=step_data_mean, step_data_std= step_data_std,step_data_dict=resampled_data_dict)
         
+        marker_position, marker_velocity = load_marker_position_and_velocity(path_to_data=path_to_data, joint_to_use=joint_to_use, axis_to_use = 0)
+        heel_strike_frames, toe_off_frames = detect_zero_crossings(marker_velocity_data=marker_velocity,search_range=2)
+        
+        step_data_mean, step_data_median, step_data_std, resampled_step_dict = calculate_average_step_length(marker_position=marker_position,event_frames=heel_strike_frames)
+   
         step_data_mean_dict[label] = step_data_mean
         step_data_std_dict[label] = step_data_std
 
-        step_data_mean_z, step_data_std_z = calculate_average_step_length(marker_data=freemocap_data,joint_to_use=joint_to_use,axis_to_use=2,event_frames=heel_strike_frames)
-        # marker_position_z, marker_velocity_z = load_marker_data(path_to_data=path_to_data, joint_to_use=joint_to_use,axis_to_use = 2)
+        # step_data_mean_z, step_data_std_z = calculate_average_step_length(marker_data=freemocap_data,joint_to_use=joint_to_use,axis_to_use=2,event_frames=heel_strike_frames)
+
+        # plot_event_frames(marker_position_data=marker_position, marker_velocity_data=marker_velocity, heel_strike_frames=heel_strike_frames, toe_off_frames=toe_off_frames)
+        # plot_avg_step_trajectory(step_data_mean=step_data_mean, 
+        #                          step_data_median = step_data_median, 
+        #                          step_data_std= step_data_std,
+        #                          step_data_dict=resampled_step_dict)
         
-        # step_data_dict_z = calculate_step_lengths(marker_position_data=marker_position_z, event_frames=heel_strike_frames)
-        # resampled_data_dict_z = resample_step_data_dict(step_data_dict=step_data_dict_z, num_resampled_points=100)
+        marker_position_z, marker_velocity_z = load_marker_position_and_velocity(path_to_data=path_to_data, joint_to_use=joint_to_use, axis_to_use = 2)
+        step_data_mean_z, step_data_median_z, step_data_std_z, resampled_step_dict_z = calculate_average_step_length(marker_position=marker_position_z,event_frames=heel_strike_frames)
 
-        # step_data_mean_z, step_data_std_z = calculate_step_trajectory_avg_and_std(step_data_dict=resampled_data_dict_z)
+        # marker_position_x_dict[label] = marker_position
+        # marker_position_z_dict[label] = marker_position_z
+        
+        step_data_mean_dict_z[label] = step_data_mean_z
+        
+        # plot_x_vs_z(step_data_mean,step_data_mean_z)
+        # plot_x_vs_z(step_data_mean_x_right,step_data_mean_z_right)
 
-        step_data_mean_x_right, step_data_std_x_right = calculate_average_step_length(marker_data=freemocap_data,joint_to_use='right_heel',axis_to_use=0,event_frames=heel_strike_frames)
-        step_data_mean_z_right, step_data_std_z_right = calculate_average_step_length(marker_data=freemocap_data,joint_to_use='right_heel',axis_to_use=2,event_frames=heel_strike_frames)
-
-        #plot_x_vs_z(step_data_mean,step_data_mean_z)
-        plot_x_vs_z(step_data_mean_x_right,step_data_mean_z_right)
         f = 2
-    
-    # plot_all_recording_means(recordings_step_mean_dict=step_data_mean_dict)
+            
+    plot_all_saggittal(step_data_mean_dict, step_data_mean_dict_z)
+    plot_all_recording_means(recordings_step_mean_dict=step_data_mean_dict)
 
 
     f = 2
