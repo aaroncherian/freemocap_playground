@@ -169,10 +169,7 @@ def plot_avg_step_trajectory(step_position_3d:dict, step_stats:dict, marker_to_p
 
 def plot_avg_hip_trajectory(step_stats:dict, axis_to_plot:int):
 
-
     left_hip_step_stats = step_stats[axis_to_plot]['left_hip']
-
-
     right_hip_step_stats = step_stats[axis_to_plot]['right_hip']
 
     figure = plt.figure()
@@ -198,8 +195,25 @@ def plot_avg_hip_trajectory(step_stats:dict, axis_to_plot:int):
     position_ax.legend()
 
 
+def plot_paired_limb_trajectories(step_stats:dict, dimension_to_plot:int, limb_one:str, limb_two:str, axis, label:str):
 
-    plt.show()
+    limb_one_stats = step_stats[dimension_to_plot][limb_one]
+    limb_two_stats = step_stats[dimension_to_plot][limb_two]
+
+    num_frames = np.arange(len(limb_one_stats['mean']))
+
+    axis.plot(num_frames,limb_one_stats['mean'], color = 'g', label = limb_one)
+    axis.fill_between(num_frames,limb_one_stats['mean'] - limb_one_stats['std'],limb_one_stats['mean'] + limb_one_stats['std'], color = 'g', alpha = .2 )
+    
+    axis.plot(num_frames,limb_two_stats['mean'], color = 'b', label = limb_two)
+    axis.fill_between(num_frames,limb_two_stats['mean'] - limb_two_stats['std'],limb_two_stats['mean'] + limb_two_stats['std'], color = 'b', alpha = .2 )
+    
+    axis.set_title(f'{label}')
+    axis.set_ylabel('Z Position (mm)')
+    axis.legend()
+
+    #axis.set_ylim([620,700])
+
 
 
 if __name__ == '__main__':
@@ -212,6 +226,15 @@ if __name__ == '__main__':
     
     # session_id_list = ['recording_15_19_00_gmt-4__brit_baseline','recording_15_24_58_gmt-4__brit_two_inch']
     # label_list = ['baseline','two inch lift']
+
+    
+    figure = plt.figure()
+    axes_dict = {
+        label: figure.add_subplot(len(label_list),1,count+1)
+        for count,label in enumerate(label_list)  
+    }
+
+
 
     for session_id, label in zip(session_id_list, label_list):
         path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz_transformed.npy'
@@ -229,5 +252,10 @@ if __name__ == '__main__':
         step_stats_dict = calculate_step_length_stats(step_data_3d=resampled_step_data_3d)
 
         # plot_avg_step_trajectory(step_position_3d=resampled_step_data_3d, step_stats =step_stats_dict, marker_to_plot = 'left_hip', axis_to_plot=0)
-        plot_avg_hip_trajectory(step_stats = step_stats_dict, axis_to_plot=2)
+        
+        #plot_avg_hip_trajectory(step_stats = step_stats_dict, axis_to_plot=2)
+        plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_hip', limb_two='right_hip', axis = axes_dict[label], label = label)
+    plt.show()
     f =2  
+
+

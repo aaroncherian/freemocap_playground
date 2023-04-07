@@ -100,7 +100,7 @@ def get_joint_coordinates_from_name(frame:int,joint_name:str,pose_estimation_mar
     return joint_coordinates
 
 
-def build_skeleton(skel_3d_data,pose_estimation_markers,pose_estimation_connections):
+def build_skeleton(skel_3d_data:np.ndarray,pose_estimation_markers:list,pose_estimation_connections:dict):
 
     num_frames = skel_3d_data.shape[0]
 
