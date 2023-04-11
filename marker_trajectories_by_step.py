@@ -194,6 +194,25 @@ def plot_avg_hip_trajectory(step_stats:dict, axis_to_plot:int):
     # position_ax.set_ylim([-100,100])
     position_ax.legend()
 
+## OLD LIMB TRAJECTORY PLOTTER
+# def plot_paired_limb_trajectories(step_stats:dict, dimension_to_plot:int, limb_one:str, limb_two:str, axis, label:str):
+
+#     limb_one_stats = step_stats[dimension_to_plot][limb_one]
+#     limb_two_stats = step_stats[dimension_to_plot][limb_two]
+
+#     num_frames = np.arange(len(limb_one_stats['mean']))
+
+#     axis.plot(num_frames,limb_one_stats['mean'], color = 'g', label = limb_one)
+#     axis.fill_between(num_frames,limb_one_stats['mean'] - limb_one_stats['std'],limb_one_stats['mean'] + limb_one_stats['std'], color = 'g', alpha = .2 )
+    
+#     axis.plot(num_frames,limb_two_stats['mean'], color = 'b', label = limb_two)
+#     axis.fill_between(num_frames,limb_two_stats['mean'] - limb_two_stats['std'],limb_two_stats['mean'] + limb_two_stats['std'], color = 'b', alpha = .2 )
+    
+#     axis.set_title(f'{label}')
+#     axis.set_ylabel('Z Position (mm)')
+#     axis.legend()
+
+    # axis.set_ylim([620,700])
 
 def plot_paired_limb_trajectories(step_stats:dict, dimension_to_plot:int, limb_one:str, limb_two:str, axis, label:str):
 
@@ -202,17 +221,45 @@ def plot_paired_limb_trajectories(step_stats:dict, dimension_to_plot:int, limb_o
 
     num_frames = np.arange(len(limb_one_stats['mean']))
 
-    axis.plot(num_frames,limb_one_stats['mean'], color = 'g', label = limb_one)
-    axis.fill_between(num_frames,limb_one_stats['mean'] - limb_one_stats['std'],limb_one_stats['mean'] + limb_one_stats['std'], color = 'g', alpha = .2 )
+    axis[0].plot(num_frames,limb_one_stats['mean'], label=f'{label} {limb_one}')
+    axis[0].fill_between(num_frames,limb_one_stats['mean'] - limb_one_stats['std'],limb_one_stats['mean'] + limb_one_stats['std'], alpha=.2 )
     
-    axis.plot(num_frames,limb_two_stats['mean'], color = 'b', label = limb_two)
-    axis.fill_between(num_frames,limb_two_stats['mean'] - limb_two_stats['std'],limb_two_stats['mean'] + limb_two_stats['std'], color = 'b', alpha = .2 )
+    axis[1].plot(num_frames,limb_two_stats['mean'], label=f'{label} {limb_two}')
+    axis[1].fill_between(num_frames,limb_two_stats['mean'] - limb_two_stats['std'],limb_two_stats['mean'] + limb_two_stats['std'], alpha=.2 )
     
-    axis.set_title(f'{label}')
-    axis.set_ylabel('Z Position (mm)')
-    axis.legend()
+    axis[0].set_title(f'{limb_one} Trajectories')
+    axis[0].set_ylabel('Z Position (mm)')
+    axis[0].legend()
 
-    #axis.set_ylim([620,700])
+    axis[1].set_title(f'{limb_two} Trajectories')
+    axis[1].set_ylabel('Z Position (mm)')
+    axis[1].set_xlabel('Frame #')
+    axis[1].legend()
+
+def plot_limb_trajectories(step_stats: dict, dimension_to_plot: int, limb_one: str, limb_two: str):
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+
+    plot_paired_limb_trajectories(
+        step_stats=step_stats,
+        dimension_to_plot=dimension_to_plot,
+        limb_one=limb_one,
+        limb_two=limb_one,  # Use the same limb as limb_one for both plots.
+        axis=ax1,
+        label=f"{limb_one} Data + Error Bands",
+    )
+
+    plot_paired_limb_trajectories(
+        step_stats=step_stats,
+        dimension_to_plot=dimension_to_plot,
+        limb_one=limb_two,
+        limb_two=limb_two,  # Use the same limb as limb_two for both plots.
+        axis=ax2,
+        label=f"{limb_two} Data + Error Bands",
+    )
+
+    plt.xlabel("Frame #")
+    plt.tight_layout()
+    # plt.show()
 
 
 
@@ -227,14 +274,16 @@ if __name__ == '__main__':
     # session_id_list = ['recording_15_19_00_gmt-4__brit_baseline','recording_15_24_58_gmt-4__brit_two_inch']
     # label_list = ['baseline','two inch lift']
 
-    
-    figure = plt.figure()
-    axes_dict = {
-        label: figure.add_subplot(len(label_list),1,count+1)
-        for count,label in enumerate(label_list)  
-    }
+    ##OLD LIMB PLOT CODE    
+    # figure = plt.figure()
+    # axes_dict = {
+    #     label: figure.add_subplot(len(label_list),1,count+1)
+    #     for count,label in enumerate(label_list)  
+    # }
 
+    figure, axes = plt.subplots(2, 1)
 
+    limb_one_axis, limb_two_axis = axes
 
     for session_id, label in zip(session_id_list, label_list):
         path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz_transformed.npy'
@@ -251,10 +300,21 @@ if __name__ == '__main__':
 
         step_stats_dict = calculate_step_length_stats(step_data_3d=resampled_step_data_3d)
 
-        # plot_avg_step_trajectory(step_position_3d=resampled_step_data_3d, step_stats =step_stats_dict, marker_to_plot = 'left_hip', axis_to_plot=0)
-        
+        # plot_avg_step_trajectory(step_position_3d=resampled_step_data_3d, step_stats =step_stats_dict, marker_to_plot = 'left_heel', axis_to_plot=2)
+
         #plot_avg_hip_trajectory(step_stats = step_stats_dict, axis_to_plot=2)
-        plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_hip', limb_two='right_hip', axis = axes_dict[label], label = label)
+        
+        plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_ankle', limb_two='right_ankle', axis=axes, label=label)
+
+        # plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_knee', limb_two='right_knee', axis=axes, label=label)
+    
+
+        # plot_limb_trajectories(
+        #     step_stats=step_stats_dict,
+        #     dimension_to_plot=2,
+        #     limb_one='left_heel',
+        #     limb_two='right_heel'
+        # )
     plt.show()
     f =2  
 

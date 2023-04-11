@@ -13,6 +13,8 @@ def calculate_leg_length(skeleton_for_this_frame, leg_segment_name:str):
     leg_length = lower_leg_length + upper_leg_length
     return leg_length
 
+
+
 def create_leg_length_dict(skeleton_connections_dict:dict):    
     leg_length_dict = {
         label:{
@@ -138,11 +140,20 @@ def plot_mean_leg_lengths_separated(mean_leg_lengths):
     x = np.arange(len(labels))
     width = 0.15
 
-    colors = ['b', 'red', 'green', 'orange']  # You can define more colors if you have more conditions
+    colors = ['b', 'g', 'r', 'c']  # You can define more colors if you have more conditions
     fig, ax = plt.subplots()
     for i, (left_leg_mean, right_leg_mean) in enumerate(zip(left_leg_means, right_leg_means)):
         rects1 = ax.bar(x[0] + width * i, left_leg_mean, width, label=f'{list(mean_leg_lengths.keys())[i]}', color=colors[i])
         rects2 = ax.bar(x[1] + width * i, right_leg_mean, width, color=colors[i])
+
+        for rects in [rects1, rects2]:
+            for rect in rects:
+                height = rect.get_height()
+                ax.annotate(f'{height:.2f}',
+                            xy=(rect.get_x() + rect.get_width() / 2, height),
+                            xytext=(0, 3),
+                            textcoords="offset points",
+                            ha='center', va='bottom')
 
     ax.set_ylabel('Mean Leg Length')
     ax.set_title('Mean Leg Lengths by Shoe Lift Condition')

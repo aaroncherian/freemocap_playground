@@ -29,6 +29,12 @@ def load_specific_marker_data(marker_data:np.ndarray, joint_to_use:str, axis_to_
     joint_index = mediapipe_indices.index(joint_to_use)
     marker_position_3d = marker_data[:, joint_index, :]
     marker_position_1d = marker_position_3d[:,axis_to_use]
+
+    num_frames = marker_position_1d.shape[0]
+
+    # for frame in range(num_frames):
+    #     marker_position_1d[frame] = marker_position_1d[frame] + 40 * frame
+
     marker_velocity_1d = np.diff(marker_position_1d, axis = 0)
     marker_velocity_1d = np.append(0,marker_velocity_1d)
 
@@ -162,7 +168,7 @@ def plot_avg_step_trajectory(step_data_mean:np.ndarray,step_data_median:np.ndarr
     position_ax.legend()
     plt.show()
 
-def plot_all_recording_means(recordings_step_mean_dict:dict):
+def plot_all_recording_means(recordings_step_mean_dict:dict, joint_to_use):
     figure = plt.figure()
     position_ax = figure.add_subplot(111)
     position_ax.set_title(f'{joint_to_use} Average Step Trajectory')
@@ -196,7 +202,7 @@ def plot_x_vs_z(x_mean_step:np.ndarray,z_mean_step:np.ndarray):
     position_ax.scatter(x_mean_step[0],z_mean_step[0], color = 'b', marker = 'p')
     position_ax.scatter(x_mean_step[-1],z_mean_step[-1], color = 'r', marker = 'o')
     position_ax.scatter(x_mean_step[midpoint_frame],z_mean_step[midpoint_frame], color = 'm', marker = 'h')
-    plt.show()
+    # plt.show()
 
 def plot_all_saggittal(x_dict,z_dict):
     
@@ -216,25 +222,59 @@ def plot_all_saggittal(x_dict,z_dict):
     # position_ax.scatter(x_mean_step[0],z_mean_step[0], color = 'b', marker = 'p')
     # position_ax.scatter(x_mean_step[-1],z_mean_step[-1], color = 'r', marker = 'o')
     # position_ax.scatter(x_mean_step[midpoint_frame],z_mean_step[midpoint_frame], color = 'm', marker = 'h')
-    plt.show()
+    # plt.show()
+
+def calculate_rmse(baseline_data: np.ndarray, comparison_data: np.ndarray):
+    if baseline_data.shape != comparison_data.shape:
+        raise ValueError("Baseline and comparison data must have the same shape")
+
     
+    squared_diff = np.abs((baseline_data - comparison_data)) 
+    mean_squared_diff = np.mean(squared_diff)
+    return mean_squared_diff
+
+def compare_sessions_rmse(session_id_list, label_list, joint_to_use,step_data_mean_dict):
+    rmse_dict = {}
+    baseline_label = label_list[0]
+    baseline_data = step_data_mean_dict[baseline_label]
+
+    for session_id, label in zip(session_id_list[1:], label_list[1:]):
+        comparison_data = step_data_mean_dict[label]
+        rmse = calculate_rmse(baseline_data[60:100], comparison_data)
+        rmse_dict[label] = rmse
+
+    return rmse_dict
+    
+def calculate_everything_for_joint(path_to_data, joint_to_use, axis_to_use, event_frames):
+    marker_position, marker_velocity = load_marker_position_and_velocity(path_to_data=path_to_data, joint_to_use=joint_to_use, axis_to_use = axis_to_use)
+    step_data_mean, step_data_median, step_data_std, resampled_step_dict = calculate_average_step_length(marker_position=marker_position,event_frames=event_frames)
+
+    return step_data_mean, resampled_step_dict
+
 
 if __name__ == '__main__':
-    path_to_recording_folder = Path(r'C:\Users\Aaron\Documents\freemocap_sessions\recordings')
-
+    #path_to_recording_folder = Path(r'C:\Users\Aaron\Documents\freemocap_sessions\recordings')
+    path_to_recording_folder = Path(r'C:\Users\aaron\FreeMocap_Data\recording_sessions')
     session_id_list = ['recording_15_19_00_gmt-4__brit_baseline','recording_15_20_51_gmt-4__brit_half_inch', 'recording_15_22_56_gmt-4__brit_one_inch','recording_15_24_58_gmt-4__brit_two_inch']
     label_list = ['baseline', 'half inch lift', 'one inch lift', 'two inch lift']
     
+    
+
     # session_id_list = ['recording_15_19_00_gmt-4__brit_baseline']
-    # label_list = ['baseline']
+    # label_list = ['baseline']dsddaavd
     joint_to_use = 'left_heel'
     step_data_mean_dict = {}
     step_data_std_dict = {}
     step_data_median_dict = {}
 
     step_data_mean_dict_z = {}
+    step_data_mean_right_dict = {}
+    # full_two_inch_data = np.load(path_to_recording_folder/session_id_list[3]/'output_data'/'full_mediapipe_body_3d_xyz_transformed.npy')
+    # clipped_data = full_two_inch_data[215:1000,:,:]
+    # np.save(path_to_recording_folder/session_id_list[3]/'output_data'/'mediapipe_body_3d_xyz_transformed.npy', clipped_data)
 
-        
+
+
 
     for session_id, label in zip(session_id_list, label_list):
         path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz_transformed.npy'
@@ -262,15 +302,28 @@ if __name__ == '__main__':
         # marker_position_x_dict[label] = marker_position
         # marker_position_z_dict[label] = marker_position_z
         
+        marker_postion_right, marker_velocity_right = load_marker_position_and_velocity(path_to_data=path_to_data, joint_to_use='right_heel', axis_to_use = 2)
+        step_data_mean_right, step_data_median_right, step_data_std_right, resampled_step_dict_right = calculate_average_step_length(marker_position=marker_postion_right,event_frames=heel_strike_frames)
+
+
+
         step_data_mean_dict_z[label] = step_data_mean_z
+
         
+
         # plot_x_vs_z(step_data_mean,step_data_mean_z)
         # plot_x_vs_z(step_data_mean_x_right,step_data_mean_z_right)
 
+        left_ankle_step_mean, left_ankle_step_dict = calculate_everything_for_joint(path_to_data=path_to_data,joint_to_use='left_heel', axis_to_use=2, event_frames=heel_strike_frames)
+        step_data_mean_dict[label] = left_ankle_step_mean
         f = 2
             
-    plot_all_saggittal(step_data_mean_dict, step_data_mean_dict_z)
-    plot_all_recording_means(recordings_step_mean_dict=step_data_mean_dict)
+    # plot_all_saggittal(step_data_mean_dict, step_data_mean_dict_z)
+    # plot_all_recording_means(recordings_step_mean_dict=step_data_mean_dict, joint_to_use='left_heel')
+    # plot_all_recording_means(recordings_step_mean_dict=step_data_mean_right_dict, joint_to_use='right_heel')
+    plot_all_recording_means(recordings_step_mean_dict=step_data_mean_dict, joint_to_use='left_heel')
+    plt.show()
 
-
+    rmse_results = compare_sessions_rmse(session_id_list, label_list, 'joint_to_use',step_data_mean_dict)
+    print("RMSE between baseline and other sessions:", rmse_results)
     f = 2
