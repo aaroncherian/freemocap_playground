@@ -290,7 +290,7 @@ if __name__ == '__main__':
 
         # step_data_mean_z, step_data_std_z = calculate_average_step_length(marker_data=freemocap_data,joint_to_use=joint_to_use,axis_to_use=2,event_frames=heel_strike_frames)
 
-        # plot_event_frames(marker_position_data=marker_position, marker_velocity_data=marker_velocity, heel_strike_frames=heel_strike_frames, toe_off_frames=toe_off_frames)
+        plot_event_frames(marker_position_data=marker_position, marker_velocity_data=marker_velocity, heel_strike_frames=heel_strike_frames, toe_off_frames=toe_off_frames)
         # plot_avg_step_trajectory(step_data_mean=step_data_mean, 
         #                          step_data_median = step_data_median, 
         #                          step_data_std= step_data_std,
@@ -324,6 +324,6 @@ if __name__ == '__main__':
     plot_all_recording_means(recordings_step_mean_dict=step_data_mean_dict, joint_to_use='left_heel')
     plt.show()
 
-    rmse_results = compare_sessions_rmse(session_id_list, label_list, 'joint_to_use',step_data_mean_dict)
-    print("RMSE between baseline and other sessions:", rmse_results)
-    f = 2
+    # rmse_results = compare_sessions_rmse(session_id_list, label_list, 'joint_to_use',step_data_mean_dict)
+    # print("RMSE between baseline and other sessions:", rmse_results)
+    # f = 2

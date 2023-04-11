@@ -69,6 +69,32 @@ def detect_zero_crossings(marker_velocity_data:np.ndarray, search_range=2, show_
     
 #     return dimension_step_dict
 
+def divide_com_data_into_steps(marker_position_3d_data: np.ndarray, event_frames: list):
+    num_frames,num_dimensions = marker_position_3d_data.shape
+        
+    def get_marker_step_data(dimension, frame):
+        current_event_frame = int(event_frames[frame])
+        next_event_frame = int(event_frames[frame + 1])
+        step_end_frame = next_event_frame - 1  # end this step right before the next heel strike/toe off
+        step_frame_interval = list(range(current_event_frame, step_end_frame))
+
+        marker_step_data = marker_position_3d_data[step_frame_interval, dimension]
+
+        if dimension == 0:
+            marker_step_data -= marker_step_data[0]  # zero it out in the x direction only
+        
+        return marker_step_data
+
+    dimension_step_dict = {
+        dimension: { 
+                count: get_marker_step_data(dimension, frame)
+                for count, frame in enumerate(range(len(event_frames) - 1))
+        }
+        for dimension in range(num_dimensions)
+    }
+    return dimension_step_dict
+        
+
                 
 def divide_3d_data_into_steps(marker_position_3d_data: np.ndarray, event_frames: list):
     num_frames, num_markers, num_dimensions = marker_position_3d_data.shape
@@ -287,26 +313,38 @@ if __name__ == '__main__':
 
     for session_id, label in zip(session_id_list, label_list):
         path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz_transformed.npy'
-
         marker_data_3d = np.load(path_to_data)
         marker_data_3d[:,:,0] = marker_data_3d[:,:,0]*-1
+
+        path_to_com_data = path_to_recording_folder/session_id/'output_data'/'center_of_mass'/'total_body_center_of_mass_xyz.npy'
+        com_data_3d = np.load(path_to_com_data)
+        com_data_3d[:,0] = com_data_3d[:,0]*-1
+        com_data_3d = com_data_3d[:,np.newaxis,:]
+
+        
 
         marker_position, marker_velocity = load_specific_marker_data(marker_data=marker_data_3d, joint_to_use='left_heel', axis_to_use = 0)
         heel_strike_frames, toe_off_frames = detect_zero_crossings(marker_velocity_data=marker_velocity,search_range=2)
 
         step_data_3d = divide_3d_data_into_steps(marker_data_3d,heel_strike_frames)
-        step_data_left_heel_x = step_data_3d[0]['left_heel']
         resampled_step_data_3d = resample_steps(step_data_dict=step_data_3d, num_resampled_points=100)
-
         step_stats_dict = calculate_step_length_stats(step_data_3d=resampled_step_data_3d)
 
-        # plot_avg_step_trajectory(step_position_3d=resampled_step_data_3d, step_stats =step_stats_dict, marker_to_plot = 'left_heel', axis_to_plot=2)
+
+        com_step_data_3d = divide_3d_data_into_steps(com_data_3d,heel_strike_frames)
+        resampled_com_step_data_3d = resample_steps(step_data_dict=com_step_data_3d, num_resampled_points=100)
+        step_stats_com_dict = calculate_step_length_stats(step_data_3d=resampled_com_step_data_3d)
+        f = 2
+        
+        # plot_avg_step_trajectory(step_position_3d=resampled_com_step_data_3d, step_stats =step_stats_com_dict, marker_to_plot = 'nose', axis_to_plot=0)
 
         #plot_avg_hip_trajectory(step_stats = step_stats_dict, axis_to_plot=2)
         
-        plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_ankle', limb_two='right_ankle', axis=axes, label=label)
+        # plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_ankle', limb_two='right_ankle', axis=axes, label=label)
 
         # plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_knee', limb_two='right_knee', axis=axes, label=label)
+
+        plot_paired_limb_trajectories(step_stats=step_stats_com_dict, dimension_to_plot=1, limb_one='nose', limb_two='nose', axis=axes, label=label)
     
 
         # plot_limb_trajectories(
