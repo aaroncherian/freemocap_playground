@@ -311,6 +311,10 @@ if __name__ == '__main__':
 
     limb_one_axis, limb_two_axis = axes
 
+
+    max_dictionary = {}
+    stance_dictionary = {}
+
     for session_id, label in zip(session_id_list, label_list):
         path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz_transformed.npy'
         marker_data_3d = np.load(path_to_data)
@@ -336,15 +340,24 @@ if __name__ == '__main__':
         step_stats_com_dict = calculate_step_length_stats(step_data_3d=resampled_com_step_data_3d)
         f = 2
         
+        max_dictionary[label] = {}
+        max_dictionary[label]['left_heel'] = np.min(step_stats_dict[2]['left_ankle']['mean'])
+        max_dictionary[label]['right_heel'] = np.min(step_stats_dict[2]['right_ankle']['mean'])
+
+        stance_dictionary[label] = {}
+        stance_dictionary[label]['left_heel'] = np.mean(step_stats_dict[2]['left_heel']['mean'][0:40])
+        stance_dictionary[label]['right_heel'] = np.mean(step_stats_dict[2]['right_heel']['mean'][60:100])
+
+
         # plot_avg_step_trajectory(step_position_3d=resampled_com_step_data_3d, step_stats =step_stats_com_dict, marker_to_plot = 'nose', axis_to_plot=0)
 
         #plot_avg_hip_trajectory(step_stats = step_stats_dict, axis_to_plot=2)
         
-        # plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_ankle', limb_two='right_ankle', axis=axes, label=label)
+        plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_hip', limb_two='right_hip', axis=axes, label=label)
 
         # plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_knee', limb_two='right_knee', axis=axes, label=label)
 
-        plot_paired_limb_trajectories(step_stats=step_stats_com_dict, dimension_to_plot=1, limb_one='nose', limb_two='nose', axis=axes, label=label)
+        # plot_paired_limb_trajectories(step_stats=step_stats_com_dict, dimension_to_plot=1, limb_one='left_heel', limb_two='right_heel', axis=axes, label=label)
     
 
         # plot_limb_trajectories(
