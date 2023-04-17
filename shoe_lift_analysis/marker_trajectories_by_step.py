@@ -287,6 +287,37 @@ def plot_limb_trajectories(step_stats: dict, dimension_to_plot: int, limb_one: s
     plt.tight_layout()
     # plt.show()
 
+def plot_max_bar(max_dictionary):
+    labels = list(max_dictionary.keys())
+    left_heel_values = [max_dictionary[label]['left_heel'] for label in labels]
+    right_heel_values = [max_dictionary[label]['right_heel'] for label in labels]
+
+    x = np.arange(len(labels))  # the label locations
+    width = 0.35  # the width of the bars
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x - width/2, left_heel_values, width, label='Left Heel')
+    rects2 = ax.bar(x + width/2, right_heel_values, width, label='Right Heel')
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel('Max Height (mm)')
+    ax.set_title('Left and Right Heel Max Height Comparison by Session')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.legend()
+
+    # Attach a text label above each bar in *rects*, displaying its height
+    for rects in [rects1, rects2]:
+        for rect in rects:
+            height = rect.get_height()
+            ax.annotate('{}'.format(height),
+                        xy=(rect.get_x() + rect.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+
+    fig.tight_layout()
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -341,8 +372,8 @@ if __name__ == '__main__':
         f = 2
         
         max_dictionary[label] = {}
-        max_dictionary[label]['left_heel'] = np.min(step_stats_dict[2]['left_ankle']['mean'])
-        max_dictionary[label]['right_heel'] = np.min(step_stats_dict[2]['right_ankle']['mean'])
+        max_dictionary[label]['left_heel'] = np.max(step_stats_dict[2]['left_hip']['mean'])
+        max_dictionary[label]['right_heel'] = np.max(step_stats_dict[2]['right_hip']['mean'])
 
         stance_dictionary[label] = {}
         stance_dictionary[label]['left_heel'] = np.mean(step_stats_dict[2]['left_heel']['mean'][0:40])
@@ -353,7 +384,7 @@ if __name__ == '__main__':
 
         #plot_avg_hip_trajectory(step_stats = step_stats_dict, axis_to_plot=2)
         
-        plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_hip', limb_two='right_hip', axis=axes, label=label)
+        plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_heel', limb_two='right_heel', axis=axes, label=label)
 
         # plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_knee', limb_two='right_knee', axis=axes, label=label)
 
@@ -366,6 +397,7 @@ if __name__ == '__main__':
         #     limb_one='left_heel',
         #     limb_two='right_heel'
         # )
+    plot_max_bar(max_dictionary)
     plt.show()
     f =2  
 

@@ -28,7 +28,7 @@ def plot_leg_asymmetries(leg_length_dicts, labels):
     ax.set_ylabel('Leg Length (mm)')
     ax.set_title('Average Leg Length')
     ax.set_xticks(index)
-    ax.set_xticklabels(labels)
+    # ax.set_xticklabels(labels)
     ax.legend()
 
     # Add bar values on top
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     mean_leg_length = calculate_mean_leg_lengths(leg_length_dict=leg_length_dict)
     std_leg_length = calculate_std_leg_lengths(leg_length_dict=leg_length_dict)
-#    plot_leg_asymmetries(leg_length_dicts=leg_length_list, labels=label_list)
+    # plot_leg_asymmetries(leg_length_dicts=leg_length_list, labels=label_list)
     plot_leg_asymmetries_grouped_by_leg(leg_length_dicts=mean_leg_length, leg_lengths_std = std_leg_length, labels=label_list)   
     f = 2
 
