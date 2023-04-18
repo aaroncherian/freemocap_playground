@@ -213,8 +213,9 @@ def plot_leg_markers(all_session_step_stats:dict, dimension_to_plot:int, labels:
     ankle_markers = ['left_ankle', 'right_ankle']
     knee_markers = ['left_knee', 'right_knee']
     hip_markers = ['left_hip', 'right_hip']
+    shoulder_markers = ['left_shoulder', 'right_shoulder']
 
-    ylim = [0,750]
+    # ylim = [0,750]
     xlim = [0,100]
 
     for label in labels:
@@ -244,7 +245,8 @@ def plot_leg_markers(all_session_step_stats:dict, dimension_to_plot:int, labels:
                 limb_to_plot=marker, # Use the same limb as limb_one for both plots.
                 axis=ax,
                 label = '',
-                color=session_color)
+                color=session_color,
+                )
             
         for marker, ax in zip(hip_markers,axes_list):
             plot_limb_trajectory(
@@ -253,10 +255,21 @@ def plot_leg_markers(all_session_step_stats:dict, dimension_to_plot:int, labels:
                 limb_to_plot=marker, # Use the same limb as limb_one for both plots.
                 axis=ax,
                 label = '',
-                color=session_color)
+                color=session_color,
+                )
 
-    ax1.set_title('Left Leg Hip, Knee & Ankle Height')
-    ax2.set_title('Right Leg Hip, Knee & Ankle Height')
+        for marker, ax in zip(shoulder_markers,axes_list):
+            plot_limb_trajectory(
+                step_stats=all_session_step_stats[label],
+                dimension_to_plot=dimension_to_plot,
+                limb_to_plot=marker, # Use the same limb as limb_one for both plots.
+                axis=ax,
+                label = '',
+                color=session_color,
+                )
+
+    ax1.set_title('Left Hip, Knee & Ankle Height')
+    ax2.set_title('Right Hip, Knee & Ankle Height')
 
     ax1.set_ylabel('Height (mm)')
     ax1.set_xlabel('% Gait Cycle')
@@ -265,8 +278,8 @@ def plot_leg_markers(all_session_step_stats:dict, dimension_to_plot:int, labels:
 
     ax1.legend()
 
-    ax1.set_ylim(ylim)
-    ax2.set_ylim(ylim)
+    # ax1.set_ylim(ylim)
+    # ax2.set_ylim(ylim)
 
     ax1.set_xlim(xlim)
     ax2.set_xlim(xlim)
@@ -274,11 +287,11 @@ def plot_leg_markers(all_session_step_stats:dict, dimension_to_plot:int, labels:
 
 
 
-def plot_limb_trajectory(step_stats:dict, dimension_to_plot:int, limb_to_plot:str, axis, label:str,color):
+def plot_limb_trajectory(step_stats:dict, dimension_to_plot:int, limb_to_plot:str, axis, label:str,color, linestyle = '-'):
         limb_stats = step_stats[dimension_to_plot][limb_to_plot]
         num_frames = np.arange(len(limb_stats['mean']))
 
-        axis.plot(num_frames,limb_stats['mean'], label=f'{label}',color=color)
+        axis.plot(num_frames,limb_stats['mean'], label=f'{label}',color=color, linestyle = linestyle)
         axis.fill_between(num_frames,limb_stats['mean'] - limb_stats['std'],limb_stats['mean'] + limb_stats['std'], alpha=.2, color = color )
 
 
