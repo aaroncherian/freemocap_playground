@@ -83,6 +83,18 @@ class SkeletonViewWidget(QWidget):
             self.ax.scatter(skel_x, skel_y, skel_z, color=color)
             self.plot_skeleton_bones(frame_number, mediapipe_skeleton, color)
 
+            trail_length = 30
+            joints_to_add_trails = [23, 24, 25, 26, 27, 28]  # Left hip, knee, ankle, and right hip, knee, ankle
+
+            for joint in joints_to_add_trails:
+                start_frame = max(0, frame_number - trail_length)
+                for i in range(start_frame, frame_number):
+                    trail_x = skeleton_3d_data[i:i + 2, joint, 0]
+                    trail_y = skeleton_3d_data[i:i + 2, joint, 1]
+                    trail_z = skeleton_3d_data[i:i + 2, joint, 2]
+                    self.ax.plot(trail_x, trail_y, trail_z, color=color, alpha=(i - start_frame + 1) / (trail_length + 1))
+                    
+
         if self.current_xlim:
             self.ax.set_xlim([self.current_xlim[0],self.current_xlim[1]])
             self.ax.set_ylim([self.current_ylim[0],self.current_ylim[1]])
