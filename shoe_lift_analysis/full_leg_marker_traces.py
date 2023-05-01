@@ -197,76 +197,40 @@ def plot_avg_hip_trajectory(step_stats:dict, axis_to_plot:int):
     position_ax.legend()
 
 
-def plot_leg_markers(all_session_step_stats:dict, dimension_to_plot:int, labels:list):
+def plot_leg_markers(left_session_step_stats: dict, right_session_step_stats: dict, dimension_to_plot: int, labels: list):
     fig, (ax1, ax2) = plt.subplots(1, 2)
 
-    #colors_list = ['#003f5c', '#7a5195', '#ef5675', '#ffa600']
-
-
     colors_list = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
-
-
     label_colors = {label: colors_list[i % len(colors_list)] for i, label in enumerate(labels)}
 
-    axes_list = [ax1,ax2]
-    heel_markers = ['left_heel', 'right_heel']
-    ankle_markers = ['left_ankle', 'right_ankle']
-    knee_markers = ['left_knee', 'right_knee']
-    hip_markers = ['left_hip', 'right_hip']
-    shoulder_markers = ['left_shoulder', 'right_shoulder']
+    axes_list = [ax1, ax2]
+    left_markers = ['left_ankle', 'left_knee', 'left_hip', 'left_shoulder']
+    right_markers = ['right_ankle', 'right_knee', 'right_hip', 'right_shoulder']
 
-    # ylim = [0,750]
-    xlim = [0,100]
+    xlim = [0, 100]
 
     for label in labels:
-        # for marker, ax in zip(heel_markers,axes_list):
-        #     plot_limb_trajectory(
-        #         step_stats=all_session_step_stats[label],
-        #         dimension_to_plot=dimension_to_plot,
-        #         limb_to_plot=marker, # Use the same limb as limb_one for both plots.
-        #         axis=ax,
-        #         label=f"{marker} Data + Error Bands",)
-
         session_color = label_colors.get(label, None)
 
-        for marker, ax in zip(ankle_markers,axes_list):
+        for marker, ax in zip(left_markers, [ax1] * len(left_markers)):
             plot_limb_trajectory(
-                step_stats=all_session_step_stats[label],
+                step_stats=left_session_step_stats[label],
                 dimension_to_plot=dimension_to_plot,
-                limb_to_plot=marker, # Use the same limb as limb_one for both plots.
+                limb_to_plot=marker,
                 axis=ax,
-                label=f"{label}",
-                color=session_color)
-            
-        for marker, ax in zip(knee_markers,axes_list):
-            plot_limb_trajectory(
-                step_stats=all_session_step_stats[label],
-                dimension_to_plot=dimension_to_plot,
-                limb_to_plot=marker, # Use the same limb as limb_one for both plots.
-                axis=ax,
-                label = '',
-                color=session_color,
-                )
-            
-        for marker, ax in zip(hip_markers,axes_list):
-            plot_limb_trajectory(
-                step_stats=all_session_step_stats[label],
-                dimension_to_plot=dimension_to_plot,
-                limb_to_plot=marker, # Use the same limb as limb_one for both plots.
-                axis=ax,
-                label = '',
-                color=session_color,
-                )
+                label=f"{label}" if marker == 'left_ankle' else '',
+                color=session_color
+            )
 
-        for marker, ax in zip(shoulder_markers,axes_list):
+        for marker, ax in zip(right_markers, [ax2] * len(right_markers)):
             plot_limb_trajectory(
-                step_stats=all_session_step_stats[label],
+                step_stats=right_session_step_stats[label],
                 dimension_to_plot=dimension_to_plot,
-                limb_to_plot=marker, # Use the same limb as limb_one for both plots.
+                limb_to_plot=marker,
                 axis=ax,
-                label = '',
-                color=session_color,
-                )
+                label='',
+                color=session_color
+            )
 
     ax1.set_title('Left Hip, Knee & Ankle Height')
     ax2.set_title('Right Hip, Knee & Ankle Height')
@@ -278,13 +242,9 @@ def plot_leg_markers(all_session_step_stats:dict, dimension_to_plot:int, labels:
 
     ax1.legend()
 
-    # ax1.set_ylim(ylim)
-    # ax2.set_ylim(ylim)
-
     ax1.set_xlim(xlim)
     ax2.set_xlim(xlim)
     plt.show()
-
 
 
 def plot_limb_trajectory(step_stats:dict, dimension_to_plot:int, limb_to_plot:str, axis, label:str,color, linestyle = '-'):
@@ -297,46 +257,39 @@ def plot_limb_trajectory(step_stats:dict, dimension_to_plot:int, limb_to_plot:st
 
 
 if __name__ == '__main__':
-    #path_to_recording_folder = Path(r'C:\Users\Aaron\Documents\freemocap_sessions\recordings')
     path_to_recording_folder = Path(r'C:\Users\aaron\FreeMocap_Data\recording_sessions')
-
 
     session_id_list = ['recording_15_19_00_gmt-4__brit_baseline','recording_15_20_51_gmt-4__brit_half_inch', 'recording_15_22_56_gmt-4__brit_one_inch','recording_15_24_58_gmt-4__brit_two_inch']
     label_list = ['baseline', 'half inch lift (12.7mm)', 'one inch lift (25.4mm)', 'two inch lift (50.8mm)']
 
-
-    # figure, axes = plt.subplots(2, 1)
-
-    # limb_one_axis, limb_two_axis = axes
-
-    stats_dict = {}
+    left_stats_dict = {}
+    right_stats_dict = {}
 
     for session_id, label in zip(session_id_list, label_list):
         path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz_transformed.npy'
         marker_data_3d = np.load(path_to_data)
         marker_data_3d[:,:,0] = marker_data_3d[:,:,0]*-1
 
-        
-        marker_position, marker_velocity = load_specific_marker_data(marker_data=marker_data_3d, joint_to_use='left_heel', axis_to_use = 0)
-        heel_strike_frames, toe_off_frames = detect_zero_crossings(marker_velocity_data=marker_velocity,search_range=2)
+        # Left heel
+        marker_position_left, marker_velocity_left = load_specific_marker_data(marker_data=marker_data_3d, joint_to_use='left_heel', axis_to_use=0)
+        left_heel_strike_frames, _ = detect_zero_crossings(marker_velocity_data=marker_velocity_left, search_range=2)
+        step_data_3d_left = divide_3d_data_into_steps(marker_data_3d, left_heel_strike_frames)
+        resampled_step_data_3d_left = resample_steps(step_data_dict=step_data_3d_left, num_resampled_points=100)
+        step_stats_dict_left = calculate_step_length_stats(step_data_3d=resampled_step_data_3d_left)
+        left_stats_dict[label] = step_stats_dict_left
 
-        step_data_3d = divide_3d_data_into_steps(marker_data_3d,heel_strike_frames)
-        resampled_step_data_3d = resample_steps(step_data_dict=step_data_3d, num_resampled_points=100)
-        step_stats_dict = calculate_step_length_stats(step_data_3d=resampled_step_data_3d)
-
-        stats_dict[label] = step_stats_dict
-
-        # plot_avg_step_trajectory(step_position_3d=resampled_com_step_data_3d, step_stats =step_stats_com_dict, marker_to_plot = 'nose', axis_to_plot=0)
-
-        #plot_avg_hip_trajectory(step_stats = step_stats_dict, axis_to_plot=2)
-        
-        # plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_heel', limb_two='right_heel', axis=axes, label=label)
-
-        # plot_paired_limb_trajectories(step_stats=step_stats_dict, dimension_to_plot=2, limb_one='left_knee', limb_two='right_knee', axis=axes, label=label)
-
-        # plot_paired_limb_trajectories(step_stats=step_stats_com_dict, dimension_to_plot=1, limb_one='left_heel', limb_two='right_heel', axis=axes, label=label)
+        # Right heel
+        marker_position_right, marker_velocity_right = load_specific_marker_data(marker_data=marker_data_3d, joint_to_use='right_heel', axis_to_use=0)
+        right_heel_strike_frames, _ = detect_zero_crossings(marker_velocity_data=marker_velocity_right, search_range=2)
+        step_data_3d_right = divide_3d_data_into_steps(marker_data_3d, right_heel_strike_frames)
+        resampled_step_data_3d_right = resample_steps(step_data_dict=step_data_3d_right, num_resampled_points=100)
+        step_stats_dict_right = calculate_step_length_stats(step_data_3d=resampled_step_data_3d_right)
+        right_stats_dict[label] = step_stats_dict_right
     
-    plot_leg_markers(all_session_step_stats=stats_dict, dimension_to_plot=2, labels=label_list)
-    f =2  
+plot_leg_markers(left_session_step_stats=left_stats_dict, right_session_step_stats=right_stats_dict, dimension_to_plot=2, labels=label_list)
+
+
+
+f =2  
 
 
