@@ -1,5 +1,41 @@
-# Running Notes
+# FreeMoCap Validation Project - Running Notes
 [![hackmd-github-sync-badge](https://hackmd.io/JdUwnYRhSle8D8UxfBYSCw/badge)](https://hackmd.io/JdUwnYRhSle8D8UxfBYSCw)
+###### tags: `freemocap` `validation` `aaron` `NIH`
+
+## 2023-05-03
+
+- Need a new subject, want to check in about protocols and planned analyses
+- Just standing or also including walking (treadmill/overground)?
+    - leaning towards standing only 
+    - don't need to do NIH stuff on the treadmill if we don't do any walking things 
+    - can use force plates as well
+- Time syncing BalancePod with FreeMoCap
+    - start FreeMoCap and then start BalancePod, try and keep track of when we started BalancePod
+- Protocol:
+    - Set up cameras (circle of 6 ideally)
+    - Calibrate 
+    - Hold A-pose
+    - Eyes Open/Solid Ground 
+    - Eyes Closed/Solid Ground
+    - Eyes Open/Foam
+    - Eyes Closed/Foam
+    - Tandem / eyes open / solid ground
+    - End recording, start new recording 
+    - One foot standing / eyes open / solid ground
+    - One foot standing / eyes closed / solid ground
+    - Repeat x amount of times
+    - Step on and off the force plates between different balance conditions
+    - Check NIH instructions (add a line about maxing performance in some way if not included)
+- 
+- 6 - 12 subjects total?
+- Try and record audio
+
+
+- NIH weaknesses:
+    - Can't time sync (control when things start and end well)
+    - Can't control the order of the tasks 
+====
+old stuff below
 
 ## 2022-01-08 Jon/Aaron/Trent
 
@@ -115,3 +151,72 @@ Where by 'clincally relevant measurements', we will compare against the NIH tool
             -  and then have each computer record the timestamp that it recieved teh pulse from the tigger
             -  use that to synchronize the data streams
     - method for resampling things at different framerates
+
+## 2022-09-21
+
+- agenda
+    - equipment
+        - pad
+            - buy from amazon
+        - NIH Toolbox
+            - Erin Meier has the app
+        - iPad
+            - Trent said he had one
+            - Michael will get one
+            - need to figure out the plan 
+- Experimental protocol
+    - start freemocap recording
+        - bonus points - start an screen record with audio and say out loud what is happening
+        - assume calibration has been settled
+    - stand in A-pose (palms facing forward) for count of 10
+    - Range of Motion 
+        - Start from head down to feet,  move each joint through full range of motion
+            - head
+            - lshoulder/rshoulder - swing forward and back
+            - elbows - rotate
+            - wrists
+            - hands - palms to camera and move fingers
+            - hips (swing torso around)
+            - legs forward/back/left/right
+            - knee - lift and swing around 
+            - ankle
+    - NIH Balance assessment (quiet stance)
+        - (ideally would be random order each time, but we can do it in order here)
+        - 70 seconds each
+        - Eyes open, solid ground
+        - eyes closed, solid ground
+        - eyes open, foam pad
+        - eyes closed, foam pad
+    - Star balance (active balance)
+        - stand in the middle of an 8-pointed star of tape on the ground
+            - arms of the star longer than you reach with your foot
+        - touch your toe as far along each arm of the star as you can (lightly touching with toe)
+        - do it for both legs (clockwise direction for right leg, anticlockwise for left)
+        - repeat x3? 
+        - depends on how long the rest of it takes
+
+## 2022-11-02
+
+### Data collection day! :D
+
+sub - ATJ
+
+equipment: 
+- 6 webcams
+- PC from jon's office
+
+
+software: 
+- fresh install of `freemocap==0.0.54` in `python=3.7` anaconda
+    - with `pip install upgrade`
+
+Qualisys Markerset:
+
+- Qualisys Sport marker set  (42)
+    - 6 additional
+        - 2 medial ankles
+        - 4 shoulders
+            - one on front of shoulder one on back , for each shoulder
+Recording: 
+
+1. 
