@@ -73,8 +73,6 @@ class MainWindow(QMainWindow):
 
         # self.setFixedSize(layout.sizeHint())
 
-
-
     def connect_signals_to_slots(self):
         self.frame_count_slider.slider.valueChanged.connect(lambda: self.skeleton_view_widget.replot(self.frame_count_slider.slider.value()))
 
@@ -101,12 +99,12 @@ class MainWindow(QMainWindow):
         if self.session_folder_path:
             self.session_folder_path = Path(self.session_folder_path)
 
-        data_array_folder = 'DataArrays'
+        data_array_folder = 'output_data'
 
         if self.freemocap_radio.isChecked():
         #data_array_folder = 'output_data'
             #marker_data_array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
-            marker_data_array_name = 'freemocap_data_resized.npy'
+            marker_data_array_name = 'mediapipe_body_3d_xyz.npy'
             markers_to_use = mediapipe_indices
         elif self.qualisys_radio.isChecked():
             marker_data_array_name = 'qualisys_marker_data_29Hz_2_cutoff.npy'
@@ -141,7 +139,9 @@ class MainWindow(QMainWindow):
         self.balance_assessment_widget.run_path_length_analysis_button.setEnabled(True)
         self.camera_view_widget.video_loader.videoLoadButton.setEnabled(True)
         self.frame_marking_widget.save_condition_button.setEnabled(True)
+        self.frame_marking_widget.load_conditions_button.setEnabled(True)
         self.saving_data_widget.save_data_button.setEnabled(True)
+
     
     def set_condition_frames_dictionary(self, condition_frames_dictionary:dict):
         self.condition_frames_dictionary = condition_frames_dictionary

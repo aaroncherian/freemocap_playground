@@ -20,7 +20,7 @@ class FreeMoCapDataLoader():
         return mediapipe_body_data
 
     def load_total_body_COM_data(self):
-        self.path_to_total_body_COM_data = self.path_to_session_folder/DATA_FOLDER_NAME/TOTAL_BODY_CENTER_OF_MASS_NPY_FILE_NAME
+        self.path_to_total_body_COM_data = self.path_to_session_folder/DATA_FOLDER_NAME/'center_of_mass'/TOTAL_BODY_CENTER_OF_MASS_NPY_FILE_NAME
         total_body_COM_data = np.load(self.path_to_total_body_COM_data)
         return total_body_COM_data
 
