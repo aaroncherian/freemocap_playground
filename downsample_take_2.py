@@ -45,13 +45,13 @@ def downsample_data(data,time_old,time_new):
     return downsampled_data
 
 
-path_to_freemocap_session_folder = Path(r'D:\ValidationStudy2022\FreeMoCap_Data\sesh_2022-05-24_16_10_46_JSM_T1_WalkRun')
-freemocap_data = np.load(path_to_freemocap_session_folder/'DataArrays'/'mediaPipeSkel_3d_origin_aligned.npy')
+path_to_freemocap_session_folder = Path(r'"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_14_40_56_MDN_NIH_Trial2"')
+freemocap_data = np.load(path_to_freemocap_session_folder/'output_data'/'mediaPipeSkel_3d_body_hands_face.npy')
 
 num_markers = freemocap_data.shape[1]
 num_dimensions = freemocap_data.shape[2]
 
-freemocap_framerate = 29.970857503650052
+freemocap_framerate = 29.9778768021153
 
 
 time_old = np.arange(0,freemocap_data.shape[0]/freemocap_framerate,1/freemocap_framerate) #use shape/framerate to get the exact number of frames as in the data

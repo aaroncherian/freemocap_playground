@@ -55,23 +55,23 @@ def resample_data(data_to_resample:np.ndarray, original_framerate:float, framera
 
 
 
-path_to_freemocap_session_folder = Path(r'D:\ValidationStudy2022\FreeMoCap_Data\sesh_2022-05-24_16_10_46_JSM_T1_WalkRun')
-freemocap_data = np.load(path_to_freemocap_session_folder/'DataArrays'/'mediaPipeSkel_3d_origin_aligned.npy')
+path_to_freemocap_session_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_14_40_56_MDN_NIH_Trial2')
+freemocap_data = np.load(path_to_freemocap_session_folder/'output_data'/'mediaPipeSkel_3d_body_hands_face.npy')
 
 #path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
-path_to_qualisys_session_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH')
-qualisys_data = np.load(path_to_qualisys_session_folder/'DataArrays'/'qualisys_origin_aligned_skeleton_3D.npy')
+path_to_qualisys_session_folder = Path(r'D:\2023-05-17_MDN_NIH_data\qtm_data\qualisys_MDN_NIH_Trial2')
+qualisys_data = np.load(path_to_qualisys_session_folder/'output_data'/'qualisys_origin_aligned_skeleton_3D.npy')
 interpolated_qualisys_data = interpolate_freemocap_data(qualisys_data)
-filtered_qualisys_data = butterworth_filter_data(interpolated_qualisys_data,cutoff=2, sampling_rate=300, order=4)
+filtered_qualisys_data = butterworth_filter_data(interpolated_qualisys_data,cutoff=6, sampling_rate=300, order=4)
 
-freemocap_framerate = 29.970857503650052 #for walking
+freemocap_framerate = 29.9778768021153 #for walking
 qualisys_framerate = 300
-resample_framerate = 29.970857503650052
+# resample_framerate = 29.970857503650052
 
 
 # resampled_freemocap_data = resample_data(data_to_resample=freemocap_data, original_framerate=freemocap_framerate, framerate_to_resample_to=resample_framerate)
 # np.save(path_to_freemocap_session_folder/'DataArrays'/'freemocap_marker_data_30Hz.npy', resampled_freemocap_data)
 
-resampled_qualisys_data = resample_data(data_to_resample=filtered_qualisys_data, original_framerate=qualisys_framerate, framerate_to_resample_to=resample_framerate)
-np.save(path_to_qualisys_session_folder/'DataArrays'/'qualisys_marker_data_29Hz_2_cutoff.npy', resampled_qualisys_data)
+resampled_qualisys_data = resample_data(data_to_resample=filtered_qualisys_data, original_framerate=qualisys_framerate, framerate_to_resample_to=freemocap_framerate)
+np.save(path_to_qualisys_session_folder/'output_data'/'downsampled_qualisys_skel_3d.npy', resampled_qualisys_data)
 
