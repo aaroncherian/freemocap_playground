@@ -20,14 +20,18 @@ class FileManager():
 
         path_to_qualisys_data = self.path_to_qualisys_session_folder/self.data_folder_name/'downsampled_qualisys_skel_3d.npy'
         path_to_freemocap_data = self.path_to_freemocap_session_folder/self.data_folder_name/'mediaPipeSkel_3d_body_hands_face.npy'
-
         self.qualisys_data = np.load(path_to_qualisys_data)
         self.freemocap_data = np.load(path_to_freemocap_data)
 
-    def save_clipped_qualisys_data(self, clipped_qualisys_data:np.ndarray):
+        path_to_qualisys_com_data = self.path_to_qualisys_session_folder/self.data_folder_name/'center_of_mass'/'total_body_center_of_mass_xyz.npy'
+        self.qualisys_com_data = np.load(path_to_qualisys_com_data)
+        
+    def save_clipped_qualisys_data(self, clipped_qualisys_data:np.ndarray, clipped_qualisys_com_data:np.ndarray):
         path_to_save_qualisys_data = self.path_to_qualisys_session_folder/self.data_folder_name/'clipped_qualisys_skel_3d.npy'
         np.save(path_to_save_qualisys_data,clipped_qualisys_data)
 
+        path_to_save_qualisys_com_data = self.path_to_qualisys_session_folder/self.data_folder_name/'center_of_mass'/'clipped_total_body_center_of_mass_xyz.npy'
+        np.save(path_to_save_qualisys_com_data,clipped_qualisys_com_data)
 
 class MainWindow(QMainWindow):
     def __init__(self, path_to_freemocap_session_folder, path_to_qualisys_session_folder):
@@ -43,6 +47,7 @@ class MainWindow(QMainWindow):
 
         self.qualisys_data = self.file_manager.qualisys_data
         self.freemocap_data = self.file_manager.freemocap_data
+        self.qualisys_com_data = self.file_manager.qualisys_com_data
 
         self.qualisys_start_end_frames = [0,self.qualisys_data.shape[0]]
         self.freemocap_start_end_frames = [0, self.freemocap_data.shape[0]]
@@ -56,7 +61,7 @@ class MainWindow(QMainWindow):
         self.frame_selector_widget = FrameSelectorWidget(self.freemocap_start_end_frames,self.qualisys_start_end_frames)
         layout.addWidget(self.frame_selector_widget)
 
-        self.data_clip_widget = ClipWidget(qualisys_3d_data=self.qualisys_data, freemocap_3d_data= self.freemocap_data)
+        self.data_clip_widget = ClipWidget(qualisys_3d_data=self.qualisys_data, freemocap_3d_data= self.freemocap_data, qualisys_com_data=self.qualisys_com_data)
         layout.addWidget(self.data_clip_widget)
 
         widget.setLayout(layout)

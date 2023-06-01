@@ -6,12 +6,14 @@ from PyQt6.QtCore import pyqtSignal
 
 class ClipWidget(QWidget):
     data_clipped_signal = pyqtSignal()
-    save_clipped_data_signal = pyqtSignal(object)
-    def __init__(self, qualisys_3d_data, freemocap_3d_data):
+    save_clipped_data_signal = pyqtSignal(object,object)
+    def __init__(self, qualisys_3d_data, freemocap_3d_data, qualisys_com_data):
         super().__init__()
 
         self.qualisys_3d_data = qualisys_3d_data
         self.freemocap_3d_data = freemocap_3d_data
+        self.qualisys_com_data = qualisys_com_data
+
         self._layout = QVBoxLayout()
         self.setLayout(self._layout)
 
@@ -46,11 +48,13 @@ class ClipWidget(QWidget):
 
         assert self.freemocap_3d_data.shape[0] == self.clipped_qualisys_data.shape[0], f'FreeMoCap and clipped Qualisys array lengths are not equal.'
 
+        self.clipped_qualisys_com_data = self.qualisys_com_data[qualisys_start_frame:qualisys_end_frame,:]
         self.save_clipped_data_button.setEnabled(True)
 
         self.data_clipped_signal.emit()
 
     def save_clipped_data(self):
-        self.save_clipped_data_signal.emit(self.clipped_qualisys_data)
+
+        self.save_clipped_data_signal.emit(self.clipped_qualisys_data,self.clipped_qualisys_com_data)
 
 
