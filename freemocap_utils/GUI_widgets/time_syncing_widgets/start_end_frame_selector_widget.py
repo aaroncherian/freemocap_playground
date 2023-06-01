@@ -36,10 +36,7 @@ class FrameSelectorWidget(QWidget):
         frame_form.addRow(QLabel('Qualisys Starting Frame'), self.qualisys_starting_frame_line)
         frame_form.addRow(QLabel('Qualisys Ending Frame'), self.qualisys_ending_frame_line)
 
-        self.freemocap_starting_frame_line.setText(str(freemocap_start_end_frames[0]))
-        self.freemocap_ending_frame_line.setText(str(freemocap_start_end_frames[1]))
-        self.qualisys_starting_frame_line.setText(str(qualisys_start_end_frames[0]))
-        self.qualisys_ending_frame_line.setText(str(qualisys_start_end_frames[1]))
+        self.set_start_and_end_frames(freemocap_start_end_frames=freemocap_start_end_frames, qualisys_start_end_frames=qualisys_start_end_frames)
 
         self._layout.addLayout(frame_form)
 
@@ -52,6 +49,13 @@ class FrameSelectorWidget(QWidget):
         self.qualisys_start_end_frames_new = [int(self.qualisys_starting_frame_line.text()),int(self.qualisys_ending_frame_line.text())]
 
         self.frame_intervals_updated_signal.emit()
+
+    def set_start_and_end_frames(self, freemocap_start_end_frames, qualisys_start_end_frames):
+        self.freemocap_starting_frame_line.setText(str(freemocap_start_end_frames[0]))
+        self.freemocap_ending_frame_line.setText(str(freemocap_start_end_frames[1]))
+        self.qualisys_starting_frame_line.setText(str(qualisys_start_end_frames[0]))
+        self.qualisys_ending_frame_line.setText(str(qualisys_start_end_frames[1]))
+
 
 
 
