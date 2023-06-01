@@ -15,6 +15,32 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 import numpy as np
+
+class FileManager:
+    def __init__(self):
+        self.data_options = {
+            "freemocap": {
+                "marker_data_array_name": "mediapipe_body_3d_xyz.npy",
+                "markers_to_use": mediapipe_indices
+            },
+            "qualisys": {
+                "marker_data_array_name": "downsampled_qualisys_skel_3d.npy",
+                "markers_to_use": qualisys_indices
+            }
+        }
+
+    def get_existing_directory(self, dialog_title="Choose a session"):
+        folder_diag = QFileDialog()
+        session_folder_path = QFileDialog.getExistingDirectory(None, dialog_title)
+        return Path(session_folder_path) if session_folder_path else None
+
+    def load_skeleton_data(self, session_folder_path, marker_data_array_name):
+        skeleton_data_folder_path = session_folder_path / 'output_data' / marker_data_array_name
+        return np.load(skeleton_data_folder_path)
+    
+    def get_data_option(self, option_name):
+        return self.data_options.get(option_name)
+    
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -25,6 +51,7 @@ class MainWindow(QMainWindow):
 
         widget = QWidget()
 
+        self.file_manager = FileManager()
 
         slider_and_skeleton_layout = QVBoxLayout()
 
@@ -90,33 +117,21 @@ class MainWindow(QMainWindow):
         self.frame_count_slider.set_slider_range(self.num_frames)
         self.enable_buttons()
         self.set_session_folder_path()
-
-    def open_folder_dialog(self):
         
-        self.folder_diag = QFileDialog()
-        self.session_folder_path  = QFileDialog.getExistingDirectory(None,"Choose a session")
+    def open_folder_dialog(self):
+        self.session_folder_path = self.file_manager.get_existing_directory("Choose a session")
 
         if self.session_folder_path:
-            self.session_folder_path = Path(self.session_folder_path)
 
-        data_array_folder = 'output_data'
+            if self.freemocap_radio.isChecked():
+                marker_data_array_name = 'mediapipe_body_3d_xyz.npy'
+                markers_to_use = mediapipe_indices
+            elif self.qualisys_radio.isChecked():
+                marker_data_array_name = 'downsampled_qualisys_skel_3d.npy'
+                markers_to_use = qualisys_indices
 
-        if self.freemocap_radio.isChecked():
-        #data_array_folder = 'output_data'
-            #marker_data_array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
-            marker_data_array_name = 'mediapipe_body_3d_xyz.npy'
-            markers_to_use = mediapipe_indices
-        elif self.qualisys_radio.isChecked():
-            marker_data_array_name = 'downsampled_qualisys_skel_3d.npy'
-            markers_to_use = qualisys_indices
-        #array_name = 'mediaPipeSkel_3d.npy'
-        #array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
-        #array_name = 'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
-        
-        skeleton_data_folder_path = self.session_folder_path / data_array_folder/marker_data_array_name
-        self.skel3d_data = np.load(skeleton_data_folder_path)
-
-        self.build_mediapipe_skeleton(markers_to_use)
+            self.skel3d_data = self.file_manager.load_skeleton_data(self.session_folder_path, marker_data_array_name)
+            self.build_mediapipe_skeleton(markers_to_use)
 
     def build_mediapipe_skeleton(self, markers_to_use:list):
 
