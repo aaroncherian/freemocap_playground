@@ -24,11 +24,11 @@ class FileManager:
                 "markers_to_use": mediapipe_indices
             },
             "qualisys": {
-                "marker_data_array_name": "downsampled_qualisys_skel_3d.npy",
+                "marker_data_array_name": "clipped_qualisys_skel_3d.npy",
                 "markers_to_use": qualisys_indices
             }
         }
-
+        
     def get_existing_directory(self, dialog_title="Choose a session"):
         folder_diag = QFileDialog()
         session_folder_path = QFileDialog.getExistingDirectory(None, dialog_title)
@@ -67,7 +67,6 @@ class MainWindow(QMainWindow):
         slider_and_skeleton_layout.addWidget(self.freemocap_radio)
         self.qualisys_radio = QRadioButton('Load Qualisys Data')
         slider_and_skeleton_layout.addWidget(self.qualisys_radio)
-
 
         self.skeleton_view_widget = SkeletonViewWidget()
         self.skeleton_view_widget.setFixedSize(self.skeleton_view_widget.size())
@@ -127,7 +126,7 @@ class MainWindow(QMainWindow):
                 marker_data_array_name = 'mediapipe_body_3d_xyz.npy'
                 markers_to_use = mediapipe_indices
             elif self.qualisys_radio.isChecked():
-                marker_data_array_name = 'downsampled_qualisys_skel_3d.npy'
+                marker_data_array_name = 'clipped_qualisys_skel_3d.npy'
                 markers_to_use = qualisys_indices
 
             self.skel3d_data = self.file_manager.load_skeleton_data(self.session_folder_path, marker_data_array_name)
