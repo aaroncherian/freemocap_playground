@@ -3,9 +3,9 @@ import scipy.io as sio
 
 from pathlib import Path
 
-freemocap_data_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\qtm_data')
+freemocap_data_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3')
 
-session_ID = 'qualisys_MDN_NIH_Trial2'
+session_ID = 'qualisys_MDN_NIH_Trial4'
 debug = True
 #frame_to_use = 2000
 freemocap_data_array_path = freemocap_data_folder_path/session_ID/'output_data'
@@ -18,4 +18,4 @@ f = 2
 
 qualisys_skel_save_path = freemocap_data_array_path/'qualisys_markers_3d.npy'
 
-# np.save(qualisys_skel_save_path,qualisys_data)
+np.save(qualisys_skel_save_path,qualisys_data)
