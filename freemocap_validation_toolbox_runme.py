@@ -22,7 +22,7 @@ from fmc_qual_validation_toolbox.mediapipe_skeleton_builder import mediapipe_ind
 from fmc_qual_validation_toolbox.qualisys_skeleton_builder import qualisys_indices
 
 
-freemocap_data_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\qtm_data')
+freemocap_data_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3')
     
 #session_one_info = {'sessionID': 'session_SER_1_20_22', 'skeleton_type': 'mediapipe'} #name of the sessionID folder
 
@@ -30,7 +30,7 @@ freemocap_data_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\qtm_data')
 
 #session_one_info = {'sessionID': 'gopro_sesh_2022-05-24_16_02_53_JSM_T1_BOS', 'skeleton_type': 'mediapipe'} #name of the sessionID folder
 #session_two_info = {'sessionID': 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS', 'skeleton_type': 'qualisys'} #name of the sessionID folder
-session_one_info = {'sessionID': 'qualisys_MDN_NIH_Trial2', 'skeleton_type': 'qualisys'} #name of the sessionID folder
+session_one_info = {'sessionID': 'qualisys_MDN_NIH_Trial4', 'skeleton_type': 'qualisys'} #name of the sessionID folder
 
 #session_two_info = {'sessionID': 'qualisys_sesh_2022-05-24_15_10_49_JSM_T2_slackline', 'skeleton_type': 'qualisys'} #name of the sessionID folder
 
@@ -40,9 +40,9 @@ session_one_info = {'sessionID': 'qualisys_MDN_NIH_Trial2', 'skeleton_type': 'qu
 #session_one_info = {'sessionID':''}
 
 #task = 'time_sync_two_sessions'
-#task = 'align_and_calculate_COM'
+task = 'align_and_calculate_COM'
 #task = 'align_skeleton_with_origin'
-task = 'calculate_COM'
+#task = 'calculate_COM'
 
 session_task_list = [session_one_info]
 
@@ -60,7 +60,7 @@ for session_info in session_task_list:
             skeleton_indices = mediapipe_indices
 
         elif session_info['skeleton_type'] == 'qualisys':
-            skeleton_data_path = freemocap_data_array_folder_path/'qualisysSkel_3d.npy'
+            skeleton_data_path = freemocap_data_array_folder_path/'downsampled_qualisys_skel_3d.npy'
             skeleton_data = np.load(skeleton_data_path)
 
             qualisys_num_frames = skeleton_data.shape[0]
@@ -105,9 +105,26 @@ for session_info in session_task_list:
         freemocap_COM_runme.run(session_info, freemocap_data_array_folder_path, skeleton_data)
 
     elif task == 'align_and_calculate_COM':
-        good_frame = good_frame_finder.find_good_frame(session_info,freemocap_data_folder_path, initial_velocity_guess=.2, debug = True)
-        skeleton_origin_alignment.align_skeleton_with_origin(session_info, freemocap_data_folder_path, good_frame, debug = True)
-        freemocap_COM_runme.run(session_info, freemocap_data_folder_path)
+
+        if session_info['skeleton_type'] == 'mediapipe':
+            skeleton_data_path = freemocap_data_array_folder_path/'mediaPipeSkel_3d_smoothed.npy' 
+            skeleton_data = np.load(skeleton_data_path)
+
+            skeleton_data_for_frame_finding = skeleton_data.copy()
+            skeleton_indices = mediapipe_indices
+
+        elif session_info['skeleton_type'] == 'qualisys':
+            skeleton_data_path = freemocap_data_array_folder_path/'downsampled_qualisys_skel_3d.npy'
+            skeleton_data = np.load(skeleton_data_path)
+
+            qualisys_num_frames = skeleton_data.shape[0]
+            skeleton_data_for_frame_finding = skeleton_data[0:int(qualisys_num_frames/2),:,:]
+
+            skeleton_indices = qualisys_indices
+
+        good_frame = good_frame_finder.find_good_frame(session_info,skeleton_data_for_frame_finding, initial_velocity_guess=.05, debug = True)
+        skeleton_origin_alignment.align_skeleton_with_origin(session_info, freemocap_data_array_folder_path, skeleton_data, skeleton_indices, good_frame, debug = True)
+        freemocap_COM_runme.run(session_info, freemocap_data_array_folder_path, skeleton_data)
 
 
     elif task == 'time_sync_two_sessions':
