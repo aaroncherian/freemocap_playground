@@ -28,9 +28,9 @@ def run(session_info, freemocap_data_array_path, skeleton_data):
     #data_array_path = this_freemocap_data_path/data_array_name
 
 
-    skeleton_file_path = freemocap_data_array_path/'origin_aligned_{}_Skelcoordinates_frame_segment_joint_XYZ.pkl'.format(skeleton_type)
-    segmentCOM_data_path = freemocap_data_array_path/'origin_aligned_segmentedCOM_frame_joint_XYZ.npy'
-    totalBodyCOM_data_path = freemocap_data_array_path/'origin_aligned_totalBodyCOM_frame_XYZ.npy'
+    skeleton_file_path = freemocap_data_array_path/'center_of_mass'/'origin_aligned_{}_Skelcoordinates_frame_segment_joint_XYZ.pkl'.format(skeleton_type)
+    segmentCOM_data_path = freemocap_data_array_path/'center_of_mass'/'origin_aligned_segmentedCOM_frame_joint_XYZ.npy'
+    totalBodyCOM_data_path = freemocap_data_array_path/'center_of_mass'/'total_body_center_of_mass_xyz.npy'
 
 
 
