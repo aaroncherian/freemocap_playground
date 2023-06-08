@@ -232,10 +232,10 @@ def set_axes_ranges(plot_ax,skeleton_data,ax_range):
 #5) Run the script and save out the reorganized .mat file
 #6) Change the session ID in the code 
 #7) Pick a frame to use 
-freemocap_data_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\qtm_data')
+freemocap_data_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3')
 
 
-session_ID = 'qualisys_MDN_NIH_Trial2'
+session_ID = 'qualisys_MDN_NIH_Trial4'
 debug = True
 #frame_to_use = 2000
 freemocap_data_array_path = freemocap_data_folder_path/session_ID/'output_data'

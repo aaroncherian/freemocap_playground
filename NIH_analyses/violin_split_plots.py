@@ -5,9 +5,8 @@ import seaborn as sns
 import matplotlib
 matplotlib.use("Qt5Agg")
 
-
-path_to_qualisys_analysis_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH\data_analysis\analysis_2023-03-14_11_23_07')
-path_to_freemocap_analysis_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\sesh_2022-05-24_16_02_53_JSM_T1_NIH\data_analysis\analysis_2023-03-13_12_58_36_2Hz')
+path_to_freemocap_analysis_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_15_03_20_MDN_NIH_Trial4\data_analysis\analysis_2023-06-01_10_17_22')
+path_to_qualisys_analysis_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\qualisys_MDN_NIH_Trial4\data_analysis\analysis_2023-06-01_18_06_59')
 
 # velocity_csv = f'condition_velocities_x.csv'
 # path_to_qual_csv = path_to_qualisys_analysis_folder/velocity_csv
@@ -42,7 +41,7 @@ for dimension in ['x','y','z']:
     ax.set_xlabel('Condition')
     ax.set_ylabel(f'COM {dimension} Velocity')
     ax.set_title(f'COM {dimension} Velocity vs. Condition')
-    ax.set_ylim([-1,1])
+    ax.set_ylim([-1.5,1.5])
     fig = ax.get_figure()
 
 

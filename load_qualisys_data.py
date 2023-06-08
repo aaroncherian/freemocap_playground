@@ -42,12 +42,12 @@ mediapipe_joint_index = mediapipe_indices.index(joint_to_plot)
 
 #path_to_qualisys_session_folder = Path(r"D:\ValidationStudy_numCams\FreeMoCap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_WalkRun")
 # path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS")
-path_to_qualisys_session_folder = Path(r"D:\2023-05-17_MDN_NIH_data\qtm_data\qualisys_MDN_NIH_Trial2")
-qualisys_data = np.load(path_to_qualisys_session_folder/'output_data'/'downsampled_qualisys_skel_3d.npy')
+path_to_qualisys_session_folder = Path(r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\qualisys_MDN_NIH_Trial4")
+qualisys_data = np.load(path_to_qualisys_session_folder/'output_data'/'qualisys_origin_aligned_skeleton_3D.npy')
 
 #path_to_freemocap_session_folder = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data\sesh_2022-05-24_16_10_46_JSM_T1_WalkRun')
 # path_to_freemocap_session_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\sesh_2022-05-24_15_55_40_JSM_T1_BOS')
-path_to_freemocap_session_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_14_40_56_MDN_NIH_Trial2')
+path_to_freemocap_session_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_15_03_20_MDN_NIH_Trial4')
 freemocap_data = np.load(path_to_freemocap_session_folder/'output_data'/'mediaPipeSkel_3d_body_hands_face.npy')
 
 
