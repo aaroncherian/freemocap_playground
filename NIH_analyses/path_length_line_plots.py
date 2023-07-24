@@ -42,14 +42,16 @@ def aggregate_path_lengths(analysis_folders):
     freemocap_path_lengths = pd.concat(freemocap_path_lengths)
     qualisys_path_lengths = pd.concat(qualisys_path_lengths)
 
+    diff_df = freemocap_path_lengths - qualisys_path_lengths
+
     # Calculate mean and standard deviation
-    freemocap_mean = freemocap_path_lengths.mean()
-    freemocap_std = freemocap_path_lengths.std()
+    freemocap_mean = diff_df.mean()
+    freemocap_std = diff_df.std()
 
     qualisys_mean = qualisys_path_lengths.mean()
     qualisys_std = qualisys_path_lengths.std()
 
-    return freemocap_mean, freemocap_std, qualisys_mean, qualisys_std
+    return freemocap_mean, freemocap_std, qualisys_mean, qualisys_std, diff_df, qualisys_path_lengths
 
 # Example usage
 analysis_folders = [
@@ -62,49 +64,49 @@ analysis_folders = [
     # ... more paths
 ]
 
-freemocap_mean, freemocap_std, qualisys_mean, qualisys_std = aggregate_path_lengths(analysis_folders)
-# Combine data into a single DataFrame
-data = []
+
+freemocap_mean, freemocap_std, qualisys_mean, qualisys_std, freemocap_path_lengths, qualisys_path_lengths = aggregate_path_lengths(analysis_folders)
+
+sns.set_style('whitegrid')
+# Conditions
 conditions = freemocap_mean.index
+conditions = [condition.replace('/', '\n') for condition in conditions]
+f = 2
+# Create figure with subplots
+fig, axs = plt.subplots(1, 2, figsize=(10, 10), sharey=True)
 
-# Add freemocap data
-for condition, mean, std in zip(conditions, freemocap_mean, freemocap_std):
-    data.append(['Freemocap', condition, mean, std])
+# Plotting Freemocap data
+# for index, row in freemocap_path_lengths.iterrows():
+#     axs[0].plot(conditions, row, '-o', color='#4d7197', alpha=0.6)
 
-# Add qualisys data
-for condition, mean, std in zip(conditions, qualisys_mean, qualisys_std):
-    data.append(['Qualisys', condition, mean, std])
+# Adding Freemocap mean and error bars
+axs[0].errorbar(conditions, freemocap_mean, yerr=freemocap_std, fmt='-o', color='black', capsize=5, label='Mean')
 
-# Create DataFrame
-df = pd.DataFrame(data, columns=['System', 'Condition', 'Mean Path Length', 'Standard Deviation'])
+# Labels and titles for Freemocap
+axs[0].set_title('Freemocap', fontsize = 16)
+axs[0].set_ylabel('Normalized Path Length (mm)', fontsize = 14)
+axs[0].legend(loc = 'upper left')
+axs[0].set_xlabel('Condition', fontsize = 14)
 
-n_conditions = len(df['Condition'].unique())
+# Plotting Qualisys data
+for index, row in qualisys_path_lengths.iterrows():
+    axs[1].plot(conditions, row, '-o', color='#bf6431', alpha=0.6)
 
-# Setting the width of the bars and position of the labels
-bar_width = 0.35
-index = np.arange(n_conditions)
+# Adding Qualisys mean and error bars
+axs[1].errorbar(conditions, qualisys_mean, yerr=qualisys_std, fmt='-o', color='black', capsize=5, label='Mean')
 
-# Plotting the barplot
-plt.figure(figsize=(10, 6))
+# Labels and titles for Qualisys
+axs[1].set_title('Qualisys', fontsize = 16)
+axs[1].set_xlabel('Condition', fontsize = 14)
+# axs[1].set_ylabel('Normalized Path Length (mm)')
+axs[1].legend(loc = 'upper left')
 
-# Plot Freemocap bars
-plt.bar(index, df[df['System'] == 'Freemocap']['Mean Path Length'],
-        bar_width, label='Freemocap',
-        yerr=df[df['System'] == 'Freemocap']['Standard Deviation'],
-        capsize=5, alpha=0.8)
+axs[0].set_ylim([0, .1])
+# axs[1].set_ylim([.1, .6])
 
-# Plot Qualisys bars
-plt.bar(index + bar_width, df[df['System'] == 'Qualisys']['Mean Path Length'],
-        bar_width, label='Qualisys',
-        yerr=df[df['System'] == 'Qualisys']['Standard Deviation'],
-        capsize=5, alpha=0.8)
+fig.suptitle('FreeMoCap and Qualisys Normalized Path Lengths vs. Condition', fontsize=16)
 
-# Adding labels and title
-plt.xlabel('Condition')
-plt.ylabel('Mean Path Length')
-plt.title('Comparison of Mean Path Lengths Between Freemocap and Qualisys')
-plt.xticks(index + bar_width / 2, df['Condition'].unique())
-plt.legend(title='System')
 
 # Display the plot
+plt.tight_layout()
 plt.show()

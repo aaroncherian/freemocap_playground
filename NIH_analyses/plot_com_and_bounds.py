@@ -57,12 +57,12 @@ class COM_2D_Plotter:
         self.marker_data_sliced, self.com_data_sliced = self.file_manager.load_condition_slices(path_to_data_analysis)
 
     def create_2D_COM_plot(self, mediapipe_indices):
-        fig, axs = plt.subplots(1, 4, figsize=(20, 5))
+        fig, axs = plt.subplots(1, 4, figsize=(20, 6), sharey=True)
 
         # List of conditions for indexing
         conditions = ['Eyes Open/Solid Ground', 'Eyes Closed/Solid Ground', 'Eyes Open/Foam', 'Eyes Closed/Foam']
 
-        ax_range = 150  # Set the range for each axis
+        ax_range = 165  # Set the range for each axis
 
         for i, ax in enumerate(axs):
             condition = conditions[i]
@@ -99,16 +99,18 @@ class COM_2D_Plotter:
             ax.plot(com_x, com_y, color='black', alpha=0.5, label='COM')
 
             # Plot average foot positions
-            ax.plot([left_heel_x, left_foot_x], [left_heel_y, left_foot_y], color='blue', label='Left Foot')
-            ax.plot([right_heel_x, right_foot_x], [right_heel_y, right_foot_y], color='red', label='Right Foot')
+            ax.plot([left_heel_x, left_foot_x], [left_heel_y, left_foot_y], color='blue', label='Left Foot', marker = '.')
+            ax.plot([right_heel_x, right_foot_x], [right_heel_y, right_foot_y], color='red', label='Right Foot', marker = '.')
 
             # Set axis range using the average foot position as reference point
             ax.set_xlim([ref_point_x - ax_range, ref_point_x + ax_range])
             ax.set_ylim([ref_point_y - ax_range, ref_point_y + ax_range])
 
             # Set axis labels
-            ax.set_xlabel('X-Axis (mm)')
-            ax.set_ylabel('Y-Axis (mm)')
+            ax.set_xlabel('X-Axis (mm)', fontsize = 14)
+            if i == 0:
+                ax.set_ylabel('Y-Axis (mm)', fontsize = 14)
+   
             ax.set_title(condition)
 
         # Create a legend for the figure

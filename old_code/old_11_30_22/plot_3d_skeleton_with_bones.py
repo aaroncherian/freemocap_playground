@@ -127,15 +127,15 @@ if __name__ == '__main__':
     from fmc_core_toolbox.good_frame_finder import find_good_frame
     from fmc_core_toolbox.skeleton_origin_alignment import align_skeleton_with_origin
     
-    freemocap_data_folder_path = Path(r'D:\freemocap2022\FreeMocap_Data')
+    freemocap_data_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3')
     #freemocap_data_folder_path = Path(r'D:\ValidationStudy2022\FreeMocap_Data')
 
-    sessionID = 'sesh_2022-09-29_17_29_31'
-    data_array_path = freemocap_data_folder_path/sessionID/'DataArrays'
-    freemocap_marker_data_array = np.load(data_array_path/'mediaPipeSkel_3d_origin_aligned.npy')
+    sessionID = 'sesh_2023-05-17_14_40_56_MDN_NIH_Trial2'
+    data_array_path = freemocap_data_folder_path/sessionID/'output_data'
+    freemocap_marker_data_array = np.load(data_array_path/'mediapipe_body_3d_xyz.npy')
     #freemocap_marker_data_array = np.load(data_array_path/'mediaPipeSkel_3d.npy')
     
-    freemocap_body_marker_data_array = freemocap_marker_data_array[:,0:33,:]
+    freemocap_body_marker_data_array = freemocap_marker_data_array[:,:,:]
 
     good_frame = find_good_frame(freemocap_body_marker_data_array,mediapipe_indices,.3)
     freemocap_alignment_marker_data_tuple = align_skeleton_with_origin(freemocap_body_marker_data_array, mediapipe_indices, good_frame)
