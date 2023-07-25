@@ -30,8 +30,9 @@ def aggregate_path_lengths(analysis_folders):
             continue
 
         # Read the JSON data
-        json_data = json.load(open(json_path))
-
+        with open(json_path, 'r') as file:
+            json_data = json.load(file)
+        
         # Extract and store path lengths (assuming JSON structure is known)
         if 'sesh' in str(path_to_analysis_folder).lower(): #this is a freemocap folder
             freemocap_path_lengths.append(pd.DataFrame(json_data['Path Lengths:'], index=[0]))
@@ -42,16 +43,7 @@ def aggregate_path_lengths(analysis_folders):
     freemocap_path_lengths = pd.concat(freemocap_path_lengths)
     qualisys_path_lengths = pd.concat(qualisys_path_lengths)
 
-    diff_df = freemocap_path_lengths - qualisys_path_lengths
-
-    # Calculate mean and standard deviation
-    freemocap_mean = diff_df.mean()
-    freemocap_std = diff_df.std()
-
-    qualisys_mean = qualisys_path_lengths.mean()
-    qualisys_std = qualisys_path_lengths.std()
-
-    return freemocap_mean, freemocap_std, qualisys_mean, qualisys_std, diff_df, qualisys_path_lengths
+    return freemocap_path_lengths, qualisys_path_lengths
 
 # Example usage
 analysis_folders = [
@@ -64,33 +56,40 @@ analysis_folders = [
     # ... more paths
 ]
 
-
-freemocap_mean, freemocap_std, qualisys_mean, qualisys_std, freemocap_path_lengths, qualisys_path_lengths = aggregate_path_lengths(analysis_folders)
+freemocap_path_lengths, qualisys_path_lengths = aggregate_path_lengths(analysis_folders)
 
 sns.set_style('whitegrid')
+
+# Calculate mean and standard deviation
+freemocap_mean = freemocap_path_lengths.mean()
+freemocap_std = freemocap_path_lengths.std()
+
+qualisys_mean = qualisys_path_lengths.mean()
+qualisys_std = qualisys_path_lengths.std()
+
 # Conditions
 conditions = freemocap_mean.index
 conditions = [condition.replace('/', '\n') for condition in conditions]
-f = 2
+
 # Create figure with subplots
 fig, axs = plt.subplots(1, 2, figsize=(10, 10), sharey=True)
 
 # Plotting Freemocap data
-# for index, row in freemocap_path_lengths.iterrows():
-#     axs[0].plot(conditions, row, '-o', color='#4d7197', alpha=0.6)
+for index, row in freemocap_path_lengths.iterrows():
+    axs[0].plot(conditions, row, '-o', color= '#7994B0', alpha=0.5)
 
 # Adding Freemocap mean and error bars
 axs[0].errorbar(conditions, freemocap_mean, yerr=freemocap_std, fmt='-o', color='black', capsize=5, label='Mean')
 
 # Labels and titles for Freemocap
 axs[0].set_title('Freemocap', fontsize = 16)
-axs[0].set_ylabel('Normalized Path Length (mm)', fontsize = 14)
+axs[0].set_ylabel('Path Length (mm)', fontsize = 14)
 axs[0].legend(loc = 'upper left')
 axs[0].set_xlabel('Condition', fontsize = 14)
 
 # Plotting Qualisys data
 for index, row in qualisys_path_lengths.iterrows():
-    axs[1].plot(conditions, row, '-o', color='#bf6431', alpha=0.6)
+    axs[1].plot(conditions, row, '-o', color= '#C67548', alpha=0.5)
 
 # Adding Qualisys mean and error bars
 axs[1].errorbar(conditions, qualisys_mean, yerr=qualisys_std, fmt='-o', color='black', capsize=5, label='Mean')
@@ -98,14 +97,7 @@ axs[1].errorbar(conditions, qualisys_mean, yerr=qualisys_std, fmt='-o', color='b
 # Labels and titles for Qualisys
 axs[1].set_title('Qualisys', fontsize = 16)
 axs[1].set_xlabel('Condition', fontsize = 14)
-# axs[1].set_ylabel('Normalized Path Length (mm)')
 axs[1].legend(loc = 'upper left')
-
-axs[0].set_ylim([0, .1])
-# axs[1].set_ylim([.1, .6])
-
-fig.suptitle('FreeMoCap and Qualisys Normalized Path Lengths vs. Condition', fontsize=16)
-
 
 # Display the plot
 plt.tight_layout()
