@@ -310,6 +310,8 @@ if __name__ == '__main__':
     for session_id, label in zip(session_id_list, label_list):
         path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz.npy'
         marker_data_3d = np.load(path_to_data)
+
+        marker_data_3d = marker_data_3d[1000:1300,:,:]
         marker_data_3d[:,:,0] = marker_data_3d[:,:,0]*-1
 
         # Left heel

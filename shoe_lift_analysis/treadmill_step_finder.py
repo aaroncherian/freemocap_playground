@@ -17,6 +17,7 @@ from scipy.interpolate import interp1d
 
 def load_marker_position_and_velocity(path_to_data:Path, joint_to_use:str, axis_to_use:int):
     marker_data = np.load(path_to_data)
+    marker_data = marker_data[:,:,:]
     
     marker_data[:,:,0] = marker_data[:,:,0] *-1
 
@@ -254,9 +255,9 @@ def calculate_everything_for_joint(path_to_data, joint_to_use, axis_to_use, even
 
 if __name__ == '__main__':
     #path_to_recording_folder = Path(r'C:\Users\Aaron\Documents\freemocap_sessions\recordings')
-    path_to_recording_folder = Path(r'C:\Users\aaron\FreeMocap_Data\recording_sessions')
-    session_id_list = ['recording_15_19_00_gmt-4__brit_baseline','recording_15_20_51_gmt-4__brit_half_inch', 'recording_15_22_56_gmt-4__brit_one_inch','recording_15_24_58_gmt-4__brit_two_inch']
-    label_list = ['baseline', 'half inch lift', 'one inch lift', 'two inch lift']
+    path_to_recording_folder = Path(r'D:\2023-06-07_JH\1.0_recordings\treadmill_calib')
+    session_id_list = ['sesh_2023-06-07_12_38_16_JH_leg_length_neg_5_trial_1']
+    label_list = ['-.5']
     
     
 
@@ -277,7 +278,7 @@ if __name__ == '__main__':
 
 
     for session_id, label in zip(session_id_list, label_list):
-        path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz_transformed.npy'
+        path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz.npy'
 
         
         marker_position, marker_velocity = load_marker_position_and_velocity(path_to_data=path_to_data, joint_to_use=joint_to_use, axis_to_use = 0)
