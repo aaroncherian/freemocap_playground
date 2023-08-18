@@ -204,8 +204,8 @@ def plot_leg_markers(left_session_step_stats: dict, right_session_step_stats: di
     label_colors = {label: colors_list[i % len(colors_list)] for i, label in enumerate(labels)}
 
     axes_list = [ax1, ax2]
-    left_markers = ['left_ankle', 'left_knee', 'left_hip', 'left_shoulder']
-    right_markers = ['right_ankle', 'right_knee', 'right_hip', 'right_shoulder']
+    left_markers = ['left_ankle', 'left_knee', 'left_hip']
+    right_markers = ['right_ankle', 'right_knee', 'right_hip']
 
     xlim = [0, 100]
 
@@ -254,19 +254,61 @@ def plot_limb_trajectory(step_stats:dict, dimension_to_plot:int, limb_to_plot:st
         axis.plot(num_frames,limb_stats['mean'], label=f'{label}',color=color, linestyle = linestyle)
         axis.fill_between(num_frames,limb_stats['mean'] - limb_stats['std'],limb_stats['mean'] + limb_stats['std'], alpha=.2, color = color )
 
+def plot_hip_heights(left_stats_dict, right_stats_dict, labels):
+    left_hip_heights = []
+    left_hip_heights_std = []
+    right_hip_heights = []
+    right_hip_heights_std = []
 
+    for label in labels:
+        left_hip_heights.append(left_stats_dict[label][2]['left_hip']['mean'][29])
+        right_hip_heights.append(right_stats_dict[label][2]['right_hip']['mean'][29])
+
+        left_hip_heights_std.append(left_stats_dict[label][2]['left_hip']['std'][29])
+        right_hip_heights_std.append(right_stats_dict[label][2]['right_hip']['std'][29])
+
+
+    x = np.arange(len(labels))
+    width = 0.4
+
+    fig, ax = plt.subplots()
+    # rects1 = ax.bar(x - width/2, left_hip_heights, width, yerr=left_hip_heights_std, label='Left Hip Height', capsize = 5 )
+    # rects2 = ax.bar(x + width/2, right_hip_heights, width, yerr=right_hip_heights_std, label='Right Hip Height', capsize=5)
+
+    rects1 = ax.bar(x - width/2, left_hip_heights, width, label='Left Hip Height')
+    rects2 = ax.bar(x + width/2, right_hip_heights, width, label='Right Hip Height')
+
+    def autolabel(rects):
+        for rect in rects:
+            height = rect.get_height()
+            ax.annotate('{:.2f}'.format(height),
+                        xy=(rect.get_x() + rect.get_width() / 2, height),
+                        xytext=(0, 3),
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+
+    autolabel(rects1)
+    autolabel(rects2)
+
+    ax.set_ylabel('Hip Height at Midstance')
+    ax.set_title('Hip Height at Midstance for Different Shoe Lifts')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.legend()
+
+    fig.tight_layout()
+    plt.show()
 
 if __name__ == '__main__':
-    path_to_recording_folder = Path(r'C:\Users\aaron\FreeMocap_Data\recording_sessions')
-
-    session_id_list = ['recording_15_19_00_gmt-4__brit_baseline','recording_15_20_51_gmt-4__brit_half_inch', 'recording_15_22_56_gmt-4__brit_one_inch','recording_15_24_58_gmt-4__brit_two_inch']
-    label_list = ['baseline', 'half inch lift (12.7mm)', 'one inch lift (25.4mm)', 'two inch lift (50.8mm)']
+    path_to_recording_folder = Path(r'D:\2023-06-07_JH\1.0_recordings\treadmill_calib')
+    session_id_list = ['sesh_2023-06-07_12_38_16_JH_leg_length_neg_5_trial_1','sesh_2023-06-07_12_43_15_JH_leg_length_neg_25_trial_1', 'sesh_2023-06-07_12_46_54_JH_leg_length_neutral_trial_1','sesh_2023-06-07_12_50_56_JH_leg_length_pos_25_trial_1', 'sesh_2023-06-07_12_55_21_JH_leg_length_pos_5_trial_1']
+    label_list = ['-.5', '-.25', 'neutral', '+.25', '+.5']
 
     left_stats_dict = {}
     right_stats_dict = {}
 
     for session_id, label in zip(session_id_list, label_list):
-        path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz_transformed.npy'
+        path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz.npy'
         marker_data_3d = np.load(path_to_data)
         marker_data_3d[:,:,0] = marker_data_3d[:,:,0]*-1
 
@@ -286,7 +328,8 @@ if __name__ == '__main__':
         step_stats_dict_right = calculate_step_length_stats(step_data_3d=resampled_step_data_3d_right)
         right_stats_dict[label] = step_stats_dict_right
     
-plot_leg_markers(left_session_step_stats=left_stats_dict, right_session_step_stats=right_stats_dict, dimension_to_plot=2, labels=label_list)
+    plot_leg_markers(left_session_step_stats=left_stats_dict, right_session_step_stats=right_stats_dict, dimension_to_plot=2, labels=label_list)
+    plot_hip_heights(left_stats_dict, right_stats_dict, label_list)
 
 
 
