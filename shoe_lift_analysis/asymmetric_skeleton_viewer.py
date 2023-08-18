@@ -121,11 +121,11 @@ if __name__ == "__main__":
 
 
     # path_to_data_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\sesh_2022-05-24_16_10_46_JSM_T1_WalkRun')
-    path_to_data_folder = Path(r'C:\Users\aaron\FreeMocap_Data\recording_sessions')
-    # file_names = ['recording_15_19_00_gmt-4__brit_baseline','recording_15_20_51_gmt-4__brit_half_inch', 'recording_15_22_56_gmt-4__brit_one_inch','recording_15_24_58_gmt-4__brit_two_inch']
-    file_names = ['recording_15_19_00_gmt-4__brit_baseline','recording_15_20_51_gmt-4__brit_half_inch']
+    path_to_recording_folder = Path(r'D:\2023-06-07_JH\1.0_recordings\treadmill_calib')
+    session_id_list = ['sesh_2023-06-07_12_38_16_JH_leg_length_neg_5_trial_1','sesh_2023-06-07_12_43_15_JH_leg_length_neg_25_trial_1', 'sesh_2023-06-07_12_46_54_JH_leg_length_neutral_trial_1','sesh_2023-06-07_12_50_56_JH_leg_length_pos_25_trial_1', 'sesh_2023-06-07_12_55_21_JH_leg_length_pos_5_trial_1']
+    label_list = ['-.5', '-.25', 'neutral', '+.25', '+.5']
 
     app = QApplication([])
-    win = MainWindow(path_to_data_folder, file_names)
+    win = MainWindow(path_to_recording_folder, session_id_list)
     win.show()
     app.exec()

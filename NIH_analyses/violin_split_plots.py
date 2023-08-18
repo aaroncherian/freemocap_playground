@@ -45,4 +45,4 @@ for dimension in ['x', 'y', 'z']:
 
     plt.show()
 
-    fig.savefig(path_to_freemocap_analysis_folder / f'combined_violin_plot_{dimension}.png')
+    # fig.savefig(path_to_freemocap_analysis_folder / f'combined_violin_plot_{dimension}.png')
