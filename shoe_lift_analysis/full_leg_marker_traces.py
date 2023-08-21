@@ -204,8 +204,8 @@ def plot_leg_markers(left_session_step_stats: dict, right_session_step_stats: di
     label_colors = {label: colors_list[i % len(colors_list)] for i, label in enumerate(labels)}
 
     axes_list = [ax1, ax2]
-    left_markers = ['left_ankle', 'left_knee', 'left_hip']
-    right_markers = ['right_ankle', 'right_knee', 'right_hip']
+    left_markers = ['left_ankle', 'left_knee', 'left_hip', 'left_shoulder']
+    right_markers = ['right_ankle', 'right_knee', 'right_hip', 'right_shoulder']
 
     xlim = [0, 100]
 
@@ -254,87 +254,71 @@ def plot_limb_trajectory(step_stats:dict, dimension_to_plot:int, limb_to_plot:st
         axis.plot(num_frames,limb_stats['mean'], label=f'{label}',color=color, linestyle = linestyle)
         axis.fill_between(num_frames,limb_stats['mean'] - limb_stats['std'],limb_stats['mean'] + limb_stats['std'], alpha=.2, color = color )
 
-def plot_hip_heights(left_stats_dict, right_stats_dict, labels):
-    left_hip_heights = []
-    left_hip_heights_std = []
-    right_hip_heights = []
-    right_hip_heights_std = []
+def plot_event_frames(marker_position_data:np.ndarray, marker_velocity_data:np.ndarray, heel_strike_frames, toe_off_frames, joint_to_use:str):
+    figure = plt.figure()
+    position_ax = figure.add_subplot(211)
+    velocity_ax = figure.add_subplot(212)
 
-    for label in labels:
-        left_hip_heights.append(left_stats_dict[label][2]['left_hip']['mean'][29])
-        right_hip_heights.append(right_stats_dict[label][2]['right_hip']['mean'][29])
+    position_ax.set_title(f'{joint_to_use} position vs. frame')
+    velocity_ax.set_title(f'{joint_to_use} velocity vs. frame')
 
-        left_hip_heights_std.append(left_stats_dict[label][2]['left_hip']['std'][29])
-        right_hip_heights_std.append(right_stats_dict[label][2]['right_hip']['std'][29])
+    position_ax.set_ylabel('Joint Position (mm)')
+    velocity_ax.set_ylabel('Joint Velocity (mm)')
+    velocity_ax.set_xlabel('Frame #')
 
 
-    x = np.arange(len(labels))
-    width = 0.4
+    velocity_ax.axhline(0, alpha = .6, color = 'k', linestyle = '--')
 
-    fig, ax = plt.subplots()
-    # rects1 = ax.bar(x - width/2, left_hip_heights, width, yerr=left_hip_heights_std, label='Left Hip Height', capsize = 5 )
-    # rects2 = ax.bar(x + width/2, right_hip_heights, width, yerr=right_hip_heights_std, label='Right Hip Height', capsize=5)
+    position_ax.plot(marker_position_data, '.-', color = 'k', alpha = .6)
+    velocity_ax.plot(marker_velocity_data, '.-', color = 'k', alpha = .6)
 
-    rects1 = ax.bar(x - width/2, left_hip_heights, width, label='Left Hip Height')
-    rects2 = ax.bar(x + width/2, right_hip_heights, width, label='Right Hip Height')
+    position_ax.scatter(toe_off_frames,marker_position_data[toe_off_frames], marker = 'o',color = 'r', label = 'toe off')
+    position_ax.scatter(heel_strike_frames,marker_position_data[heel_strike_frames], marker = 'o',color = 'b', label = 'heel strike')
 
-    def autolabel(rects):
-        for rect in rects:
-            height = rect.get_height()
-            ax.annotate('{:.2f}'.format(height),
-                        xy=(rect.get_x() + rect.get_width() / 2, height),
-                        xytext=(0, 3),
-                        textcoords="offset points",
-                        ha='center', va='bottom')
+    velocity_ax.scatter(toe_off_frames,marker_velocity_data[toe_off_frames], marker = 'o',color = 'r', label = 'toe off')
+    velocity_ax.scatter(heel_strike_frames,marker_velocity_data[heel_strike_frames], marker = 'o',color = 'b', label = 'heel strike')
+    velocity_ax.legend()
 
-    autolabel(rects1)
-    autolabel(rects2)
-
-    ax.set_ylabel('Hip Height at Midstance')
-    ax.set_title('Hip Height at Midstance for Different Shoe Lifts')
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels)
-    ax.legend()
-
-    fig.tight_layout()
     plt.show()
+
 
 if __name__ == '__main__':
     path_to_recording_folder = Path(r'D:\2023-06-07_JH\1.0_recordings\treadmill_calib')
     session_id_list = ['sesh_2023-06-07_12_38_16_JH_leg_length_neg_5_trial_1','sesh_2023-06-07_12_43_15_JH_leg_length_neg_25_trial_1', 'sesh_2023-06-07_12_46_54_JH_leg_length_neutral_trial_1','sesh_2023-06-07_12_50_56_JH_leg_length_pos_25_trial_1', 'sesh_2023-06-07_12_55_21_JH_leg_length_pos_5_trial_1']
     label_list = ['-.5', '-.25', 'neutral', '+.25', '+.5']
-
+    
     left_stats_dict = {}
     right_stats_dict = {}
 
     for session_id, label in zip(session_id_list, label_list):
         path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz.npy'
         marker_data_3d = np.load(path_to_data)
-
-        marker_data_3d = marker_data_3d[1000:1300,:,:]
-        marker_data_3d[:,:,0] = marker_data_3d[:,:,0]*-1
+        # marker_data_3d = marker_data_3d[1329:1614, :, :]  # remove the confidence values
+        # marker_data_3d[:,:,0] = marker_data_3d[:,:,0]*-1
+        # marker_data_3d[:,:,1] = marker_data_3d[:,:,1]*-1
 
         # Left heel
-        marker_position_left, marker_velocity_left = load_specific_marker_data(marker_data=marker_data_3d, joint_to_use='left_heel', axis_to_use=0)
-        left_heel_strike_frames, _ = detect_zero_crossings(marker_velocity_data=marker_velocity_left, search_range=2)
+        marker_position_left, marker_velocity_left = load_specific_marker_data(marker_data=marker_data_3d, joint_to_use='left_heel', axis_to_use=1)
+        left_heel_strike_frames, left_toe_off_frames = detect_zero_crossings(marker_velocity_data=marker_velocity_left, search_range=2)
         step_data_3d_left = divide_3d_data_into_steps(marker_data_3d, left_heel_strike_frames)
         resampled_step_data_3d_left = resample_steps(step_data_dict=step_data_3d_left, num_resampled_points=100)
         step_stats_dict_left = calculate_step_length_stats(step_data_3d=resampled_step_data_3d_left)
         left_stats_dict[label] = step_stats_dict_left
 
+        # plot_event_frames(marker_position_data=marker_position_left, marker_velocity_data=marker_velocity_left, heel_strike_frames=left_heel_strike_frames, toe_off_frames=left_toe_off_frames, joint_to_use='left_heel')
+
         # Right heel
-        marker_position_right, marker_velocity_right = load_specific_marker_data(marker_data=marker_data_3d, joint_to_use='right_heel', axis_to_use=0)
-        right_heel_strike_frames, _ = detect_zero_crossings(marker_velocity_data=marker_velocity_right, search_range=2)
+        marker_position_right, marker_velocity_right = load_specific_marker_data(marker_data=marker_data_3d, joint_to_use='right_heel', axis_to_use=1)
+        right_heel_strike_frames, right_toe_off_frames = detect_zero_crossings(marker_velocity_data=marker_velocity_right, search_range=2)
         step_data_3d_right = divide_3d_data_into_steps(marker_data_3d, right_heel_strike_frames)
         resampled_step_data_3d_right = resample_steps(step_data_dict=step_data_3d_right, num_resampled_points=100)
         step_stats_dict_right = calculate_step_length_stats(step_data_3d=resampled_step_data_3d_right)
         right_stats_dict[label] = step_stats_dict_right
+
+        # plot_event_frames(marker_position_data=marker_position_right, marker_velocity_data=marker_velocity_right, heel_strike_frames=right_heel_strike_frames, toe_off_frames= right_toe_off_frames, joint_to_use='right_heel')
+        # plot_event_frames(marker_position_data=marker_position_left, marker_velocity_data=marker_velocity_left, heel_strike_frames=left_heel_strike_frames, toe_off_frames=left_toe_off_frames, joint_to_use='left_heel')
+
     
-    plot_leg_markers(left_session_step_stats=left_stats_dict, right_session_step_stats=right_stats_dict, dimension_to_plot=2, labels=label_list)
-    plot_hip_heights(left_stats_dict, right_stats_dict, label_list)
-
-
-
-f =2  
+plot_leg_markers(left_session_step_stats=left_stats_dict, right_session_step_stats=right_stats_dict, dimension_to_plot=2, labels=label_list)
 
 

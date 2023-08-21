@@ -17,9 +17,10 @@ from scipy.interpolate import interp1d
 
 def load_marker_position_and_velocity(path_to_data:Path, joint_to_use:str, axis_to_use:int):
     marker_data = np.load(path_to_data)
-    marker_data = marker_data[:,:,:]
     
-    marker_data[:,:,0] = marker_data[:,:,0] *-1
+    marker_data = marker_data[1329:1614,:,:]
+
+    # marker_data[:,:,0] = marker_data[:,:,0] *-1
 
     marker_position, marker_velocity = load_specific_marker_data(marker_data=marker_data, joint_to_use=joint_to_use,axis_to_use = axis_to_use)
 
@@ -256,8 +257,8 @@ def calculate_everything_for_joint(path_to_data, joint_to_use, axis_to_use, even
 if __name__ == '__main__':
     #path_to_recording_folder = Path(r'C:\Users\Aaron\Documents\freemocap_sessions\recordings')
     path_to_recording_folder = Path(r'D:\2023-06-07_JH\1.0_recordings\treadmill_calib')
-    session_id_list = ['sesh_2023-06-07_12_38_16_JH_leg_length_neg_5_trial_1']
-    label_list = ['-.5']
+    session_id_list = ['sesh_2023-06-07_12_38_16_JH_leg_length_neg_5_trial_1','sesh_2023-06-07_12_43_15_JH_leg_length_neg_25_trial_1', 'sesh_2023-06-07_12_46_54_JH_leg_length_neutral_trial_1','sesh_2023-06-07_12_50_56_JH_leg_length_pos_25_trial_1', 'sesh_2023-06-07_12_55_21_JH_leg_length_pos_5_trial_1']
+    label_list = ['-.5', '-.25', 'neutral', '+.25', '+.5']
     
     
 
@@ -281,7 +282,7 @@ if __name__ == '__main__':
         path_to_data = path_to_recording_folder/session_id/'output_data'/'mediapipe_body_3d_xyz.npy'
 
         
-        marker_position, marker_velocity = load_marker_position_and_velocity(path_to_data=path_to_data, joint_to_use=joint_to_use, axis_to_use = 0)
+        marker_position, marker_velocity = load_marker_position_and_velocity(path_to_data=path_to_data, joint_to_use=joint_to_use, axis_to_use = 1)
         heel_strike_frames, toe_off_frames = detect_zero_crossings(marker_velocity_data=marker_velocity,search_range=2)
         
         step_data_mean, step_data_median, step_data_std, resampled_step_dict = calculate_average_step_length(marker_position=marker_position,event_frames=heel_strike_frames)
