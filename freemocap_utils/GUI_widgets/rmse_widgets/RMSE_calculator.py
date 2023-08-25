@@ -40,6 +40,13 @@ def calculate_rmse_dataframe(qualisys_data:np.ndarray, freemocap_data:np.ndarray
     
     return rmse_dataframe
 
+def calculate_rmse_per_timepoint_per_dimension(predictions, targets):
+    squared_errors = (predictions - targets) ** 2
+    rmse_per_timepoint_per_dimension = np.sqrt(np.mean(squared_errors, axis=0))
+    return rmse_per_timepoint_per_dimension
+
+
+
 
 
 

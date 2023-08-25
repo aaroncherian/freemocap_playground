@@ -14,6 +14,9 @@ from freemocap_utils.GUI_widgets.rmse_widgets.RMSE_calculator import calculate_r
 import numpy as np
 
 import seaborn as sns
+import pandas as pd
+
+
 
 class RMSEPlots(FigureCanvasQTAgg):
 
