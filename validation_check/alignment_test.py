@@ -6,6 +6,11 @@ from matplotlib.widgets import Slider
 from scipy import optimize
 from scipy.spatial.transform import Rotation
 
+from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QHBoxLayout,QVBoxLayout
+
+
+from rmse_viewer_gui import RMSEViewerGUI
+
 qualisys_indices = [
 'head',
 'left_ear',
@@ -66,6 +71,65 @@ mediapipe_indices = [
     'left_foot_index',
     'right_foot_index'
     ]
+
+
+
+def optimize_transformation(params, segments_list_A, segments_list_B, transformed_skeletons_list):
+    tx, ty, tz = params[0:3]  # Translation parameters
+    rx, ry, rz = params[3:6]  # Rotation parameters (Euler angles in degrees)
+    s = params[6]  # Scaling parameter
+
+    rotation = Rotation.from_euler('xyz', [rx, ry, rz], degrees=True)
+    
+    total_error_list = []
+    
+    for segmentA, segmentB in zip(segments_list_A, segments_list_B):
+        segmentA_transformed = s * rotation.apply(segmentA) + [tx, ty, tz]
+        error_list = [abs(y - x) for x, y in zip(segmentA_transformed, segmentB)]
+        this_segment_error = np.mean(error_list)
+        transformed_skeletons_list.append(segmentA_transformed)
+        total_error_list.append(this_segment_error)
+
+    return total_error_list
+
+def get_optimized_transformation_matrix(segments_list_A, segments_list_B):
+    initial_guess = [0, 0, 0, 0, 0, 0, 1]
+    transformed_skeleton_list = []
+
+    # New optimization call
+    transformation_matrix = optimize.least_squares(optimize_transformation, 
+                                            initial_guess, 
+                                            args=(segments_list_A, segments_list_B, transformed_skeleton_list),
+                                            gtol=1e-10, 
+                                            verbose=2).x
+    
+    return transformation_matrix, transformed_skeleton_list
+    
+
+def plot_optimization_steps(qualisys_data, transformed_skeletons_list):
+    def plot_frame(f):
+        ax.clear()
+        ax.scatter(qualisys_data[:, 0], qualisys_data[:, 1], qualisys_data[:, 2], c='blue', label='Qualisys')
+        ax.scatter(transformed_skeletons_list[f][:, 0], transformed_skeletons_list[f][:, 1], transformed_skeletons_list[f][:, 2], c='red', label='Transformed FreeMoCap')
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        ax.legend()
+        ax.set_title(f"Iteration {f}")
+        fig.canvas.draw_idle()
+
+    fig = plt.figure(figsize=[10, 8])
+    ax = fig.add_subplot(111, projection='3d')
+    slider_ax = plt.axes([0.25, 0.02, 0.65, 0.03], facecolor='lightgoldenrodyellow')
+    frame_slider = Slider(slider_ax, 'Iteration', 0, len(transformed_skeletons_list) - 1, valinit=0, valstep=1)
+
+    def update(val):
+        frame = int(frame_slider.val)
+        plot_frame(frame)
+
+    frame_slider.on_changed(update)
+    plot_frame(0)
+    plt.show()
 
 def plot_3d_scatter(freemocap_data, qualisys_data):
     def plot_frame(f):
@@ -156,7 +220,8 @@ freemocap_data_path = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2
 
 qualisys_data = np.load(qualisys_data_path)
 freemocap_data = np.load(freemocap_data_path)
-plot_3d_scatter(freemocap_data, qualisys_data)
+freemocap_data = freemocap_data 
+# plot_3d_scatter(freemocap_data, qualisys_data)
 
 frames_subset = [300,350]
 qualisys_data_subset = qualisys_data[frames_subset[0]:frames_subset[1]]
@@ -171,10 +236,13 @@ freemocap_heel_midpoint_mean = np.mean([freemocap_representative_mean[mediapipe_
 qualisys_heel_midpoint_mean = np.mean([qualisys_representative_mean[qualisys_indices.index('left_heel'), :],
                                         qualisys_representative_mean[qualisys_indices.index('right_heel'), :]], axis=0)
 
-freemocap_data_zeroed = freemocap_data - freemocap_heel_midpoint_mean
-qualisys_data_zeroed = qualisys_data - qualisys_heel_midpoint_mean
+# freemocap_data_zeroed = freemocap_data - freemocap_heel_midpoint_mean
+# qualisys_data_zeroed = qualisys_data - qualisys_heel_midpoint_mean
 
-plot_3d_scatter(freemocap_data_zeroed, qualisys_data_zeroed)
+# plot_3d_scatter(freemocap_data_zeroed, qualisys_data_zeroed)
+
+freemocap_data_zeroed = freemocap_data
+qualisys_data_zeroed = qualisys_data
 
 freemocap_zeroed_mean = np.mean(freemocap_data_zeroed[frames_subset[0]:frames_subset[1]], axis = 0)
 qualisys_zeroed_mean = np.mean(qualisys_data_zeroed[frames_subset[0]:frames_subset[1]], axis = 0)
@@ -182,11 +250,22 @@ qualisys_zeroed_mean = np.mean(qualisys_data_zeroed[frames_subset[0]:frames_subs
 freemocap_segmented = extract_corresponding_segments(freemocap_zeroed_mean, mediapipe_indices, segments_definition)
 qualisys_segmented = extract_corresponding_segments(qualisys_zeroed_mean, qualisys_indices, segments_definition)
 
-translation_matrix = get_optimal_translation_matrix(freemocap_segmented, qualisys_segmented)
-freemocap_data_zeroed_translated = freemocap_data_zeroed + translation_matrix
+# transformation_matrix = get_optimal_translation_matrix(freemocap_segmented, qualisys_segmented)
+transformation_matrix, transformed_skeletons_list = get_optimized_transformation_matrix(freemocap_segmented, qualisys_segmented)
+plot_optimization_steps(qualisys_data = qualisys_representative_mean, transformed_skeletons_list = transformed_skeletons_list)
 
-# freemocap_data_translated = translate_to_align(freemocap_data, qualisys_data)
-plot_3d_scatter(freemocap_data_zeroed_translated, qualisys_data)
+# translation_matrix = get_optimal_translation_matrix(freemocap_segmented, qualisys_segmented)
+# freemocap_data_zeroed_translated = freemocap_data_zeroed + translation_matrix
+
+# # freemocap_data_translated = translate_to_align(freemocap_data, qualisys_data)
+# plot_3d_scatter(freemocap_data_zeroed_translated, qualisys_data)
 
 
 f = 2
+
+
+# app = QApplication([])
+# win = RMSEViewerGUI(qualisys_data_original=qualisys_data, freemocap_data_original=freemocap_data_zeroed_translated)
+
+# win.show()
+# app.exec()

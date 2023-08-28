@@ -1,6 +1,7 @@
 
 from pathlib import Path
 import numpy as np
+from matplotlib.widgets import Slider
 
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QHBoxLayout,QVBoxLayout, QLabel
 
@@ -10,6 +11,9 @@ from freemocap_utils.GUI_widgets.time_syncing_widgets.marker_selector_widget imp
 from freemocap_utils.GUI_widgets.rmse_widgets.frame_selector_widget import FrameSelectorWidget
 from freemocap_utils.GUI_widgets.rmse_widgets.RMSE_calculator import calculate_rmse_dataframe
 from freemocap_utils.GUI_widgets.rmse_widgets.reference_frame_widget import ReferenceFrameWidget
+
+
+from freemocap_utils.GUI_widgets.rmse_widgets.plot_3d_widget import Scatter3DWidget
 
 import matplotlib.pyplot as plt
 
@@ -45,7 +49,10 @@ class RMSEViewerGUI(QMainWindow):
         plots_layout.addWidget(self.time_series_viewer_widget)
 
         self.rmse_viewer_widget = RMSEViewWidget()
-        plots_layout.addWidget(self.rmse_viewer_widget)
+        # plots_layout.addWidget(self.rmse_viewer_widget)
+
+        self.plot_3d = Scatter3DWidget(freemocap_data=self.freemocap_data, qualisys_data=self.qualisys_data)
+        plots_layout.addWidget(self.plot_3d)
 
         self.reference_frame_widget = ReferenceFrameWidget()
         layout.addWidget(self.reference_frame_widget)
@@ -71,12 +78,14 @@ class RMSEViewerGUI(QMainWindow):
         # self.zero_data()
         self.time_series_viewer_widget.update_plot(self.marker_selector_widget.current_marker,freemocap_data=self.freemocap_data_original, qualisys_data=self.qualisys_data_original            )
         self.rmse_viewer_widget.update_plot(qualisys_data=self.qualisys_data, freemocap_data=self.freemocap_data)
+        
+        
 
     def handle_plotting(self):
         # self.zero_data()
         self.time_series_viewer_widget.update_plot(self.marker_selector_widget.current_marker,freemocap_data=self.freemocap_data, qualisys_data=self.qualisys_data)
         self.rmse_viewer_widget.update_plot(qualisys_data=self.qualisys_data, freemocap_data=self.freemocap_data)
-
+        self.plot_3d.update_data(freemocap_data=self.freemocap_data, qualisys_data=self.qualisys_data)
         def calculate_rmse_per_timepoint_per_dimension(qualisys_data, freemocap_data, qualisys_indices, mediapipe_indices):
             num_timepoints, _, _ = qualisys_data.shape
             rmse_per_timepoint_per_dimension = np.zeros((num_timepoints, 3))
@@ -130,19 +139,22 @@ class RMSEViewerGUI(QMainWindow):
         # self.freemocap_data = self.freemocap_data[:,:,:] -difference
         # self.qualisys_data = self.qualisys_data[:,:,:] - difference
 
-path_to_freemocap_session_folder = Path(r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_14_53_48_MDN_NIH_Trial3"
-)
-freemocap_data = np.load(path_to_freemocap_session_folder/'output_data'/'mediapipe_body_3d_xyz.npy')
-
-path_to_qualisys_session_folder = Path(r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\qualisys_MDN_NIH_Trial3")
-qualisys_data = np.load(path_to_qualisys_session_folder/'output_data'/'clipped_qualisys_skel_3d.npy')
 
 
-# freemocap_sliced_data = freemocap_data[1162:6621,:,:]
+if __name__ == '__main__':
+    path_to_freemocap_session_folder = Path(r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_14_53_48_MDN_NIH_Trial3"
+    )
+    freemocap_data = np.load(path_to_freemocap_session_folder/'output_data'/'mediapipe_body_3d_xyz.npy')
+
+    path_to_qualisys_session_folder = Path(r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\qualisys_MDN_NIH_Trial3")
+    qualisys_data = np.load(path_to_qualisys_session_folder/'output_data'/'clipped_qualisys_skel_3d.npy')
 
 
-app = QApplication([])
-win = RMSEViewerGUI(qualisys_data_original=qualisys_data, freemocap_data_original=freemocap_data)
+    # freemocap_sliced_data = freemocap_data[1162:6621,:,:]
 
-win.show()
-app.exec()
+
+    app = QApplication([])
+    win = RMSEViewerGUI(qualisys_data_original=qualisys_data, freemocap_data_original=freemocap_data)
+
+    win.show()
+    app.exec()

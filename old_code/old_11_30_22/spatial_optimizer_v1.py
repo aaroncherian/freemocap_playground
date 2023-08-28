@@ -140,10 +140,6 @@ qualisys_data_path = qualisys_data_array_path/qualisys_data_array_name
 mediapipe_data_path = freemocap_data_array_path/mediapipe_data_array_name
 
 #qualysis_mat_file = sio.loadmat(qualisys_data_path)
-qualisys_data_path = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\qualisys_MDN_NIH_Trial3\output_data\clipped_qualisys_skel_3d.npy"
-freemocap_data_path = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_14_53_48_MDN_NIH_Trial3\output_data\mediapipe_body_3d_xyz.npy"
-
-
 qualisys_pose_data = np.load(qualisys_data_path)
 #qualisys_num_frame_range = range(qualisys_pose_data.shape[0])
 qualisys_num_frame_range = range(qualisys_pose_data.shape[0])
@@ -179,9 +175,9 @@ else:
 
 
 #qualisys_frame = 56686
-qualisys_frame = 300
+qualisys_frame = 4730-750
 #mediapipe_frame = 9499
-mediapipe_frame = 300
+mediapipe_frame = 473
 
 this_frame_qualisys_joint_data = qualisys_pose_data[qualisys_frame,:,:]
 this_frame_qualisys_skeleton = qualisys_skeleton_data[qualisys_frame]
@@ -284,7 +280,7 @@ save_name = 'mediapipe_skel_data_aligned_to_qualisys.npy'
 save_path = freemocap_data_array_path/save_name
 
 
-# np.save(save_path, mediapipe_translated)
+np.save(save_path, mediapipe_translated)
 
 
 f = 2
