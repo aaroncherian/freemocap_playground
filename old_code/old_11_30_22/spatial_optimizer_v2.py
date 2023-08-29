@@ -23,6 +23,7 @@ points_to_extract = [
     'left_knee',
     'left_ankle',
     'left_heel',
+    'right_heel',
     'right_foot_index',
     'left_foot_index',
 ]
@@ -59,7 +60,17 @@ def optimize_transformation(params, freemocap_data, qualisys_data):
     error = np.linalg.norm(transformed_data - qualisys_data)
     return error
 
-
+def objective_least_squares(params, freemocap_data, qualisys_data):
+    tx, ty, tz = params[0:3]  # Translation parameters
+    rx, ry, rz = params[3:6]  # Rotation parameters (Euler angles in degrees)
+    s = params[6]  # Scaling parameter
+    
+    rotation = Rotation.from_euler('xyz', [rx, ry, rz], degrees=True)
+    transformed_freemocap_data = s * rotation.apply(freemocap_data) + [tx, ty, tz]
+    
+    # Calculate the residuals (errors)
+    residuals = qualisys_data - transformed_freemocap_data
+    return residuals.flatten()
 
 def plot_representative_means(freemocap_data, qualisys_data):
     def plot_data():
@@ -116,25 +127,36 @@ freemocap_representative_mean = np.mean(freemocap_extracted_subset, axis=0)
 initial_guess = [0, 0, 0, 0, 0, 0, 1]  # [tx, ty, tz, rx, ry, rz, s]
 
 # Run the optimization
-result = optimize.minimize(optimize_transformation, 
+minimized_params = optimize.minimize(optimize_transformation, 
                            initial_guess, 
                            args=(freemocap_representative_mean, qualisys_representative_mean),
-                           method='L-BFGS-B')
+                           method='L-BFGS-B',).x
 
 # Extract the optimized transformation parameters
-optimized_params = result.x
 
 plot_representative_means(freemocap_representative_mean,qualisys_representative_mean)
+
+tx, ty, tz = minimized_params[0:3]  # Translation parameters
+rx, ry, rz = minimized_params[3:6]  # Rotation parameters (Euler angles in degrees)
+s = minimized_params[6]  # Scaling parameter
+
+rotation = Rotation.from_euler('xyz', [rx, ry, rz], degrees=True)
+minimized_data = s * rotation.apply(freemocap_representative_mean) + [tx, ty, tz]
+
+plot_representative_means(minimized_data,qualisys_representative_mean)
+
+optimized_params = optimize.least_squares(objective_least_squares, initial_guess, args=(freemocap_representative_mean, qualisys_representative_mean),  gtol=1e-10, 
+                                            verbose=2).x
 
 tx, ty, tz = optimized_params[0:3]  # Translation parameters
 rx, ry, rz = optimized_params[3:6]  # Rotation parameters (Euler angles in degrees)
 s = optimized_params[6]  # Scaling parameter
 
 rotation = Rotation.from_euler('xyz', [rx, ry, rz], degrees=True)
-transformed_data = s * rotation.apply(freemocap_representative_mean) + [tx, ty, tz]
+optimized_data = s * rotation.apply(freemocap_representative_mean) + [tx, ty, tz]
 
+plot_representative_means(optimized_data,qualisys_representative_mean)
 
-plot_representative_means(transformed_data,qualisys_representative_mean)
 
 
 f = 2
