@@ -75,21 +75,27 @@ mediapipe_indices = [
 
 
 def optimize_transformation(params, segments_list_A, segments_list_B, transformed_skeletons_list):
+    print('another optimization')
     tx, ty, tz = params[0:3]  # Translation parameters
     rx, ry, rz = params[3:6]  # Rotation parameters (Euler angles in degrees)
     s = params[6]  # Scaling parameter
 
     rotation = Rotation.from_euler('xyz', [rx, ry, rz], degrees=True)
-    
+    iteration_transformed_segments = []  # Initialize empty list for this iteration
+
     total_error_list = []
     
     for segmentA, segmentB in zip(segments_list_A, segments_list_B):
         segmentA_transformed = s * rotation.apply(segmentA) + [tx, ty, tz]
         error_list = [abs(y - x) for x, y in zip(segmentA_transformed, segmentB)]
         this_segment_error = np.mean(error_list)
-        transformed_skeletons_list.append(segmentA_transformed)
+        iteration_transformed_segments.append(segmentA_transformed)
+
         total_error_list.append(this_segment_error)
 
+    transformed_skeletons_list.append(iteration_transformed_segments)
+
+    # plot_representative_means(np.array(iteration_transformed_segments),segments_list_B)
     return total_error_list
 
 def get_optimized_transformation_matrix(segments_list_A, segments_list_B):
@@ -110,10 +116,14 @@ def plot_optimization_steps(qualisys_data, transformed_skeletons_list):
     def plot_frame(f):
         ax.clear()
         ax.scatter(qualisys_data[:, 0], qualisys_data[:, 1], qualisys_data[:, 2], c='blue', label='Qualisys')
-        ax.scatter(transformed_skeletons_list[f][:, 0], transformed_skeletons_list[f][:, 1], transformed_skeletons_list[f][:, 2], c='red', label='Transformed FreeMoCap')
+        iteration_data = np.vstack(transformed_skeletons_list[f])
+        ax.scatter(iteration_data[:, 0], iteration_data[:, 1], iteration_data[:, 2], c='red', label='Transformed FreeMoCap')
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
+        ax.set_xlim([-limit_x, limit_x])
+        ax.set_ylim([-limit_y, limit_y])
+        ax.set_zlim([-limit_z, limit_z])
         ax.legend()
         ax.set_title(f"Iteration {f}")
         fig.canvas.draw_idle()
@@ -123,13 +133,60 @@ def plot_optimization_steps(qualisys_data, transformed_skeletons_list):
     slider_ax = plt.axes([0.25, 0.02, 0.65, 0.03], facecolor='lightgoldenrodyellow')
     frame_slider = Slider(slider_ax, 'Iteration', 0, len(transformed_skeletons_list) - 1, valinit=0, valstep=1)
 
+    mean_x = (np.mean(qualisys_data[:, 0])) / 2
+    mean_y = (np.mean(qualisys_data[:, 1])) / 2
+    mean_z = (np.mean(qualisys_data[:, 2])) / 2
+
+    ax_range = 1000
+    limit_x = mean_x + ax_range
+    limit_y = mean_y + ax_range
+    limit_z = mean_z + ax_range
+
+
     def update(val):
         frame = int(frame_slider.val)
         plot_frame(frame)
 
+
+
     frame_slider.on_changed(update)
     plot_frame(0)
     plt.show()
+
+def plot_representative_means(freemocap_data, qualisys_data):
+    def plot_data():
+        ax.clear()
+        ax.scatter(qualisys_data[:, 0], qualisys_data[:, 1], qualisys_data[:, 2], c='blue', label='Qualisys')
+        ax.scatter(freemocap_data[:, 0], freemocap_data[:, 1], freemocap_data[:, 2], c='red', label='FreeMoCap')
+        ax.set_xlim([-limit_x, limit_x])
+        ax.set_ylim([-limit_y, limit_y])
+        ax.set_zlim([-limit_z, limit_z])
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        ax.legend()
+        ax.set_title(f"Representative means")
+        fig.canvas.draw_idle()
+
+    fig = plt.figure(figsize=[10, 8])
+    ax = fig.add_subplot(111, projection='3d')
+
+    mean_x = (np.mean(qualisys_data[:, 0]) + np.mean(freemocap_data[:, 0])) / 2
+    mean_y = (np.mean(qualisys_data[:, 1]) + np.mean(freemocap_data[:, 1])) / 2
+    mean_z = (np.mean(qualisys_data[:, 2]) + np.mean(freemocap_data[:, 2])) / 2
+
+    
+    ax_range = 1000
+    limit_x = mean_x + ax_range
+    limit_y = mean_y + ax_range
+    limit_z = mean_z + ax_range
+
+    plot_data()
+
+    plt.show()
+
+
+
 
 def plot_3d_scatter(freemocap_data, qualisys_data):
     def plot_frame(f):
@@ -203,16 +260,16 @@ def extract_corresponding_segments(data, indices, segments_definition):
 segments_definition = {
     'right_upper_arm': ['right_shoulder', 'right_elbow'],
     'left_upper_arm': ['left_shoulder', 'left_elbow'],
-    # 'right_forearm': ['right_elbow', 'right_wrist'],
-    # 'left_forearm': ['left_elbow', 'left_wrist'],
-    # 'right_hand': ['right_wrist', 'right_index'],
-    # 'left_hand': ['left_wrist', 'left_index'],
-    # 'right_thigh': ['right_hip', 'right_knee'],
-    # 'left_thigh': ['left_hip', 'left_knee'],
-    # 'right_shin': ['right_knee', 'right_ankle'],
-    # 'left_shin': ['left_knee', 'left_ankle'],
-    # 'right_foot': ['right_ankle', 'right_foot_index'],
-    # 'left_foot': ['left_ankle', 'left_foot_index'],
+    'right_forearm': ['right_elbow', 'right_wrist'],
+    'left_forearm': ['left_elbow', 'left_wrist'],
+    'right_hand': ['right_wrist', 'right_index'],
+    'left_hand': ['left_wrist', 'left_index'],
+    'right_thigh': ['right_hip', 'right_knee'],
+    'left_thigh': ['left_hip', 'left_knee'],
+    'right_shin': ['right_knee', 'right_ankle'],
+    'left_shin': ['left_knee', 'left_ankle'],
+    'right_foot': ['right_ankle', 'right_foot_index'],
+    'left_foot': ['left_ankle', 'left_foot_index'],
 }
 
 qualisys_data_path = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\qualisys_MDN_NIH_Trial3\output_data\clipped_qualisys_skel_3d.npy"
@@ -223,13 +280,14 @@ freemocap_data = np.load(freemocap_data_path)
 freemocap_data = freemocap_data 
 # plot_3d_scatter(freemocap_data, qualisys_data)
 
-frames_subset = [300,350]
+frames_subset = [300,301]
 qualisys_data_subset = qualisys_data[frames_subset[0]:frames_subset[1]]
 freemocap_data_subset = freemocap_data[frames_subset[0]:frames_subset[1]]
 
 qualisys_representative_mean = np.mean(qualisys_data_subset, axis = 0)
 freemocap_representative_mean = np.mean(freemocap_data_subset, axis = 0)
 
+# plot_representative_means(freemocap_representative_mean, qualisys_representative_mean)
 freemocap_heel_midpoint_mean = np.mean([freemocap_representative_mean[mediapipe_indices.index('left_heel'), :],
                                         freemocap_representative_mean[mediapipe_indices.index('right_heel'), :]], axis=0)
 
@@ -239,7 +297,6 @@ qualisys_heel_midpoint_mean = np.mean([qualisys_representative_mean[qualisys_ind
 # freemocap_data_zeroed = freemocap_data - freemocap_heel_midpoint_mean
 # qualisys_data_zeroed = qualisys_data - qualisys_heel_midpoint_mean
 
-# plot_3d_scatter(freemocap_data_zeroed, qualisys_data_zeroed)
 
 freemocap_data_zeroed = freemocap_data
 qualisys_data_zeroed = qualisys_data
@@ -252,8 +309,19 @@ qualisys_segmented = extract_corresponding_segments(qualisys_zeroed_mean, qualis
 
 # transformation_matrix = get_optimal_translation_matrix(freemocap_segmented, qualisys_segmented)
 transformation_matrix, transformed_skeletons_list = get_optimized_transformation_matrix(freemocap_segmented, qualisys_segmented)
-plot_optimization_steps(qualisys_data = qualisys_representative_mean, transformed_skeletons_list = transformed_skeletons_list)
+# plot_optimization_steps(qualisys_data = qualisys_representative_mean, transformed_skeletons_list = transformed_skeletons_list)
 
+tx, ty, tz = transformation_matrix[0:3]  # Translation parameters
+rx, ry, rz = transformation_matrix[3:6]  # Rotation parameters (Euler angles in degrees)
+s = transformation_matrix[6]  # Scaling parameter
+rotation = Rotation.from_euler('xyz', [rx, ry, rz], degrees=True)
+
+freemocap_transformed = s * rotation.apply(freemocap_data) + [tx, ty, tz]
+
+plot_3d_scatter(freemocap_data, qualisys_data)
+
+
+f = 2
 # translation_matrix = get_optimal_translation_matrix(freemocap_segmented, qualisys_segmented)
 # freemocap_data_zeroed_translated = freemocap_data_zeroed + translation_matrix
 
