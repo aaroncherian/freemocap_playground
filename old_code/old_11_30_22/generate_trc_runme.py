@@ -22,11 +22,11 @@ this_computer_name = socket.gethostname()
 
 #sessionID = 'sesh_2022-05-24_16_10_46_JSM_T1_WalkRun'
 
-freemocap_data_folder_path = Path(r'D:\ValidationStudy_numCams\FreeMoCap_Data')
+freemocap_data_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3')
 
-sessionID = 'sesh_2022-05-24_16_10_46_JSM_T1_WalkRun'
-data_array_folder = 'DataArrays'
-array_name = 'mediaPipeSkel_3d_origin_aligned.npy'
+sessionID = 'sesh_2023-05-17_13_37_32_MDN_treadmill_1'
+data_array_folder = 'output_data'
+array_name = 'mediapipe_body_3d_xyz.npy'
 
 data_array_folder_path = freemocap_data_folder_path / sessionID / data_array_folder
 skel3d_data = np.load(data_array_folder_path / array_name)

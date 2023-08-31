@@ -104,6 +104,43 @@ def plot_representative_means(freemocap_data, qualisys_data):
 
     plt.show()
 
+def plot_3d_scatter(freemocap_data, qualisys_data):
+    def plot_frame(f):
+        ax.clear()
+        ax.scatter(qualisys_data[f, :, 0], qualisys_data[f, :, 1], qualisys_data[f, :, 2], c='blue', label='Qualisys')
+        ax.scatter(freemocap_data[f, :, 0], freemocap_data[f, :, 1], freemocap_data[f, :, 2], c='red', label='FreeMoCap')
+        ax.set_xlim([-limit_x, limit_x])
+        ax.set_ylim([-limit_y, limit_y])
+        ax.set_zlim([-limit_z, limit_z])
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        ax.legend()
+        ax.set_title(f"Frame {f}")
+        fig.canvas.draw_idle()
+
+    mean_x = (np.mean(qualisys_data[:, :, 0]) + np.mean(freemocap_data[:, :, 0])) / 2
+    mean_y = (np.mean(qualisys_data[:, :, 1]) + np.mean(freemocap_data[:, :, 1])) / 2
+    mean_z = (np.mean(qualisys_data[:, :, 2]) + np.mean(freemocap_data[:, :, 2])) / 2
+
+    ax_range = 1000
+    limit_x = mean_x + ax_range
+    limit_y = mean_y + ax_range
+    limit_z = mean_z + ax_range
+
+    fig = plt.figure(figsize=[10, 8])
+    ax = fig.add_subplot(111, projection='3d')
+    slider_ax = plt.axes([0.25, 0.02, 0.65, 0.03], facecolor='lightgoldenrodyellow')
+    frame_slider = Slider(slider_ax, 'Frame', 0, len(qualisys_data) - 1, valinit=0, valstep=1)
+
+    def update(val):
+        frame = int(frame_slider.val)
+        plot_frame(frame)
+
+    frame_slider.on_changed(update)
+    plot_frame(0)
+    plt.show()
+
 
 qualisys_data_path = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\qualisys_MDN_NIH_Trial3\output_data\clipped_qualisys_skel_3d.npy"
 freemocap_data_path = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_14_53_48_MDN_NIH_Trial3\output_data\mediapipe_body_3d_xyz.npy"
@@ -143,7 +180,7 @@ s = minimized_params[6]  # Scaling parameter
 rotation = Rotation.from_euler('xyz', [rx, ry, rz], degrees=True)
 minimized_data = s * rotation.apply(freemocap_representative_mean) + [tx, ty, tz]
 
-plot_representative_means(minimized_data,qualisys_representative_mean)
+# plot_representative_means(minimized_data,qualisys_representative_mean)
 
 optimized_params = optimize.least_squares(objective_least_squares, initial_guess, args=(freemocap_representative_mean, qualisys_representative_mean),  gtol=1e-10, 
                                             verbose=2).x
@@ -155,8 +192,14 @@ s = optimized_params[6]  # Scaling parameter
 rotation = Rotation.from_euler('xyz', [rx, ry, rz], degrees=True)
 optimized_data = s * rotation.apply(freemocap_representative_mean) + [tx, ty, tz]
 
-plot_representative_means(optimized_data,qualisys_representative_mean)
+# plot_representative_means(optimized_data,qualisys_representative_mean)
 
+# Initialize an array to hold the transformed data
+freemocap_transformed = np.zeros_like(freemocap_data)
 
+# Apply the transformation to each frame
+for i in range(freemocap_data.shape[0]):
+    freemocap_transformed[i, :, :] = s * rotation.apply(freemocap_data[i, :, :]) + [tx, ty, tz]
 
+plot_3d_scatter(freemocap_transformed, qualisys_data)
 f = 2
