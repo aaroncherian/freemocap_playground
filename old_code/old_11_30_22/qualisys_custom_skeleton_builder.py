@@ -393,7 +393,7 @@ for frame_to_use in track(range(num_frames), description='Calculating Qualisys J
     qualisys_joints_array [frame_to_use,left_hip_index,:] = left_hip_XYZ
     qualisys_joints_array [frame_to_use,right_hip_index,:] = right_hip_XYZ
 
-np.save(qualisys_skel_save_path,qualisys_joints_array)
+# np.save(qualisys_skel_save_path,qualisys_joints_array)
 
 
 if debug:
