@@ -14,9 +14,6 @@ def reformat_qualisys_tsv_data(path_to_recording_folder, tsv_name:str):
     # Drop the 'Frame' and 'Time' columns
     original_qualisys_dataframe.drop(columns=['Frame', 'Time'], inplace=True)
 
-    # Find the unique markers and map them to integers
-    unique_markers = {marker.split(' ')[0]: i for i, marker in enumerate(original_qualisys_dataframe.columns[::3])}
-
     # Create the reorganized_data list with marker names as strings
     reorganized_qualisys_data= [
         [frame, col.split(' ')[0], row[col], row[f"{col.split(' ')[0]} Y"], row[f"{col.split(' ')[0]} Z"]]
