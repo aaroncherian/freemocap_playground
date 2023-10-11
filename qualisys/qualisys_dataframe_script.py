@@ -47,11 +47,8 @@ def main(original_qualisys_dataframe: pd.DataFrame, joint_center_weights: dict):
     
 
     qualisys_generic_marker_dataframe = create_generic_qualisys_marker_dataframe(original_qualisys_dataframe, qualisys_marker_mappings)
-
     qualisys_markers_frame_marker_dimension = dataframe_to_numpy(qualisys_generic_marker_dataframe)
-
     marker_names = qualisys_generic_marker_dataframe['marker'].unique().tolist()
-
     joint_centers_frame_marker_dimension = calculate_joint_centers(qualisys_markers_frame_marker_dimension, joint_center_weights, marker_names)
 
     return joint_centers_frame_marker_dimension, qualisys_markers_frame_marker_dimension
