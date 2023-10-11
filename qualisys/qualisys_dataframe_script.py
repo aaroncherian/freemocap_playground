@@ -1,6 +1,4 @@
-from qualisys.qualisys_generic_marker_mapping import qualisys_marker_mappings
-from qualisys.qualisys_plotting import plot_3d_scatter
-from qualisys.qualisys_joint_center_mapping import joint_center_weights
+
 from qualisys.calculate_joint_centers import calculate_joint_centers
 import pandas as pd
 from pathlib import Path
@@ -29,46 +27,56 @@ def dataframe_to_numpy(df):
     return reshaped_array
 
 
+def create_generic_qualisys_marker_dataframe(qualisys_biomechanical_marker_dataframe: pd.DataFrame, qualisys_marker_mappings):
+
+    flat_mappings = {}
+    for joint, markers in qualisys_marker_mappings.items():
+        for biomechanical_name, generic_name in markers.items():
+            flat_mappings[biomechanical_name] = generic_name
+    
+    # Filter rows to keep only the markers that are in the flat_mappings dictionary
+    qualisys_generic_marker_dataframe = qualisys_biomechanical_marker_dataframe[qualisys_biomechanical_marker_dataframe['marker'].isin(flat_mappings.keys())]
+
+    # Replace the marker names in the DataFrame
+    qualisys_generic_marker_dataframe['marker'] = qualisys_generic_marker_dataframe['marker'].replace(flat_mappings)
+
+    return qualisys_generic_marker_dataframe
 
 
-path_to_recording_folder = Path(r"D:\2023-06-07_JH\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_JH_flexion_neutral_trial_1")
-path_to_qualisys_folder = path_to_recording_folder / 'qualisys'
-path_to_qualisys_csv = path_to_qualisys_folder / 'qualisys_markers_dataframe.csv'
+def main(original_qualisys_dataframe: pd.DataFrame, joint_center_weights: dict):
+    
 
-df = pd.read_csv(path_to_qualisys_csv)
+    qualisys_generic_marker_dataframe = create_generic_qualisys_marker_dataframe(original_qualisys_dataframe, qualisys_marker_mappings)
 
-# Flatten the nested dictionary to easily map biomechanical to generic names
-flat_mappings = {}
-for joint, markers in qualisys_marker_mappings.items():
-    for biomech, generic in markers.items():
-        flat_mappings[biomech] = generic
+    qualisys_markers_frame_marker_dimension = dataframe_to_numpy(qualisys_generic_marker_dataframe)
 
-# Filter rows to keep only the markers that are in the flat_mappings dictionary
-df = df[df['marker'].isin(flat_mappings.keys())]
+    marker_names = qualisys_generic_marker_dataframe['marker'].unique().tolist()
 
-# Replace the marker names in the DataFrame
-df['marker'] = df['marker'].replace(flat_mappings)
+    joint_centers_frame_marker_dimension = calculate_joint_centers(qualisys_markers_frame_marker_dimension, joint_center_weights, marker_names)
 
-qualisys_frame_marker_dimension = dataframe_to_numpy(df)
-
-marker_names = df['marker'].unique().tolist()
-
-f = 2 
-
-# plot_3d_scatter(df)
-
-
-# joint_centers_df = calculate_joint_centers(df, joint_center_weights)
-joint_centers = calculate_joint_centers(qualisys_frame_marker_dimension, joint_center_weights, marker_names)
-
-array_dict = {'Qualisys Markers': qualisys_frame_marker_dimension, 'Qualisys Joint Centers': joint_centers}
-
-plot_3d_scatter(array_dict)
-f = 2 
-
-# plot_3d_scatter(joint_centers_df)
+    return joint_centers_frame_marker_dimension, qualisys_markers_frame_marker_dimension
 
 
 
 
-f = 2
+if __name__ == '__main__':
+
+    from qualisys.qualisys_generic_marker_mapping import qualisys_marker_mappings
+    from qualisys.qualisys_plotting import plot_3d_scatter
+    from qualisys.qualisys_joint_center_mapping import joint_center_weights
+
+    path_to_recording_folder = Path(r"D:\2023-06-07_JH\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_JH_flexion_neutral_trial_1")
+    path_to_qualisys_folder = path_to_recording_folder / 'qualisys'
+    path_to_qualisys_csv = path_to_qualisys_folder / 'qualisys_markers_dataframe.csv'
+
+    qualisys_dataframe = pd.read_csv(path_to_qualisys_csv)
+
+    joint_centers_frame_marker_dimension,qualisys_markers_frame_marker_dimension  = main(qualisys_dataframe, joint_center_weights)
+
+    data_arrays_to_plot = {
+        'qualisys markers': qualisys_markers_frame_marker_dimension,
+        'qualisys joint centers': joint_centers_frame_marker_dimension,
+    }
+    plot_3d_scatter(data_arrays_to_plot)
+
+    f = 2
