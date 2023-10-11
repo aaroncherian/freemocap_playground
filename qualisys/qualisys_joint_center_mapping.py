@@ -199,16 +199,12 @@ joint_center_weights = {
         'left_upper_leg': [.25, .25, .25],
     },
     'right_knee': {
-        'right_outside_upper_knee': [.25, .25, .25],
-        'right_inside_upper_knee': [.25, .25, .25],
-        'right_outside_lower_knee': [.25, .25, .25],
-        'right_inside_lower_knee': [.25, .25, .25],
+        'right_outside_upper_knee': [.5, .5, .5],
+        'right_inside_upper_knee': [.5, .5, .5],
     },
     'left_knee': {
-        'left_outside_upper_knee': [.25, .25, .25],
-        'left_inside_upper_knee': [.25, .25, .25],
-        'left_outside_lower_knee': [.25, .25, .25],
-        'left_inside_lower_knee': [.25, .25, .25],
+        'left_outside_upper_knee': [.5, .5, .5],
+        'left_inside_upper_knee': [.5, .5, .5],
     },
     'right_ankle': {
         'right_outside_ankle': [.5, .5, .5],
