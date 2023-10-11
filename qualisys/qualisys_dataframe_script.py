@@ -51,10 +51,6 @@ df['marker'] = df['marker'].replace(flat_mappings)
 
 qualisys_frame_marker_dimension = dataframe_to_numpy(df)
 
-# array_dict = {'Qualisys Markers': qualisys_frame_marker_dimension}
-
-# plot_3d_scatter(array_dict)
-
 marker_names = df['marker'].unique().tolist()
 
 f = 2 
