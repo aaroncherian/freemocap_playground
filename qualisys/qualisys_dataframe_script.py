@@ -1,5 +1,5 @@
 
-from qualisys.calculate_joint_centers import calculate_joint_centers
+from qualisys.joint_center_calculation.calculate_joint_centers import calculate_joint_centers
 import pandas as pd
 from pathlib import Path
 
@@ -57,14 +57,15 @@ def main(original_qualisys_dataframe: pd.DataFrame, joint_center_weights: dict):
 
 
 if __name__ == '__main__':
-
+    import numpy as np
     from qualisys.joint_center_calculation.qualisys_generic_marker_mapping import qualisys_marker_mappings
     from qualisys.qualisys_plotting import plot_3d_scatter
     from qualisys.joint_center_calculation.qualisys_joint_center_mapping import joint_center_weights
 
-    path_to_recording_folder = Path(r"D:\2023-06-07_JH\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_JH_flexion_neutral_trial_1")
+    path_to_recording_folder = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1")
     path_to_qualisys_folder = path_to_recording_folder / 'qualisys'
     path_to_qualisys_csv = path_to_qualisys_folder / 'qualisys_markers_dataframe.csv'
+    save_path = path_to_qualisys_folder / 'qualisys_joint_centers_3d_xyz.npy'
 
     qualisys_dataframe = pd.read_csv(path_to_qualisys_csv)
 
@@ -74,6 +75,9 @@ if __name__ == '__main__':
         'qualisys markers': qualisys_markers_frame_marker_dimension,
         'qualisys joint centers': joint_centers_frame_marker_dimension,
     }
-    plot_3d_scatter(data_arrays_to_plot)
+    
+    np.save(save_path, joint_centers_frame_marker_dimension)
+
+    
 
     f = 2
