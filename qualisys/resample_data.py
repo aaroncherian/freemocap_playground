@@ -66,21 +66,24 @@ def get_freemocap_framerate(path_to_freemocap_recording_folder):
 
 
 path_to_freemocap_recording_folder = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1')
+
+
 freemocap_framerate = get_freemocap_framerate(path_to_freemocap_recording_folder)
 
 
 path_to_qualisys_data = path_to_freemocap_recording_folder / 'qualisys' / 'qualisys_joint_centers_3d_xyz.npy'
+path_to_save_data = path_to_freemocap_recording_folder / 'qualisys' / 'resampled_qualisys_joint_centers_3d_xyz.npy'
 
 qualisys_joint_center_data = np.load(path_to_qualisys_data)
 
 qualisys_framerate = 300
 
 interpolated_qualisys_data = interpolate_freemocap_data(qualisys_joint_center_data)
-filtered_qualisys_data = butterworth_filter_data(interpolated_qualisys_data,cutoff=6, sampling_rate=300, order=4)
+filtered_qualisys_data = butterworth_filter_data(interpolated_qualisys_data,cutoff=6, sampling_rate=qualisys_framerate, order=4)
 resampled_qualisys_data = resample_data(data_to_resample=filtered_qualisys_data, original_framerate=qualisys_framerate, framerate_to_resample_to=freemocap_framerate)
 
 
 f = 2
-
+np.save(path_to_save_data, resampled_qualisys_data)
 # np.save(path_to_qualisys_session_folder/'output_data'/'downsampled_qualisys_skel_3d.npy', resampled_qualisys_data)
 

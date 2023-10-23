@@ -48,7 +48,7 @@ class ClipWidget(QWidget):
 
         assert self.freemocap_3d_data.shape[0] == self.clipped_qualisys_data.shape[0], f'FreeMoCap and clipped Qualisys array lengths are not equal.'
 
-        self.clipped_qualisys_com_data = self.qualisys_com_data[qualisys_start_frame:qualisys_end_frame,:]
+        self.clipped_qualisys_com_data = None
         self.save_clipped_data_button.setEnabled(True)
 
         self.data_clipped_signal.emit()

@@ -4,15 +4,16 @@ from pathlib import Path
 
 
 
-def reformat_qualisys_tsv_data(path_to_recording_folder, tsv_name:str):
+def reformat_synced_qualisys_tsv_data(path_to_recording_folder, tsv_name:str):
 
     path_to_qualisys_folder = path_to_recording_folder / 'qualisys'
-    path_to_save_numpy_array = path_to_qualisys_folder / 'qualisys_markers.npy'
+    # path_to_save_numpy_array = path_to_qualisys_folder / 'qualisys_markers.npy'
     path_to_tsv = path_to_qualisys_folder / tsv_name
 
     original_qualisys_dataframe =  pd.read_csv(path_to_tsv, sep='\t')
     # Drop the 'Frame' and 'Time' columns
-    original_qualisys_dataframe.drop(columns=['Frame', 'Time'], inplace=True)
+    original_qualisys_dataframe.drop(columns=['Frame', 'Time', 'unix_timestamps'] + [col for col in original_qualisys_dataframe.columns if 'Unnamed' in col], inplace=True)
+
 
     # Create the reorganized_data list with marker names as strings
     reorganized_qualisys_data= [
@@ -24,9 +25,9 @@ def reformat_qualisys_tsv_data(path_to_recording_folder, tsv_name:str):
     reorganized_qualisys_dataframe.to_csv(path_to_qualisys_folder / 'qualisys_markers_dataframe.csv', index=False)
 
 if __name__ == '__main__':
-    path_to_recording_folder = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_JH_flexion_neutral_trial_1")
+    path_to_recording_folder = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1")
     tsv_name = 'flexion_neutral_trial_1_tracked_with_header_synchronized.tsv'
-    reformat_qualisys_tsv_data(path_to_recording_folder, tsv_name)
+    reformat_synced_qualisys_tsv_data(path_to_recording_folder, tsv_name)
 
 
 
