@@ -23,13 +23,21 @@ range_freemocap_unix = freemocap_unix_timestamps_df.iloc[:, 2:].max(axis=1) - fr
 std_freemocap_unix = freemocap_unix_timestamps_df.iloc[:, 2:].std(axis=1)
 first_timestamp = mean_freemocap_unix.iloc[0]
 
-# Given framerate
-given_framerate = 29.967667127642223
-time_interval = 1 / given_framerate
+# # Given framerate
+# given_framerate = 29.967667127642223
+# time_interval = 1 / given_framerate
 
-# Generate a new list of timestamps based on the first timestamp and the given framerate
-num_frames = len(mean_freemocap_unix)
-freemocap_timestamps = [first_timestamp + i * time_interval for i in range(num_frames)]
+# # Generate a new list of timestamps based on the first timestamp and the given framerate
+# num_frames = len(mean_freemocap_unix)
+# freemocap_timestamps = [first_timestamp + i * time_interval for i in range(num_frames)]
+
+
+freemocap_unix_timestamps_df = pd.concat([mean_freemocap_unix, range_freemocap_unix, std_freemocap_unix], axis=1)
+# pd.set_option('display.max_rows', None)
+# pd.set_option('display.max_columns', None)
+freemocap_unix_timestamps_df
+# %%
+freemocap_timestamps = mean_freemocap_unix.to_list()
 
 # Give Series a name
 mean_freemocap_unix.name = 'mean_timestamp'
@@ -165,59 +173,109 @@ synchronized_qualisys_df_to_plot = pd.DataFrame({
     'z': synchronized_qualisys_right_toe_z
 })
 
-# make a 2,1 subplot with the original timeseries on top and the synchronized timeseries on the bottom
-fig = make_subplots(rows=2, cols=1, subplot_titles=("Freemocap vs Original Qualisys", "Freemocap vs Synchronized Qualisys"))
-fig.update_xaxes(title_text="Frame Number", row=1, col=1)
-fig.update_yaxes(title_text="mm", row=1, col=1)
 
-fig.update_xaxes(title_text="Frame Number", row=2, col=1)
-fig.update_yaxes(title_text="mm", row=2, col=1)
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Generate some sample data for illustration
+# In your actual code, these would come from your dataframes
+freemocap_data =  freemocap_body_df['right_foot_index_z']  # Replace this with freemocap_body_df['right_foot_index_x']
+qualisys_data = qualisys_synchronized_df['RTOE Z']  # Replace this with qualisys_synchronized_df['RTOE X']
+
+# Ensure the two signals are of the same length (trimming the longer one if necessary)
+min_length = min(len(freemocap_data), len(qualisys_data))
+freemocap_data = freemocap_data[:min_length]
+qualisys_data = qualisys_data[:min_length]
+
+# Normalize the signals
+def normalize(signal):
+    return (signal - np.mean(signal)) / np.std(signal)
+
+normalized_freemocap = normalize(freemocap_data)
+normalized_qualisys = normalize(qualisys_data)
+
+# Compute the cross-correlation
+cross_corr = np.correlate(normalized_freemocap, normalized_qualisys, mode='full')
+
+# Find the lag that maximizes the cross-correlation
+optimal_lag = np.argmax(cross_corr) - (len(normalized_freemocap) - 1)
+print(f"The optimal lag is: {optimal_lag}")
+
+# Shift the qualisys data by the optimal lag
+if optimal_lag > 0:
+    shifted_qualisys = np.concatenate([np.zeros(optimal_lag), normalized_qualisys[:-optimal_lag]])
+else:
+    shifted_qualisys = np.concatenate([normalized_qualisys[-optimal_lag:], np.zeros(-optimal_lag)])
+
+# Plot the original and shifted signals
+plt.figure(figsize=(14, 6))
+plt.subplot(1, 2, 1)
+plt.title('Before Shift')
+plt.plot(normalized_freemocap, label='FreeMoCap Data')
+plt.plot(normalized_qualisys, label='Qualisys Data')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.title('After Shift')
+plt.plot(normalized_freemocap, label='FreeMoCap Data')
+plt.plot(shifted_qualisys, label=f'Qualisys Data (Shifted by {optimal_lag} frames)')
+plt.legend()
+
+plt.show()
+
+# # make a 2,1 subplot with the original timeseries on top and the synchronized timeseries on the bottom
+# fig = make_subplots(rows=2, cols=1, subplot_titles=("Freemocap vs Original Qualisys", "Freemocap vs Synchronized Qualisys"))
+# fig.update_xaxes(title_text="Frame Number", row=1, col=1)
+# fig.update_yaxes(title_text="mm", row=1, col=1)
+
+# fig.update_xaxes(title_text="Frame Number", row=2, col=1)
+# fig.update_yaxes(title_text="mm", row=2, col=1)
 
 
-freemocap_colors = {'x': 'red', 'y': 'green', 'z': 'blue'}
-original_qualisys_colors = {'x': 'orange', 'y': 'turquoise', 'z': 'purple'}
-synchronized_qualisys_colors = {'x': 'pink', 'y': 'cyan', 'z': 'darkmagenta'}
+# freemocap_colors = {'x': 'red', 'y': 'green', 'z': 'blue'}
+# original_qualisys_colors = {'x': 'orange', 'y': 'turquoise', 'z': 'purple'}
+# synchronized_qualisys_colors = {'x': 'pink', 'y': 'cyan', 'z': 'darkmagenta'}
 
 
-# Loop through each coordinate and add traces to subplots
-for coord in ['x', 'y', 'z']:
-    fig.add_trace(go.Scatter(x=freemocap_df_to_plot.index,
-                             y=freemocap_df_to_plot[coord],
-                             mode='lines+markers',
-                             name=f'freemocap right toe {coord}',
-                             line=dict(color=freemocap_colors[coord]),
-                             ),
+# # Loop through each coordinate and add traces to subplots
+# for coord in ['x', 'y', 'z']:
+#     fig.add_trace(go.Scatter(x=freemocap_df_to_plot.index,
+#                              y=freemocap_df_to_plot[coord],
+#                              mode='lines+markers',
+#                              name=f'freemocap right toe {coord}',
+#                              line=dict(color=freemocap_colors[coord]),
+#                              ),
 
-                  row=1,
-                  col=1)
-    fig.add_trace(go.Scatter(x=original_qualisys_df_to_plot.index,
-                             y=original_qualisys_df_to_plot[coord],
-                             mode='lines+markers',
-                             name=f'original qualisys right toe {coord}',
-                             line=dict(color=original_qualisys_colors[coord]),
-                             ),
-                  row=1,
-                  col=1)
+#                   row=1,
+#                   col=1)
+#     fig.add_trace(go.Scatter(x=original_qualisys_df_to_plot.index,
+#                              y=original_qualisys_df_to_plot[coord],
+#                              mode='lines+markers',
+#                              name=f'original qualisys right toe {coord}',
+#                              line=dict(color=original_qualisys_colors[coord]),
+#                              ),
+#                   row=1,
+#                   col=1)
 
-    fig.add_trace(go.Scatter(x=freemocap_df_to_plot.index,
-                             y=freemocap_df_to_plot[coord],
-                             mode='lines+markers',
-                             name=f'freemocap right toe {coord}',
-                             line=dict(color=freemocap_colors[coord]),
-                             ),
-                  row=2,
-                  col=1)
+#     fig.add_trace(go.Scatter(x=freemocap_df_to_plot.index,
+#                              y=freemocap_df_to_plot[coord],
+#                              mode='lines+markers',
+#                              name=f'freemocap right toe {coord}',
+#                              line=dict(color=freemocap_colors[coord]),
+#                              ),
+#                   row=2,
+#                   col=1)
 
-    fig.add_trace(go.Scatter(x=synchronized_qualisys_df_to_plot.index,
-                             y=synchronized_qualisys_df_to_plot[coord],
-                             mode='lines+markers',
-                             name=f'synchronized qualisys right toe {coord}',
-                             line=dict(color=synchronized_qualisys_colors[coord]),
-                             ),
-                  row=2,
-                  col=1)
+#     fig.add_trace(go.Scatter(x=synchronized_qualisys_df_to_plot.index,
+#                              y=synchronized_qualisys_df_to_plot[coord],
+#                              mode='lines+markers',
+#                              name=f'synchronized qualisys right toe {coord}',
+#                              line=dict(color=synchronized_qualisys_colors[coord]),
+#                              ),
+#                   row=2,
+#                   col=1)
 
-fig.show()
+# fig.show()
 
 
 # %%
