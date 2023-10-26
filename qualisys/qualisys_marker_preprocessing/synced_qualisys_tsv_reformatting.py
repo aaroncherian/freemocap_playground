@@ -25,8 +25,10 @@ def reformat_synced_qualisys_tsv_data(path_to_recording_folder, tsv_name:str):
     reorganized_qualisys_dataframe.to_csv(path_to_qualisys_folder / 'qualisys_markers_dataframe.csv', index=False)
 
 if __name__ == '__main__':
-    path_to_recording_folder = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1")
-    tsv_name = 'flexion_neutral_trial_1_tracked_with_header_synchronized.tsv'
+    # path_to_recording_folder = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1")
+    # tsv_name = 'flexion_neutral_trial_1_tracked_with_header_synchronized.tsv'
+    path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2')
+    tsv_name = 'synchronized_markers.tsv'
     reformat_synced_qualisys_tsv_data(path_to_recording_folder, tsv_name)
 
 

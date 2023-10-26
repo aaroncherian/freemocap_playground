@@ -10,10 +10,10 @@ def create_freemocap_unix_timestamps(csv_path):
     df.replace(-1, float('nan'), inplace=True)
     mean_timestamps = df.iloc[:, 2:].mean(axis=1, skipna=True)
     time_diff = np.diff(mean_timestamps)
-    framerate = 1 / np.mean(time_diff)
+    framerate = 1 / np.nanmean(time_diff)
     return mean_timestamps, framerate
 
-def strip_qualisys_tsv(tsv_path, header_line_count=13):
+def strip_qualisys_tsv(tsv_path, header_line_count):
     original_df = pd.read_csv(tsv_path, skiprows=header_line_count, delimiter="\t")
     with open(tsv_path, 'r') as f:
         header = [next(f).strip().split('\t') for _ in range(header_line_count)]
@@ -148,19 +148,33 @@ def plot_shifted_signals(freemocap_data: pd.Series, qualisys_data: pd.Series, op
     plt.show()
 
 # Test the functions
-freemocap_csv_path = Path(
-    r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\synchronized_videos\timestamps\unix_synced_timestamps.csv")
 
-qualisys_tsv_path = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\qualisys\flexion_neutral_trial_1_tracked_with_header.tsv")
+recording_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2')
+freemocap_csv_path = recording_folder_path / 'synchronized_videos' / 'timestamps' / 'unix_synced_timestamps.csv'
+qualisys_tsv_path = recording_folder_path / 'qualisys' / 'MDN_treadmill_2_tracked.tsv'
+freemocap_body_csv = recording_folder_path / 'output_data' / 'mediapipe_body_3d_xyz.csv'
+header_line_count = 12
 
-freemocap_body_csv = Path(
-    r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\output_data\mediapipe_body_3d_xyz.csv")
+
+# recording_folder_path = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1")
+# freemocap_csv_path = recording_folder_path / 'synchronized_videos' / 'timestamps' / 'unix_synced_timestamps.csv'
+# qualisys_tsv_path = recording_folder_path / 'qualisys' / 'flexion_neutral_trial_1_tracked_with_header.tsv'
+# freemocap_body_csv = recording_folder_path / 'output_data' / 'mediapipe_body_3d_xyz.csv'
+# header_line_count = 13
+
+# freemocap_csv_path = Path(
+#     r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\synchronized_videos\timestamps\unix_synced_timestamps.csv")
+
+# qualisys_tsv_path = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\qualisys\flexion_neutral_trial_1_tracked_with_header.tsv")
+
+# freemocap_body_csv = Path(
+#     r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\output_data\mediapipe_body_3d_xyz.csv")
 
 
 freemocap_timestamps, framerate = create_freemocap_unix_timestamps(freemocap_csv_path)
 print(f"Calculated FreeMoCap framerate: {framerate}")
 
-qualisys_df, header_dict = strip_qualisys_tsv(qualisys_tsv_path)
+qualisys_df, header_dict = strip_qualisys_tsv(qualisys_tsv_path, header_line_count=header_line_count)
 qualisys_start_timestamp = header_dict["time_stamp"]
 qualisys_df_with_unix = insert_qualisys_timestamp_column(qualisys_df.copy(), qualisys_start_timestamp, lag_in_seconds=0)
 
@@ -171,7 +185,7 @@ freemocap_body_df = pd.read_csv(freemocap_body_csv)
 freemocap_data =  freemocap_body_df['right_foot_index_y']
 qualisys_data = synchronized_qualisys_df['RTOE Y'] 
 
-optimal_lag = calculate_optimal_lag(freemocap_data, qualisys_data)
+optimal_lag = calculate_optimal_lag(freemocap_data[2000:3000], qualisys_data[2000:3000])
 
 print(f"Optimal lag: {optimal_lag}")
 
@@ -187,7 +201,7 @@ synchronized_qualisys_df = synchronize_qualisys_data(qualisys_df_with_unix_lag_c
 
 qualisys_data = synchronized_qualisys_df['RTOE Y']
 
-optimal_lag = calculate_optimal_lag(freemocap_data, qualisys_data)
+optimal_lag = calculate_optimal_lag(freemocap_data[2000:3000], qualisys_data[2000:3000])
 
 print(f"Optimal lag: {optimal_lag}")
 
@@ -198,8 +212,9 @@ assert synchronized_qualisys_df.shape[1] == qualisys_df.shape[
 assert synchronized_qualisys_df.shape[0] == len(
     freemocap_timestamps), "qualisys_synchronized_df does not have the same number of rows as freemocap_timestamps"
 
-synchronized_qualisys_df.to_csv(Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\qualisys\flexion_neutral_trial_1_tracked_with_header_synchronized.tsv"),
-                                sep="\t", index=False)
+synchronized_qualisys_df.to_csv(recording_folder_path/'qualisys'/'synchronized_markers.tsv', sep="\t", index=False)
+# synchronized_qualisys_df.to_csv(Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\qualisys\flexion_neutral_trial_1_tracked_with_header_synchronized.tsv"),
+#                                 sep="\t", index=False)
 
 
 f = 2
