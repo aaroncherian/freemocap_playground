@@ -59,9 +59,9 @@ def plot_3d_scatter(array_dict):
     
     # Compute the overall mean and axis range
     first_array = next(iter(array_dict.values()))
-    mean_x = np.mean(first_array[:, :, 0])
-    mean_y = np.mean(first_array[:, :, 1])
-    mean_z = np.mean(first_array[:, :, 2])
+    mean_x = np.nanmean(first_array[:, :, 0])
+    mean_y = np.nanmean(first_array[:, :, 1])
+    mean_z = np.nanmean(first_array[:, :, 2])
     mean_vals = (mean_x, mean_y, mean_z)
     
     ax_range = 1000

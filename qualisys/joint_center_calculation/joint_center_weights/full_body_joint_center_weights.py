@@ -1,4 +1,47 @@
 joint_center_weights = {
+    'head': {
+        'left_head': [.5, .5, .5],
+        'right_head': [.5, .5, .5],
+    },
+
+    'right_shoulder': {
+        'right_front_shoulder': [.5, .5, .5],
+        'right_back_shoulder': [.5, .5, .5],
+    },
+
+    'left_shoulder': {
+        'left_front_shoulder': [.5, .5, .5],
+        'left_back_shoulder': [.5, .5, .5],
+    },
+
+    'right_elbow': {
+        'right_outside_elbow': [.5, .5, .5],
+        'right_inside_elbow': [.5, .5, .5],
+    },
+
+    'left_elbow': {
+        'left_outside_elbow': [.5, .5, .5],
+        'left_inside_elbow': [.5, .5, .5],
+    },
+
+    'right_wrist': {
+        'right_outside_wrist': [.5, .5, .5],
+        'right_inside_wrist': [.5, .5, .5],
+    },
+
+    'left_wrist': {
+        'left_outside_wrist': [.5, .5, .5],
+        'left_inside_wrist': [.5, .5, .5],
+    },
+
+    'right_hand': {
+        'right_hand': [1, 1, 1],
+    },
+
+    'left_hand': {
+        'left_hand': [1, 1, 1],
+    },
+    
     'right_hip': {
         'right_upper_hip': [.25, .25, .25],
         'right_back_upper_hip': [.25, .25, .25],
@@ -12,12 +55,16 @@ joint_center_weights = {
         'left_upper_leg': [.25, .25, .25],
     },
     'right_knee': {
-        'right_outside_upper_knee': [.5, .5, .5],
-        'right_inside_upper_knee': [.5, .5, .5],
+        'right_outside_upper_knee': [.25, .25, .25],
+        'right_inside_upper_knee': [.25, .25, .25],
+        'right_outside_lower_knee': [.25, .25, .25],
+        'right_inside_lower_knee': [.25, .25, .25],
     },
     'left_knee': {
-        'left_outside_upper_knee': [.5, .5, .5],
-        'left_inside_upper_knee': [.5, .5, .5],
+        'left_outside_upper_knee': [.25, .25, .25],
+        'left_inside_upper_knee': [.25, .25, .25],
+        'left_outside_lower_knee': [.25, .25, .25],
+        'left_inside_lower_knee': [.25, .25, .25],
     },
     'right_ankle': {
         'right_outside_ankle': [.5, .5, .5],

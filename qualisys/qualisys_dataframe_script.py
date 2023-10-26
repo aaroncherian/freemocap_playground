@@ -58,8 +58,9 @@ def main(original_qualisys_dataframe: pd.DataFrame, joint_center_weights: dict):
 
 if __name__ == '__main__':
     import numpy as np
-    from qualisys.joint_center_calculation.generic_mappings.prosthetic_generic_mappings import qualisys_marker_mappings
-    from qualisys.joint_center_calculation.joint_center_weights.prosthetic_joint_center_weights import joint_center_weights
+    from qualisys.joint_center_calculation.generic_mappings.full_body_generic_marker_mapping import qualisys_marker_mappings
+    from qualisys.joint_center_calculation.joint_center_weights.full_body_joint_center_weights import joint_center_weights
+    from qualisys.qualisys_plotting import plot_3d_scatter
 
     # path_to_recording_folder = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1")
     path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2')
@@ -76,6 +77,7 @@ if __name__ == '__main__':
         'qualisys joint centers': joint_centers_frame_marker_dimension,
     }
     
+    # plot_3d_scatter(data_arrays_to_plot)
     np.save(save_path, joint_centers_frame_marker_dimension)
 
     
