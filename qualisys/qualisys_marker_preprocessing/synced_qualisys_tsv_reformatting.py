@@ -6,7 +6,7 @@ from pathlib import Path
 
 def reformat_synced_qualisys_tsv_data(path_to_recording_folder, tsv_name:str):
 
-    path_to_qualisys_folder = path_to_recording_folder / 'qualisys'
+    path_to_qualisys_folder = path_to_recording_folder / 'qualisys_data'
     # path_to_save_numpy_array = path_to_qualisys_folder / 'qualisys_markers.npy'
     path_to_tsv = path_to_qualisys_folder / tsv_name
 
@@ -27,7 +27,7 @@ def reformat_synced_qualisys_tsv_data(path_to_recording_folder, tsv_name:str):
 if __name__ == '__main__':
     # path_to_recording_folder = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1")
     # tsv_name = 'flexion_neutral_trial_1_tracked_with_header_synchronized.tsv'
-    path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2')
+    path_to_recording_folder = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_38_16_TF01_leg_length_neg_5_trial_1')
     tsv_name = 'synchronized_markers.tsv'
     reformat_synced_qualisys_tsv_data(path_to_recording_folder, tsv_name)
 

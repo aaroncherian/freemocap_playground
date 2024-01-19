@@ -58,7 +58,7 @@ qualisys_tsv_path = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\ses
 
 # %%
 # Load qualisys tsv as dataframe (skipping header)
-qualisys_header_line_count = 13  # should be constant for all Qualisys output? or does it depend on 'export' settings?
+qualisys_header_line_count = 11  # should be constant for all Qualisys output? or does it depend on 'export' settings?
 
 qualisys_original_df = pd.read_csv(qualisys_tsv_path,
                                    skiprows=qualisys_header_line_count,
