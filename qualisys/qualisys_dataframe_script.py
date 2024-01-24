@@ -3,6 +3,14 @@ from qualisys.joint_center_calculation.calculate_joint_centers import calculate_
 import pandas as pd
 from pathlib import Path
 
+from skellyforge.freemocap_utils.postprocessing_widgets.task_worker_thread import TaskWorkerThread
+from skellyforge.freemocap_utils.config import default_settings
+from skellyforge.freemocap_utils.constants import (
+    TASK_INTERPOLATION,
+    TASK_FILTERING,
+)
+
+
 def dataframe_to_numpy(df):
     # Get the list of unique markers in the order they appear for frame 0
     marker_order = df['marker'].unique().tolist()
@@ -76,14 +84,21 @@ if __name__ == '__main__':
 
     joint_centers_frame_marker_dimension,qualisys_markers_frame_marker_dimension = main(qualisys_dataframe, joint_center_weights)
 
+    post_process_task_worker = TaskWorkerThread(raw_skeleton_data=joint_centers_frame_marker_dimension, task_list= [TASK_INTERPOLATION, TASK_FILTERING], settings=default_settings)
+    post_process_task_worker.run()
+    filt_interp_joint_centers_frame_marker_dimension = post_process_task_worker.tasks[TASK_FILTERING]['result']
+
+    
+
     data_arrays_to_plot = {
         'qualisys markers': qualisys_markers_frame_marker_dimension,
-        'qualisys joint centers': joint_centers_frame_marker_dimension,
+        'qualisys joint centers': filt_interp_joint_centers_frame_marker_dimension,
     }
     
     plot_3d_scatter(data_arrays_to_plot)
-    np.save(save_path, joint_centers_frame_marker_dimension)
+    np.save(save_path, filt_interp_joint_centers_frame_marker_dimension)
 
     
 
     f = 2
+ 
