@@ -17,12 +17,13 @@ class FileManager():
         self.path_to_freemocap_session_folder = path_to_freemocap_session_folder
 
         self.freemocap_data_folder_name = 'output_data'
-        self.qualisys_data_folder_name = 'qualisys'
+        self.qualisys_data_folder_name = 'output_data'
 
-        path_to_qualisys_data = self.path_to_qualisys_session_folder/self.qualisys_data_folder_name/'qualisys_joint_centers_3d_xyz.npy'
+        path_to_qualisys_data = self.path_to_qualisys_session_folder/self.qualisys_data_folder_name/'qualisys_origin_aligned_skeleton_3D.npy'
         path_to_freemocap_data = self.path_to_freemocap_session_folder/self.freemocap_data_folder_name/'mediaPipeSkel_3d_body_hands_face.npy'
         self.qualisys_data = np.load(path_to_qualisys_data)
         self.freemocap_data = np.load(path_to_freemocap_data)
+        
 
         # path_to_qualisys_com_data = self.path_to_qualisys_session_folder/self.data_folder_name/'center_of_mass'/'downsampled_total_body_center_of_mass_xyz.npy'
         # self.qualisys_com_data = np.load(path_to_qualisys_com_data)
@@ -92,11 +93,12 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
 
     
-    path_to_qualisys_session_folder = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1")
+    path_to_qualisys_session_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\qualisys_MDN_NIH_Trial3')
+
     #path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS")
     #path_to_qualisys_session_folder = Path(r"D:\ValidationStudy2022\FreeMocap_Data\qualisys_sesh_2022-05-24_16_02_53_JSM_T1_NIH")
 
-    path_to_freemocap_session_folder = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1')
+    path_to_freemocap_session_folder = Path(r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_14_53_48_MDN_NIH_Trial3")
     #path_to_freemocap_session_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\sesh_2022-05-24_15_55_40_JSM_T1_BOS')
     #path_to_freemocap_session_folder = Path(r'D:\ValidationStudy2022\FreeMocap_Data\sesh_2022-05-24_16_02_53_JSM_T1_NIH')
 
