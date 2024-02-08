@@ -32,6 +32,7 @@ freemocap_data_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\ca
 #session_two_info = {'sessionID': 'qualisys_sesh_2022-05-24_16_02_53_JSM_T1_BOS', 'skeleton_type': 'qualisys'} #name of the sessionID folder
 session_one_info = {'sessionID': 'qualisys_MDN_NIH_Trial4', 'skeleton_type': 'qualisys'} #name of the sessionID folder
 
+session_one_info = {'sessionID': 'mediapipe_MDN_Trial_2_yolo', 'skeleton_type': 'mediapipe'} #name of the sessionID folder
 #session_two_info = {'sessionID': 'qualisys_sesh_2022-05-24_15_10_49_JSM_T2_slackline', 'skeleton_type': 'qualisys'} #name of the sessionID folder
 
 #session_one_info = {'sessionID': 'sesh_2022-05-24_16_10_46_JSM_T1_WalkRun', 'skeleton_type': 'mediapipe'} #name of the sessionID folder

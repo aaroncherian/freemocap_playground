@@ -95,7 +95,7 @@ if __name__ == '__main__':
     # recording_folder = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_50_56_TF01_leg_length_pos_25_trial_1')
     # path_to_freemocap_data = recording_folder/'mediapipe_yolo_dlc_output_data'/'raw_data'/'mediapipe3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
 
-    recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\mediapipe_MDN_Trial_2_yolo')
+    recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\mediapipe_MDN_Trial_3_yolo')
     output_folder_name = 'output_data'
     raw_data_file_name = 'mediapipe3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
 

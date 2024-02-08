@@ -66,16 +66,17 @@ def main(original_qualisys_dataframe: pd.DataFrame, joint_center_weights: dict):
 
 if __name__ == '__main__':
     import numpy as np
-    from qualisys.joint_center_calculation.generic_mappings.full_body_generic_marker_mapping import qualisys_marker_mappings
-    from qualisys.joint_center_calculation.joint_center_weights.full_body_joint_center_weights import joint_center_weights
+    # from qualisys.joint_center_calculation.generic_mappings.full_body_generic_marker_mapping import qualisys_marker_mappings
+    # from qualisys.joint_center_calculation.joint_center_weights.full_body_joint_center_weights import joint_center_weights
 
-    # from qualisys.joint_center_calculation.generic_mappings.prosthetic_generic_mappings import qualisys_marker_mappings
-    # from qualisys.joint_center_calculation.joint_center_weights.prosthetic_joint_center_weights import joint_center_weights
+    from qualisys.joint_center_calculation.generic_mappings.prosthetic_generic_mappings import qualisys_marker_mappings
+    from qualisys.joint_center_calculation.joint_center_weights.prosthetic_joint_center_weights import joint_center_weights
     
     from qualisys.qualisys_plotting import plot_3d_scatter
 
-    path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\mediapipe_MDN_Trial_2_yolo')
+    # path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\mediapipe_MDN_Trial_2_yolo')
     # path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2')
+    path_to_recording_folder = Path(r'E:\prosthetic_validation\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1')
     path_to_qualisys_folder = path_to_recording_folder / 'qualisys_data'
     path_to_qualisys_csv = path_to_qualisys_folder / 'qualisys_markers_dataframe.csv'
     save_path = path_to_qualisys_folder / 'qualisys_joint_centers_3d_xyz.npy'
