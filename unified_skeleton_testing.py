@@ -174,8 +174,9 @@ virtual_markers = {
 
 
 from pydantic import BaseModel, validator, root_validator
+import numpy as np
 from typing import Dict, List
-
+from pathlib import Path
 class Markers(BaseModel):
     markers: List[str]
 
@@ -201,11 +202,6 @@ class VirtualMarkers(BaseModel):
             raise ValueError(f'Marker weights must sum to approximately 1 for {virtual_marker} Current sum is {weight_sum}.')
 
         return virtual_marker
-
-
-
-
-
 
 class Segment(BaseModel):
     proximal: str
@@ -234,12 +230,69 @@ class Segments(BaseModel):
         return values
 
 
+class Skeleton(BaseModel):
+    markers:Markers
+    virtual_markers: VirtualMarkers
+    segments: Segments
+    marker_data: Dict[str, np.ndarray] = {}  
+    virtual_marker_data: Dict[str, np.ndarray] = {}
+    class Config:
+        arbitrary_types_allowed = True
+
+    def integrate_freemocap_3d_data(self, freemocap_3d_data:np.ndarray):
+        num_markers_in_data = freemocap_3d_data.shape[1]
+        num_markers_in_model = len(self.markers.markers)
+        
+        if num_markers_in_data != num_markers_in_model:
+            raise ValueError(
+                f"The number of markers in the 3D data ({num_markers_in_data}) does not match "
+                f"the number of markers in the model ({num_markers_in_model})."
+            )
+    
+        for i, marker_name in enumerate(self.markers.markers):
+            self.marker_data[marker_name] = freemocap_3d_data[:, i, :]
+
+    def calculate_virtual_markers(self):
+        # Check if actual marker data is present
+        if not self.marker_data:
+            raise ValueError("3d marker data must be integrated before calculating virtual markers. Run `integrate_freemocap_3d_data()` first.")
+
+        # Iterate over the virtual markers and calculate their positions
+        for vm_name, vm_info in self.virtual_markers.virtual_markers.items():
+            # Initialize an array to hold the computed positions of the virtual marker
+            vm_positions = np.zeros((self.marker_data[next(iter(self.marker_data))].shape[0], 3))
+            for marker_name, weight in zip(vm_info['marker_names'], vm_info['marker_weights']):
+                vm_positions += self.marker_data[marker_name] * weight
+            self.virtual_marker_data[vm_name] = vm_positions
+        
+        self.marker_data.update(self.virtual_marker_data)
+        
+
+
+    @property
+    def trajectories(self):
+        return self.marker_data
+
+
 
 markers = Markers(markers=mediapipe_body)
-
 virtual_markers = VirtualMarkers(virtual_markers=virtual_markers)
-
-
 segments = Segments(markers=markers, virtual_markers=virtual_markers, segment_connections= {name: Segment(**segment) for name, segment in segment_connections.items()})
+
+
+
+path_to_data_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2\output_data')
+path_to_data = path_to_data_folder / 'mediapipe_body_3d_xyz.npy'
+
+freemocap_3d_data = np.load(path_to_data)
+
+skeleton = Skeleton(markers=markers, virtual_markers=virtual_markers, segments=segments)
+skeleton.integrate_freemocap_3d_data(freemocap_3d_data)
+
+trajectory = skeleton.trajectories
+
+skeleton.calculate_virtual_markers()
+
+trajectory = skeleton.trajectories
 
 f = 2
