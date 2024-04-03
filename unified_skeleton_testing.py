@@ -34,34 +34,10 @@ mediapipe_body = [
             "right_foot_index",
             ]
 
-mediapipe_hand = [
-                "wrist",
-                "thumb_cmc",
-                "thumb_mcp",
-                "thumb_ip",
-                "thumb_tip",
-                "index_finger_mcp",
-                "index_finger_pip",
-                "index_finger_dip",
-                "index_finger_tip",
-                "middle_finger_mcp",
-                "middle_finger_pip",
-                "middle_finger_dip",
-                "middle_finger_tip",
-                "ring_finger_mcp",
-                "ring_finger_pip",
-                "ring_finger_dip",
-                "ring_finger_tip",
-                "pinky_mcp",
-                "pinky_pip",
-                "pinky_dip",
-                "pinky_tip",
-                ]
-
 segment_connections = {
 "head":{
-    'proximal': 'head_center',
-    'distal': 'nose'
+    'proximal': 'left_ear',
+    'distal': 'right_ear'
 },
 "neck":{
     'proximal': 'head_center',
@@ -173,6 +149,68 @@ virtual_markers = {
 }
 
 
+
+center_of_mass_anthropometric_data = {
+    "head": {
+        "segment_com_length": .5,
+        "segment_com_percentage": 0.081,
+    },
+    "spine": {
+        "segment_com_length": .5,
+        "segment_com_percentage": 0.497,
+    },
+    "right_upper_arm": {
+        "segment_com_length": .436,
+        "segment_com_percentage": 0.028,
+    },
+    "left_upper_arm": {
+        "segment_com_length": .436,
+        "segment_com_percentage": 0.028,
+    },
+    "right_forearm": {
+        "segment_com_length": .430,
+        "segment_com_percentage": 0.016,
+    },
+    "left_forearm": {
+        "segment_com_length": .430,
+        "segment_com_percentage": 0.016,
+    },
+    "right_hand": {
+        "segment_com_length": .506,
+        "segment_com_percentage": 0.006,
+    },
+    "left_hand": {
+        "segment_com_length": .506,
+        "segment_com_percentage": 0.006,
+    },
+    "right_thigh": {
+        "segment_com_length": .433,
+        "segment_com_percentage": 0.1,
+    },
+    "left_thigh": {
+        "segment_com_length": .433,
+        "segment_com_percentage": 0.1,
+    },
+    "right_shank": {
+        "segment_com_length": .433,
+        "segment_com_percentage": 0.0465,
+    },
+    "left_shank": {
+        "segment_com_length": .433,
+        "segment_com_percentage": 0.0465,
+    },
+    "right_foot": {
+        "segment_com_length": .5,
+        "segment_com_percentage": 0.0145,
+    },
+    "left_foot": {
+        "segment_com_length": .5,
+        "segment_com_percentage": 0.0145,
+    },
+}
+
+
+
 from pydantic import BaseModel, validator, root_validator
 import numpy as np
 from typing import Dict, List
@@ -266,13 +304,66 @@ class Skeleton(BaseModel):
             self.virtual_marker_data[vm_name] = vm_positions
         
         self.marker_data.update(self.virtual_marker_data)
-        
+    
+    def get_segment_markers(self, segment_name: str) -> Dict[str, np.ndarray]:
+        """Returns a dictionary with the positions of the proximal and distal markers for a segment."""
+        segment = self.segments.segment_connections.get(segment_name)
+        if not segment:
+            raise ValueError(f"Segment '{segment_name}' is not defined in the skeleton.")
+
+        proximal_marker = self.trajectories.get(segment.proximal)
+        distal_marker = self.trajectories.get(segment.distal)
+
+        return {
+            'proximal': proximal_marker,
+            'distal': distal_marker
+        }
 
 
     @property
     def trajectories(self):
         return self.marker_data
+    
+    def debug_plot(self, frame_index: int):
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+        """Plots the markers and segments for a given frame."""
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
 
+        # Gather all marker positions at the specified frame index
+        all_marker_positions = [marker_data[frame_index] for marker_data in self.trajectories.values()]
+
+        # Calculate the mean position along each axis
+        mean_x, mean_y, mean_z = np.mean(all_marker_positions, axis=0)
+
+        # Set the range around the mean position
+        range_limit = 900
+        ax.set_xlim(mean_x - range_limit, mean_x + range_limit)
+        ax.set_ylim(mean_y - range_limit, mean_y + range_limit)
+        ax.set_zlim(mean_z - range_limit, mean_z + range_limit)
+
+        # Plot all markers
+        for marker_name, marker_data in self.trajectories.items():
+            ax.scatter(*marker_data[frame_index], label=marker_name)
+
+        # Plot segments as lines between connected markers
+        for segment_name, segment in self.segments.segment_connections.items():
+            proximal_marker = self.trajectories.get(segment.proximal)
+            distal_marker = self.trajectories.get(segment.distal)
+            if proximal_marker is not None and distal_marker is not None:
+                ax.plot(
+                    [proximal_marker[frame_index, 0], distal_marker[frame_index, 0]],
+                    [proximal_marker[frame_index, 1], distal_marker[frame_index, 1]],
+                    [proximal_marker[frame_index, 2], distal_marker[frame_index, 2]],
+                    label=f'Segment: {segment_name}'
+                )
+
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        ax.legend()
+        plt.show()
 
 
 markers = Markers(markers=mediapipe_body)
@@ -281,18 +372,133 @@ segments = Segments(markers=markers, virtual_markers=virtual_markers, segment_co
 
 
 
-path_to_data_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2\output_data')
+path_to_data_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_15_36_03_MDN_OneLeg_Trial1\output_data')
 path_to_data = path_to_data_folder / 'mediapipe_body_3d_xyz.npy'
 
 freemocap_3d_data = np.load(path_to_data)
 
 skeleton = Skeleton(markers=markers, virtual_markers=virtual_markers, segments=segments)
 skeleton.integrate_freemocap_3d_data(freemocap_3d_data)
-
-trajectory = skeleton.trajectories
-
 skeleton.calculate_virtual_markers()
+# skeleton.debug_plot(frame_index=300)
+# trajectory = skeleton.trajectories
 
-trajectory = skeleton.trajectories
+# left_forearm = skeleton.get_segment_markers('left_forearm')
 
 f = 2
+
+
+
+def calculate_segment_center_of_mass(skeleton: Skeleton, anthropometric_data: Dict[str, Dict[str, float]]) -> Dict[str, np.ndarray]:
+    """
+    Calculates the center of mass for each segment based on anthropometric data.
+    
+    Parameters:
+    - skeleton: An instance of the Skeleton class containing marker trajectories.
+    - anthropometric_data: A dictionary containing the segment COM length percentages.
+    
+    Returns:
+    - A dictionary with the segment names as keys and their COM positions as values.
+    """
+    segment_com_data = {}
+
+    for segment_name, segment_info in anthropometric_data.items():
+        segment_coordinates = skeleton.get_segment_markers(segment_name)
+
+        segment_proximal = segment_coordinates["proximal"]
+        segment_distal = segment_coordinates["distal"]
+
+        segment_com_length = segment_info["segment_com_length"]
+
+        segment_com = segment_proximal + (segment_distal-segment_proximal)*segment_com_length
+        segment_com_data[segment_name] = segment_com
+
+    return segment_com_data
+    f = 2
+
+def calculate_total_body_center_of_mass(segment_center_of_mass_data: Dict[str, np.ndarray], anthropometric_data: Dict[str, Dict[str, float]]) -> np.ndarray:
+    """
+    Calculates the total body center of mass for each frame based on segment COM positions and anthropometric data.
+    
+    Parameters:
+    - segment_com_data: A dictionary with segment names as keys and COM positions as values for each frame.
+    - anthropometric_data: A dictionary containing segment mass percentages.
+    
+    Returns:
+    - A numpy array containing the position of the total body center of mass for each frame.
+    """
+    # Assume all segments have the same number of frames
+    num_frames = next(iter(segment_center_of_mass_data.values())).shape[0]
+    total_body_com = np.zeros((num_frames, 3))
+
+    for segment_name, segment_info in anthropometric_data.items():
+        # Retrieve the COM position for the current segment
+        segment_com = segment_center_of_mass_data.get(segment_name)
+        # Retrieve the mass percentage for the current segment
+        segment_mass_percentage = segment_info.get('segment_com_percentage')
+
+        # Add the weighted segment COM to the total COM for each frame
+        total_body_com += segment_com * segment_mass_percentage
+
+
+    return total_body_com
+
+
+segment_com_data = calculate_segment_center_of_mass(skeleton=skeleton, anthropometric_data=center_of_mass_anthropometric_data)
+
+total_body_com_data_new = calculate_total_body_center_of_mass(segment_center_of_mass_data=segment_com_data, anthropometric_data=center_of_mass_anthropometric_data)
+
+total_body_com_data_old = np.load(path_to_data_folder/'center_of_mass'/'total_body_center_of_mass_xyz.npy')
+import matplotlib.pyplot as plt
+
+# Plot the old total body center of mass data in red
+plt.plot(total_body_com_data_old[:, 0], 'r', alpha=0.5, label='Old COM data')
+
+# Plot the new total body center of mass data in blue
+plt.plot(total_body_com_data_new[:, 0], 'b', alpha=0.5, label = 'New COM data')
+
+# Add labels and title
+plt.xlabel('frames')
+plt.ylabel('Z')
+plt.title('Total Body Center of Mass')
+plt.legend()
+# Show the plot
+plt.show()
+
+
+
+# segment_com_old = np.load(path_to_data_folder/'center_of_mass'/'segmentCOM_frame_joint_xyz.npy')
+# # Select a frame index to plot
+# frame_index = 300
+
+# # Get the segment COM data for the selected frame
+# segment_com_old_frame = segment_com_old[frame_index]
+# segment_com_data_frame = {segment_name: segment_com[frame_index] for segment_name, segment_com in segment_com_data.items()}
+
+# # Create a 3D plot
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# mean_x, mean_y, mean_z = np.mean(segment_com_old_frame, axis=0)
+
+# # Set the range around the mean position
+# range_limit = 900
+# ax.set_xlim(mean_x - range_limit, mean_x + range_limit)
+# ax.set_ylim(mean_y - range_limit, mean_y + range_limit)
+# ax.set_zlim(mean_z - range_limit, mean_z + range_limit)
+# # Plot the segment COM data from the old format
+# for segment_index, segment_com in enumerate(segment_com_old_frame):
+#     ax.scatter(segment_com[0], segment_com[1], segment_com[2], color='r', alpha=0.5)
+
+# # Plot the segment COM data from the new format
+# for segment_name, segment_com in segment_com_data_frame.items():
+#     ax.scatter(segment_com[0], segment_com[1], segment_com[2], color='b', alpha=0.5)
+
+# # Set labels and title
+# ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+# ax.set_zlabel('Z')
+# ax.set_title('Segment Center of Mass')
+
+# # Show the plot
+# plt.show()
+f = 2 
