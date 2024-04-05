@@ -30,13 +30,15 @@ skeleton = create_skeleton_model(
     actual_markers=mediapipe_body,
     virtual_markers=virtual_markers,
     segment_connections=segment_connections,
+    joint_hierarchy=joint_hierarchy,
+    anthropometric_data = center_of_mass_anthropometric_data
 )
 
 
 freemocap_data = np.load(path_to_data)
 skeleton_3d = integrate_freemocap_data_into_skeleton_model(skeleton, freemocap_data)
 
-total_body_center_of_mass = calculate_center_of_mass_from_skeleton(skeleton=skeleton_3d, anthropometric_data=center_of_mass_anthropometric_data)
-rigid_bone_data = enforce_rigid_bones_from_skeleton(skeleton=skeleton_3d, joint_hierarchy_data=joint_hierarchy)
+total_body_center_of_mass = calculate_center_of_mass_from_skeleton(skeleton=skeleton_3d)
+rigid_bone_data = enforce_rigid_bones_from_skeleton(skeleton=skeleton_3d)
 
 f = 2

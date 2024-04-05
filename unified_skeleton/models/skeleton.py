@@ -1,9 +1,10 @@
 
-from typing import Dict
+from typing import Dict, List, Optional
 from pydantic import BaseModel
 import numpy as np
 
 from .marker_models.marker_hub import MarkerHub
+from .joint_hierarchy import JointHierarchy
 from .segments import Segments
 
 class Skeleton(BaseModel):
@@ -11,6 +12,9 @@ class Skeleton(BaseModel):
     segments: Segments
     marker_data: Dict[str, np.ndarray] = {}  
     virtual_marker_data: Dict[str, np.ndarray] = {}
+    joint_hierarchy: Optional[Dict[str, List[str]]] = None
+    anthropometric_data: Optional[Dict[str, Dict[str, float]]] = None
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -56,6 +60,24 @@ class Skeleton(BaseModel):
             'proximal': proximal_marker,
             'distal': distal_marker
         }
+
+    def add_joint_hierarchy(self, joint_hierarchy: Dict[str, List[str]]):
+        """
+        Adds joint hierarchy data to the skeleton model.
+
+        Parameters:
+        - joint_hierarchy: A dictionary with joint names as keys and lists of connected marker names as values.
+        """
+        self.joint_hierarchy = JointHierarchy(markers=self.markers, joint_hierarchy=joint_hierarchy)
+
+    def add_anthropometric_data(self, anthropometric_data: Dict[str, Dict[str, float]]):
+        """
+        Adds anthropometric data to the skeleton model.
+
+        Parameters:
+        - anthropometric_data: A dictionary containing segment mass percentages.
+        """
+        self.anthropometric_data = anthropometric_data
 
     @property
     def trajectories(self):

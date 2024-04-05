@@ -31,7 +31,7 @@ def get_all_segment_markers(skeleton: Skeleton) -> Dict[str, Dict[str, np.ndarra
     # Return the dictionary containing all the segment marker positions
     return segment_positions
 
-def calculate_center_of_mass_from_skeleton(skeleton: Skeleton, anthropometric_data: Dict[str, Dict[str, float]]) -> np.ndarray:
+def calculate_center_of_mass_from_skeleton(skeleton: Skeleton) -> np.ndarray:
     """
     Calculates the center of mass of the total body based on segment center of mass positions and anthropometric data.
     
@@ -40,7 +40,7 @@ def calculate_center_of_mass_from_skeleton(skeleton: Skeleton, anthropometric_da
     - anthropometric_data: A dictionary containing segment mass percentages
     """
     segment_3d_positions = get_all_segment_markers(skeleton)
-    segment_com_data = calculate_all_segments_com(segment_3d_positions, anthropometric_data)
-    total_body_com = calculate_total_body_center_of_mass(segment_com_data, anthropometric_data)
+    segment_com_data = calculate_all_segments_com(segment_3d_positions, skeleton.anthropometric_data)
+    total_body_com = calculate_total_body_center_of_mass(segment_com_data, skeleton.anthropometric_data)
 
     return total_body_com
