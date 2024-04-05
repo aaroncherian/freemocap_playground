@@ -284,81 +284,82 @@ class VirtualMarkers(BaseModel):
 
 
 class MarkerHub(BaseModel):
-    marker_names: Markers
+    original_marker_names: Markers
     virtual_markers: Optional[VirtualMarkers] = None
     _all_markers: List[str] = Field(default_factory=list)
 
-    @classmethod
-    def create(cls, marker_list: List[str]):
-        instance = cls(marker_names=Markers(markers=marker_list))
-        # Bypass Pydantic's restriction by modifying the __dict__ directly
-        instance.__dict__['_all_markers'] = instance.marker_names.markers.copy()
-        return instance
+    @root_validator
+    def copy_markers_to_all(cls, values):
+        """Copy markers to _all_markers at initialization."""
+        original_marker_names = values.get('original_marker_names')
+        if original_marker_names:
+            # Directly initializing _all_markers with a copy of marker_names.markers
+            values['_all_markers'] = original_marker_names.markers.copy()
+        return values
 
     def add_virtual_markers(self, virtual_markers_dict: Dict[str, Dict[str, List]]):
-        if virtual_markers_dict:
-            self.virtual_markers = VirtualMarkers(virtual_markers=virtual_markers_dict)
-            for virtual_marker_name in self.virtual_markers.virtual_markers.keys():
-                if virtual_marker_name not in self._all_markers:
-                    self._all_markers.append(virtual_marker_name)
+        """Add virtual markers and update _all_markers."""
+        virtual_markers_model = VirtualMarkers(virtual_markers=virtual_markers_dict)
+        self.virtual_markers = virtual_markers_model
+        for virtual_marker_name in virtual_markers_model.virtual_markers.keys():
+            if virtual_marker_name not in self._all_markers:
+                self._all_markers.append(virtual_marker_name)
 
     @property
     def all_markers(self) -> List[str]:
+        """Publicly expose the combined list of markers."""
         return self._all_markers
 
+    @classmethod
+    def create(cls, marker_list: List[str]):
+        """Class method to create an instance with initial marker names."""
+        return cls(original_marker_names=Markers(markers=marker_list))
 class Segment(BaseModel):
     proximal: str
     distal: str
 
 class Segments(BaseModel):
-    markers: Markers
-    virtual_markers: VirtualMarkers
+    markers:MarkerHub
     segment_connections: Dict[str, Segment]
 
     @root_validator
     def check_that_all_markers_exist(cls, values):
-        markers = values.get('markers').markers
-        virtual_markers = values.get('virtual_markers').virtual_markers
+        markers = values.get('markers').all_markers
         segment_connections = values.get('segment_connections')
 
-        virtual_marker_names = set(virtual_markers.keys())
-
         for segment_name, segment_connection in segment_connections.items():
-            if segment_connection.proximal not in markers and segment_connection.proximal not in virtual_marker_names:
+            if segment_connection.proximal not in markers:
                 raise ValueError(f'The proximal marker {segment_connection.proximal} for {segment_name} is not in the list of markers or virtual markers.')
-
-            if segment_connection.distal not in markers and segment_connection.distal not in virtual_marker_names:
+            if segment_connection.distal not in markers:
                 raise ValueError(f'The distal marker {segment_connection.distal} for {segment_name} is not in the list of markers or virtual markers.')
-
+        
         return values
 
 
 class JointHierarchy(BaseModel):
-    markers:Markers
-    virtual_markers: VirtualMarkers
+    markers: MarkerHub
     joint_hierarchy: Dict[str, List[str]]
 
     @root_validator
     def check_that_all_markers_exist(cls, values):
-        markers = values.get('markers').markers
-        virtual_markers = values.get('virtual_markers').virtual_markers
+        marker_names = values.get('markers').all_markers
+        # virtual_markers = values.get('virtual_markers').virtual_markers
         joint_hierarchy = values.get('joint_hierarchy')
 
-        virtual_marker_names = set(virtual_markers.keys())
+        # virtual_marker_names = set(virtual_markers.keys())
 
         for joint_name, joint_connections in joint_hierarchy.items():
-            if joint_name not in markers and joint_name not in virtual_marker_names:
+            if joint_name not in marker_names:
                 raise ValueError(f'The joint {joint_name} is not in the list of markers or virtual markers.')
             for connected_marker in joint_connections:
-                if connected_marker not in markers and connected_marker not in virtual_marker_names:
+                if connected_marker not in marker_names:
                     raise ValueError(f'The connected marker {connected_marker} for {joint_name} is not in the list of markers or virtual markers.')
 
         return values
 
 
 class Skeleton(BaseModel):
-    markers:Markers
-    virtual_markers: VirtualMarkers
+    markers: MarkerHub
     segments: Segments
     marker_data: Dict[str, np.ndarray] = {}  
     virtual_marker_data: Dict[str, np.ndarray] = {}
@@ -367,7 +368,8 @@ class Skeleton(BaseModel):
 
     def integrate_freemocap_3d_data(self, freemocap_3d_data:np.ndarray):
         num_markers_in_data = freemocap_3d_data.shape[1]
-        num_markers_in_model = len(self.markers.markers)
+        original_marker_names_list = self.markers.original_marker_names.markers
+        num_markers_in_model = len(original_marker_names_list)
         
         if num_markers_in_data != num_markers_in_model:
             raise ValueError(
@@ -375,7 +377,7 @@ class Skeleton(BaseModel):
                 f"the number of markers in the model ({num_markers_in_model})."
             )
     
-        for i, marker_name in enumerate(self.markers.markers):
+        for i, marker_name in enumerate(original_marker_names_list):
             self.marker_data[marker_name] = freemocap_3d_data[:, i, :]
 
     def calculate_virtual_markers(self):
@@ -384,7 +386,7 @@ class Skeleton(BaseModel):
             raise ValueError("3d marker data must be integrated before calculating virtual markers. Run `integrate_freemocap_3d_data()` first.")
 
         # Iterate over the virtual markers and calculate their positions
-        for vm_name, vm_info in self.virtual_markers.virtual_markers.items():
+        for vm_name, vm_info in self.markers.virtual_markers.virtual_markers.items():
             # Initialize an array to hold the computed positions of the virtual marker
             vm_positions = np.zeros((self.marker_data[next(iter(self.marker_data))].shape[0], 3))
             for marker_name, weight in zip(vm_info['marker_names'], vm_info['marker_weights']):
@@ -454,7 +456,7 @@ class Skeleton(BaseModel):
 
 
 def create_marker_hub(marker_list:List[str], virtual_markers:Dict[str, Dict[str, List]]= None):
-    marker_hub = MarkerHub.create(marker_list=mediapipe_body)
+    marker_hub = MarkerHub.create(marker_list=marker_list)
     if virtual_markers:
         marker_hub.add_virtual_markers(virtual_markers)
     return marker_hub
@@ -464,11 +466,11 @@ def create_marker_hub(marker_list:List[str], virtual_markers:Dict[str, Dict[str,
 # virtual_markers = VirtualMarkers(virtual_markers=virtual_markers)
 
 # marker_hub = MarkerHub(markers=markers, virtual_markers=virtual_markers)
+# segments = Segments(markers=markers, virtual_markers=virtual_markers, segment_connections= {name: Segment(**segment) for name, segment in segment_connections.items()})
 
 marker_hub = create_marker_hub(marker_list=mediapipe_body, virtual_markers=virtual_markers)
 
-
-segments = Segments(markers=markers, virtual_markers=virtual_markers, segment_connections= {name: Segment(**segment) for name, segment in segment_connections.items()})
+segments = Segments(markers=marker_hub, segment_connections= {name: Segment(**segment) for name, segment in segment_connections.items()})
 
 
 path_to_session_folder = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_55_21_TF01_leg_length_pos_5_trial_1')
@@ -477,7 +479,9 @@ path_to_data = path_to_data_folder / 'mediapipe_body_3d_xyz.npy'
 
 freemocap_3d_data = np.load(path_to_data)
 
-skeleton = Skeleton(markers=markers, virtual_markers=virtual_markers, segments=segments)
+# skeleton = Skeleton(markers=ma, virtual_markers=virtual_markers, segments=segments)
+
+skeleton = Skeleton(markers=marker_hub, segments=segments)
 skeleton.integrate_freemocap_3d_data(freemocap_3d_data)
 skeleton.calculate_virtual_markers()
 # skeleton.debug_plot(frame_index=300)
@@ -486,35 +490,41 @@ skeleton.calculate_virtual_markers()
 # left_forearm = skeleton.get_segment_markers('left_forearm')
 
 f = 2
+def get_all_segment_markers(skeleton: Skeleton) -> Dict[str, Dict[str, np.ndarray]]:
+    segment_positions = {}
+    for segment_name in skeleton.segments.segment_connections.keys():
+        segment_positions[segment_name] = skeleton.get_segment_markers(segment_name)
+    return segment_positions
 
-
-
-def calculate_segment_center_of_mass(skeleton: Skeleton, anthropometric_data: Dict[str, Dict[str, float]]) -> Dict[str, np.ndarray]:
+def calculate_segment_com(proximal: np.ndarray, distal: np.ndarray, com_length_percentage: float) -> np.ndarray:
     """
-    Calculates the center of mass for each segment based on anthropometric data.
-    
+    Calculates the center of mass for a segment.
+
     Parameters:
-    - skeleton: An instance of the Skeleton class containing marker trajectories.
-    - anthropometric_data: A dictionary containing the segment COM length percentages.
-    
+    - proximal: The position of the proximal marker.
+    - distal: The position of the distal marker.
+    - com_length_percentage: The length percentage from the proximal marker to the COM.
+
     Returns:
-    - A dictionary with the segment names as keys and their COM positions as values.
+    - The position of the segment's center of mass.
     """
+    return proximal + (distal - proximal) * com_length_percentage
+
+
+def calculate_all_segments_com(skeleton: Skeleton, anthropometric_data: Dict[str, Dict[str, float]]) -> Dict[str, np.ndarray]:
+    segment_positions = get_all_segment_markers(skeleton)
     segment_com_data = {}
 
     for segment_name, segment_info in anthropometric_data.items():
-        segment_coordinates = skeleton.get_segment_markers(segment_name)
+        proximal = segment_positions[segment_name]["proximal"]
+        distal = segment_positions[segment_name]["distal"]
+        com_length_percentage = segment_info["segment_com_length"]
 
-        segment_proximal = segment_coordinates["proximal"]
-        segment_distal = segment_coordinates["distal"]
-
-        segment_com_length = segment_info["segment_com_length"]
-
-        segment_com = segment_proximal + (segment_distal-segment_proximal)*segment_com_length
+        segment_com = calculate_segment_com(proximal, distal, com_length_percentage)
         segment_com_data[segment_name] = segment_com
 
     return segment_com_data
-    f = 2
+
 
 def calculate_total_body_center_of_mass(segment_center_of_mass_data: Dict[str, np.ndarray], anthropometric_data: Dict[str, Dict[str, float]]) -> np.ndarray:
     """
@@ -544,29 +554,29 @@ def calculate_total_body_center_of_mass(segment_center_of_mass_data: Dict[str, n
     return total_body_com
 
 
-segment_com_data = calculate_segment_center_of_mass(skeleton=skeleton, anthropometric_data=center_of_mass_anthropometric_data)
+segment_com_data = calculate_all_segments_com(skeleton=skeleton, anthropometric_data=center_of_mass_anthropometric_data)
 
 total_body_com_data_new = calculate_total_body_center_of_mass(segment_center_of_mass_data=segment_com_data, anthropometric_data=center_of_mass_anthropometric_data)
 
 total_body_com_data_old = np.load(path_to_data_folder/'center_of_mass'/'total_body_center_of_mass_xyz.npy')
-# # import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # # Plot the old total body center of mass data in red
-# # plt.plot(total_body_com_data_old[:, 0], 'r', alpha=0.5, label='Old COM data')
+# plt.plot(total_body_com_data_old[:, 0], 'r', alpha=0.5, label='Old COM data')
 
 # # Plot the new total body center of mass data in blue
-# # plt.plot(total_body_com_data_new[:, 0], 'b', alpha=0.5, label = 'New COM data')
+# plt.plot(total_body_com_data_new[:, 0], 'b', alpha=0.5, label = 'New COM data')
 
 # # Add labels and title
-# # plt.xlabel('frames')
-# # plt.ylabel('Z')
-# # plt.title('Total Body Center of Mass')
-# # plt.legend()
+# plt.xlabel('frames')
+# plt.ylabel('Z')
+# plt.title('Total Body Center of Mass')
+# plt.legend()
 # # Show the plot
-# # plt.show()
+# plt.show()
 
 
-
+f = 2 
 # # segment_com_old = np.load(path_to_data_folder/'center_of_mass'/'segmentCOM_frame_joint_xyz.npy')
 # # Select a frame index to plot
 # # frame_index = 300
@@ -642,7 +652,7 @@ def calculate_bone_lengths_and_statistics(skeleton: Skeleton) -> Dict[str, Dict[
 
 bone_lengths_and_stats = calculate_bone_lengths_and_statistics(skeleton)
 
-joint_hierarchy_data = JointHierarchy(markers=markers, virtual_markers=virtual_markers, joint_hierarchy=joint_hierarchy)
+joint_hierarchy_data = JointHierarchy(markers= marker_hub, joint_hierarchy=joint_hierarchy)
 
 f = 2
 from copy import deepcopy
@@ -696,7 +706,7 @@ def adjust_children(parent_marker: str, frame_index: int, adjustment: np.ndarray
 rigid_marker_data = enforce_rigid_bones(skeleton, bone_lengths_and_stats, joint_hierarchy_data.joint_hierarchy)
 
 
-rigid_maker_data_to_save = np.stack([rigid_marker_data[marker_name] for marker_name in skeleton.markers.markers], axis=1)
+rigid_maker_data_to_save = np.stack([rigid_marker_data[marker_name] for marker_name in skeleton.markers.all_markers], axis=1)
 
 path_to_rigid_folder = path_to_session_folder / 'rigid_mediapipe_dlc_output_data'
 path_to_rigid_folder.mkdir(exist_ok=True)

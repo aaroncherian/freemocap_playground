@@ -1,0 +1,62 @@
+
+from typing import Dict
+from pydantic import BaseModel
+import numpy as np
+
+from .marker_models.marker_hub import MarkerHub
+from .segments import Segments
+
+class Skeleton(BaseModel):
+    markers: MarkerHub
+    segments: Segments
+    marker_data: Dict[str, np.ndarray] = {}  
+    virtual_marker_data: Dict[str, np.ndarray] = {}
+    class Config:
+        arbitrary_types_allowed = True
+
+    def integrate_freemocap_3d_data(self, freemocap_3d_data:np.ndarray):
+        num_markers_in_data = freemocap_3d_data.shape[1]
+        original_marker_names_list = self.markers.original_marker_names.markers
+        num_markers_in_model = len(original_marker_names_list)
+        
+        if num_markers_in_data != num_markers_in_model:
+            raise ValueError(
+                f"The number of markers in the 3D data ({num_markers_in_data}) does not match "
+                f"the number of markers in the model ({num_markers_in_model})."
+            )
+    
+        for i, marker_name in enumerate(original_marker_names_list):
+            self.marker_data[marker_name] = freemocap_3d_data[:, i, :]
+
+    def calculate_virtual_markers(self):
+        # Check if actual marker data is present
+        if not self.marker_data:
+            raise ValueError("3d marker data must be integrated before calculating virtual markers. Run `integrate_freemocap_3d_data()` first.")
+
+        # Iterate over the virtual markers and calculate their positions
+        for vm_name, vm_info in self.markers.virtual_markers.virtual_markers.items():
+            # Initialize an array to hold the computed positions of the virtual marker
+            vm_positions = np.zeros((self.marker_data[next(iter(self.marker_data))].shape[0], 3))
+            for marker_name, weight in zip(vm_info['marker_names'], vm_info['marker_weights']):
+                vm_positions += self.marker_data[marker_name] * weight
+            self.virtual_marker_data[vm_name] = vm_positions
+        
+        self.marker_data.update(self.virtual_marker_data)
+    
+    def get_segment_markers(self, segment_name: str) -> Dict[str, np.ndarray]:
+        """Returns a dictionary with the positions of the proximal and distal markers for a segment."""
+        segment = self.segments.segment_connections.get(segment_name)
+        if not segment:
+            raise ValueError(f"Segment '{segment_name}' is not defined in the skeleton.")
+
+        proximal_marker = self.trajectories.get(segment.proximal)
+        distal_marker = self.trajectories.get(segment.distal)
+
+        return {
+            'proximal': proximal_marker,
+            'distal': distal_marker
+        }
+
+    @property
+    def trajectories(self):
+        return self.marker_data
