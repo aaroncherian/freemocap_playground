@@ -209,11 +209,52 @@ center_of_mass_anthropometric_data = {
     },
 }
 
+joint_hierarchy = {
+    "hips_center": ["left_hip", 
+                   "right_hip", 
+                   "trunk_center"],
+    "trunk_center": ["neck_center"],
+    "neck_center": ["left_shoulder", 
+                    "right_shoulder", 
+                    "head_center"],
+    "head_center": ["nose", 
+                    "left_eye_inner", 
+                    "left_eye", 
+                    "left_eye_outer", 
+                    "right_eye_inner", 
+                    "right_eye", 
+                    "right_eye_outer", 
+                    "left_ear", 
+                    "right_ear", 
+                    "mouth_left", 
+                    "mouth_right"],
+    "left_shoulder": ["left_elbow"],
+    "left_elbow": ["left_wrist"],
+    "left_wrist": ["left_pinky",
+                    "left_index",
+                    "left_thumb"],
+    "right_shoulder": ["right_elbow"],
+    "right_elbow": ["right_wrist"],
+    "right_wrist": ["right_pinky",
+                     "right_index",
+                     "right_thumb"],
+    "left_hip": ["left_knee"],
+    "left_knee": ["left_ankle"],
+    "left_ankle": ["left_heel",
+                   "left_foot_index"],
+    "right_hip": ["right_knee"],
+    "right_knee": ["right_ankle"],
+    "right_ankle": ["right_heel",
+                    "right_foot_index"],
+}
+
+    
 
 
-from pydantic import BaseModel, validator, root_validator
+
+from pydantic import BaseModel, validator, root_validator, Field
 import numpy as np
-from typing import Dict, List
+from typing import Dict, List, Optional
 from pathlib import Path
 class Markers(BaseModel):
     markers: List[str]
@@ -241,6 +282,30 @@ class VirtualMarkers(BaseModel):
 
         return virtual_marker
 
+
+class MarkerHub(BaseModel):
+    marker_names: Markers
+    virtual_markers: Optional[VirtualMarkers] = None
+    _all_markers: List[str] = Field(default_factory=list)
+
+    @classmethod
+    def create(cls, marker_list: List[str]):
+        instance = cls(marker_names=Markers(markers=marker_list))
+        # Bypass Pydantic's restriction by modifying the __dict__ directly
+        instance.__dict__['_all_markers'] = instance.marker_names.markers.copy()
+        return instance
+
+    def add_virtual_markers(self, virtual_markers_dict: Dict[str, Dict[str, List]]):
+        if virtual_markers_dict:
+            self.virtual_markers = VirtualMarkers(virtual_markers=virtual_markers_dict)
+            for virtual_marker_name in self.virtual_markers.virtual_markers.keys():
+                if virtual_marker_name not in self._all_markers:
+                    self._all_markers.append(virtual_marker_name)
+
+    @property
+    def all_markers(self) -> List[str]:
+        return self._all_markers
+
 class Segment(BaseModel):
     proximal: str
     distal: str
@@ -264,6 +329,29 @@ class Segments(BaseModel):
 
             if segment_connection.distal not in markers and segment_connection.distal not in virtual_marker_names:
                 raise ValueError(f'The distal marker {segment_connection.distal} for {segment_name} is not in the list of markers or virtual markers.')
+
+        return values
+
+
+class JointHierarchy(BaseModel):
+    markers:Markers
+    virtual_markers: VirtualMarkers
+    joint_hierarchy: Dict[str, List[str]]
+
+    @root_validator
+    def check_that_all_markers_exist(cls, values):
+        markers = values.get('markers').markers
+        virtual_markers = values.get('virtual_markers').virtual_markers
+        joint_hierarchy = values.get('joint_hierarchy')
+
+        virtual_marker_names = set(virtual_markers.keys())
+
+        for joint_name, joint_connections in joint_hierarchy.items():
+            if joint_name not in markers and joint_name not in virtual_marker_names:
+                raise ValueError(f'The joint {joint_name} is not in the list of markers or virtual markers.')
+            for connected_marker in joint_connections:
+                if connected_marker not in markers and connected_marker not in virtual_marker_names:
+                    raise ValueError(f'The connected marker {connected_marker} for {joint_name} is not in the list of markers or virtual markers.')
 
         return values
 
@@ -319,7 +407,6 @@ class Skeleton(BaseModel):
             'distal': distal_marker
         }
 
-
     @property
     def trajectories(self):
         return self.marker_data
@@ -366,13 +453,26 @@ class Skeleton(BaseModel):
         plt.show()
 
 
-markers = Markers(markers=mediapipe_body)
-virtual_markers = VirtualMarkers(virtual_markers=virtual_markers)
+def create_marker_hub(marker_list:List[str], virtual_markers:Dict[str, Dict[str, List]]= None):
+    marker_hub = MarkerHub.create(marker_list=mediapipe_body)
+    if virtual_markers:
+        marker_hub.add_virtual_markers(virtual_markers)
+    return marker_hub
+
+
+# markers = Markers(markers=mediapipe_body)
+# virtual_markers = VirtualMarkers(virtual_markers=virtual_markers)
+
+# marker_hub = MarkerHub(markers=markers, virtual_markers=virtual_markers)
+
+marker_hub = create_marker_hub(marker_list=mediapipe_body, virtual_markers=virtual_markers)
+
+
 segments = Segments(markers=markers, virtual_markers=virtual_markers, segment_connections= {name: Segment(**segment) for name, segment in segment_connections.items()})
 
 
-
-path_to_data_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_15_36_03_MDN_OneLeg_Trial1\output_data')
+path_to_session_folder = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_55_21_TF01_leg_length_pos_5_trial_1')
+path_to_data_folder = path_to_session_folder / 'mediapipe_dlc_output_data'
 path_to_data = path_to_data_folder / 'mediapipe_body_3d_xyz.npy'
 
 freemocap_3d_data = np.load(path_to_data)
@@ -449,56 +549,155 @@ segment_com_data = calculate_segment_center_of_mass(skeleton=skeleton, anthropom
 total_body_com_data_new = calculate_total_body_center_of_mass(segment_center_of_mass_data=segment_com_data, anthropometric_data=center_of_mass_anthropometric_data)
 
 total_body_com_data_old = np.load(path_to_data_folder/'center_of_mass'/'total_body_center_of_mass_xyz.npy')
-import matplotlib.pyplot as plt
+# # import matplotlib.pyplot as plt
 
-# Plot the old total body center of mass data in red
-plt.plot(total_body_com_data_old[:, 0], 'r', alpha=0.5, label='Old COM data')
+# # Plot the old total body center of mass data in red
+# # plt.plot(total_body_com_data_old[:, 0], 'r', alpha=0.5, label='Old COM data')
 
-# Plot the new total body center of mass data in blue
-plt.plot(total_body_com_data_new[:, 0], 'b', alpha=0.5, label = 'New COM data')
+# # Plot the new total body center of mass data in blue
+# # plt.plot(total_body_com_data_new[:, 0], 'b', alpha=0.5, label = 'New COM data')
 
-# Add labels and title
-plt.xlabel('frames')
-plt.ylabel('Z')
-plt.title('Total Body Center of Mass')
-plt.legend()
-# Show the plot
-plt.show()
+# # Add labels and title
+# # plt.xlabel('frames')
+# # plt.ylabel('Z')
+# # plt.title('Total Body Center of Mass')
+# # plt.legend()
+# # Show the plot
+# # plt.show()
 
 
 
-# segment_com_old = np.load(path_to_data_folder/'center_of_mass'/'segmentCOM_frame_joint_xyz.npy')
+# # segment_com_old = np.load(path_to_data_folder/'center_of_mass'/'segmentCOM_frame_joint_xyz.npy')
 # # Select a frame index to plot
-# frame_index = 300
+# # frame_index = 300
 
 # # Get the segment COM data for the selected frame
-# segment_com_old_frame = segment_com_old[frame_index]
-# segment_com_data_frame = {segment_name: segment_com[frame_index] for segment_name, segment_com in segment_com_data.items()}
+# # segment_com_old_frame = segment_com_old[frame_index]
+# # segment_com_data_frame = {segment_name: segment_com[frame_index] for segment_name, segment_com in segment_com_data.items()}
 
 # # Create a 3D plot
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-# mean_x, mean_y, mean_z = np.mean(segment_com_old_frame, axis=0)
+# # fig = plt.figure()
+# # ax = fig.add_subplot(111, projection='3d')
+# # mean_x, mean_y, mean_z = np.mean(segment_com_old_frame, axis=0)
 
 # # Set the range around the mean position
-# range_limit = 900
-# ax.set_xlim(mean_x - range_limit, mean_x + range_limit)
-# ax.set_ylim(mean_y - range_limit, mean_y + range_limit)
-# ax.set_zlim(mean_z - range_limit, mean_z + range_limit)
+# # range_limit = 900
+# # ax.set_xlim(mean_x - range_limit, mean_x + range_limit)
+# # ax.set_ylim(mean_y - range_limit, mean_y + range_limit)
+# # ax.set_zlim(mean_z - range_limit, mean_z + range_limit)
 # # Plot the segment COM data from the old format
-# for segment_index, segment_com in enumerate(segment_com_old_frame):
-#     ax.scatter(segment_com[0], segment_com[1], segment_com[2], color='r', alpha=0.5)
+# # for segment_index, segment_com in enumerate(segment_com_old_frame):
+# #     ax.scatter(segment_com[0], segment_com[1], segment_com[2], color='r', alpha=0.5)
 
 # # Plot the segment COM data from the new format
-# for segment_name, segment_com in segment_com_data_frame.items():
-#     ax.scatter(segment_com[0], segment_com[1], segment_com[2], color='b', alpha=0.5)
+# # for segment_name, segment_com in segment_com_data_frame.items():
+# #     ax.scatter(segment_com[0], segment_com[1], segment_com[2], color='b', alpha=0.5)
 
 # # Set labels and title
-# ax.set_xlabel('X')
-# ax.set_ylabel('Y')
-# ax.set_zlabel('Z')
-# ax.set_title('Segment Center of Mass')
+# # ax.set_xlabel('X')
+# # ax.set_ylabel('Y')
+# # ax.set_zlabel('Z')
+# # ax.set_title('Segment Center of Mass')
 
 # # Show the plot
-# plt.show()
+# # plt.show()
 f = 2 
+
+def calculate_bone_lengths_and_statistics(skeleton: Skeleton) -> Dict[str, Dict[str, float]]:
+    """
+    Calculates bone lengths for each frame and their statistics (median and standard deviation).
+    
+    Parameters:
+    - skeleton: An instance of the Skeleton class containing marker trajectories.
+    
+    Returns:
+    - A dictionary with segment names as keys and dictionaries with lengths,
+      median lengths, and standard deviations as values.
+    """
+    bone_statistics = {}
+    # Iterate over each segment defined in the skeleton
+    for segment_name, segment in skeleton.segments.segment_connections.items():
+        # Retrieve the 3D positions for the proximal and distal markers of the segment
+        proximal_pos = skeleton.marker_data[segment.proximal]
+        distal_pos = skeleton.marker_data[segment.distal]
+        
+        # Calculate the lengths of the bone for each frame using Euclidean distance
+        lengths = np.linalg.norm(distal_pos - proximal_pos, axis=1)
+        # Filter out NaN values, which can occur if marker data is missing
+        valid_lengths = lengths[~np.isnan(lengths)]
+        
+        # Calculate the median and standard deviation from the valid lengths
+        median_length = np.median(valid_lengths)
+        stdev_length = np.std(valid_lengths)
+        
+        # Store the calculated lengths and statistics in the bone_statistics dictionary
+        bone_statistics[segment_name] = {
+            'lengths': lengths,  # The raw lengths for each frame
+            'median': median_length,  # The median length of the bone
+            'stdev': stdev_length  # The standard deviation of the bone lengths
+        }
+    
+    # Return the dictionary containing lengths and statistics for each segment
+    return bone_statistics
+
+bone_lengths_and_stats = calculate_bone_lengths_and_statistics(skeleton)
+
+joint_hierarchy_data = JointHierarchy(markers=markers, virtual_markers=virtual_markers, joint_hierarchy=joint_hierarchy)
+
+f = 2
+from copy import deepcopy
+
+def enforce_rigid_bones(skeleton: Skeleton, bone_lengths_and_statistics: Dict[str, Dict[str, float]], joint_hierarchy: Dict[str, List[str]]):
+    """
+    Enforces rigid bones by adjusting the distal joints of each segment to match the median length.
+    """
+    original_marker_data = skeleton.marker_data
+    rigid_marker_data = deepcopy(original_marker_data)
+
+    for segment_name, stats in bone_lengths_and_statistics.items():
+        desired_length = stats['median']
+        lengths = stats['lengths']
+        
+        # Get the proximal and distal marker names from the segment
+        segment = skeleton.segments.segment_connections[segment_name]
+        proximal_marker = segment.proximal
+        distal_marker = segment.distal
+        
+        # Iterate over each frame to adjust the distal marker position
+        for frame_index, current_length in enumerate(lengths):
+            if current_length != desired_length:
+                # Calculate the adjustment vector needed to reach the median length
+                proximal_position = original_marker_data[proximal_marker][frame_index]
+                distal_position = original_marker_data[distal_marker][frame_index]
+                direction = distal_position - proximal_position
+                direction /= np.linalg.norm(direction)  # Normalize to unit vector
+                adjustment = (desired_length - current_length) * direction
+                
+                # Apply the adjustment to the distal marker
+                rigid_marker_data[distal_marker][frame_index] += adjustment
+                
+                # If the distal marker has children in the hierarchy, adjust them as well
+                adjust_children(distal_marker, frame_index, adjustment, rigid_marker_data, joint_hierarchy)
+    
+    return rigid_marker_data
+
+def adjust_children(parent_marker: str, frame_index: int, adjustment: np.ndarray, marker_data: Dict[str, np.ndarray], joint_hierarchy: Dict[str, List[str]]):
+    """
+    Recursively adjusts the positions of child markers based on the adjustment of the parent marker.
+    """
+    if parent_marker in joint_hierarchy:
+        for child_marker in joint_hierarchy[parent_marker]:
+            # Apply the adjustment to the child marker
+            marker_data[child_marker][frame_index] += adjustment
+            # Recursively adjust the children of this child marker
+            adjust_children(child_marker, frame_index, adjustment, marker_data, joint_hierarchy)
+
+
+rigid_marker_data = enforce_rigid_bones(skeleton, bone_lengths_and_stats, joint_hierarchy_data.joint_hierarchy)
+
+
+rigid_maker_data_to_save = np.stack([rigid_marker_data[marker_name] for marker_name in skeleton.markers.markers], axis=1)
+
+path_to_rigid_folder = path_to_session_folder / 'rigid_mediapipe_dlc_output_data'
+path_to_rigid_folder.mkdir(exist_ok=True)
+np.save(path_to_rigid_folder/'mediapipe_body_3d_xyz.npy', rigid_maker_data_to_save)
