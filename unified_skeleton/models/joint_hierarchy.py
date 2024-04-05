@@ -1,7 +1,7 @@
 from typing import Dict, List
 from pydantic import BaseModel, root_validator
 
-from marker_models.marker_hub import MarkerHub
+from .marker_models.marker_hub import MarkerHub
 
 
 class JointHierarchy(BaseModel):

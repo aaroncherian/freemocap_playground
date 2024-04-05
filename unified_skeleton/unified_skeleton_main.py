@@ -11,8 +11,12 @@ from skeleton_utils import integrate_freemocap_data_into_skeleton_model
 from models.skeleton import Skeleton
 
 from center_of_mass.skeleton_center_of_mass import calculate_center_of_mass_from_skeleton
+
+from enforce_rigid_bones.skeleton_rigid_bones import enforce_rigid_bones_from_skeleton
+
 from pathlib import Path
 import numpy as np
+
 
 
 
@@ -33,8 +37,6 @@ freemocap_data = np.load(path_to_data)
 skeleton_3d = integrate_freemocap_data_into_skeleton_model(skeleton, freemocap_data)
 
 total_body_center_of_mass = calculate_center_of_mass_from_skeleton(skeleton=skeleton_3d, anthropometric_data=center_of_mass_anthropometric_data)
-
-total_body_com_data_old = np.load(path_to_data_folder/'center_of_mass'/'total_body_center_of_mass_xyz.npy')
-
+rigid_bone_data = enforce_rigid_bones_from_skeleton(skeleton=skeleton_3d, joint_hierarchy_data=joint_hierarchy)
 
 f = 2
