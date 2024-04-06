@@ -34,6 +34,25 @@ mediapipe_body = [
             "right_foot_index",
             ]
 
+virtual_markers = {
+        "head_center": {
+        "marker_names": ["left_ear", "right_ear"],
+        "marker_weights": [0.5, 0.5],
+    },
+    "neck_center": {
+        "marker_names": ["left_shoulder", "right_shoulder"],
+        "marker_weights": [0.5, 0.5],
+    },
+    "trunk_center": {
+        "marker_names": ["left_shoulder", "right_shoulder", "left_hip", "right_hip"],
+        "marker_weights": [0.25, 0.25, 0.25, 0.25],
+    },
+    "hips_center": {
+        "marker_names": ["left_hip", "right_hip" ],
+        "marker_weights": [0.5, 0.5],
+    },
+}
+
 segment_connections = {
 "head":{
     'proximal': 'left_ear',
@@ -129,24 +148,6 @@ segment_connections = {
 },
 }
 
-virtual_markers = {
-        "head_center": {
-        "marker_names": ["left_ear", "right_ear"],
-        "marker_weights": [0.5, 0.5],
-    },
-    "neck_center": {
-        "marker_names": ["left_shoulder", "right_shoulder"],
-        "marker_weights": [0.5, 0.5],
-    },
-    "trunk_center": {
-        "marker_names": ["left_shoulder", "right_shoulder", "left_hip", "right_hip"],
-        "marker_weights": [0.25, 0.25, 0.25, 0.25],
-    },
-    "hips_center": {
-        "marker_names": ["left_hip", "right_hip" ],
-        "marker_weights": [0.5, 0.5],
-    },
-}
 
 joint_hierarchy = {
     "hips_center": ["left_hip", 
