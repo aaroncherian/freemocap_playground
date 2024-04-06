@@ -26,22 +26,22 @@ def create_marker_hub(marker_list: List[str], virtual_markers: Dict[str, Dict[st
 
 def create_skeleton_model(
     actual_markers: List[str], 
-    segment_connections: Dict[str, Dict[str, str]], 
+    segment_connections: Dict[str, Dict[str, str]] = None, 
     virtual_markers: Dict[str, Dict[str, List]] = None,
     joint_hierarchy: Dict[str, List[str]] = None,
     anthropometric_data: Dict[str, Dict[str, float]] = None
 ) -> Skeleton:
     """
-    Creates a Skeleton model that includes both actual and optionally virtual markers, as well as segment connections.
-    Optionally integrates joint hierarchy data into the Skeleton model if provided.
-
+    Creates a Skeleton model that includes both actual and optionally virtual markers
+    Optionally integrates segment connections, joint hierarchy, and anthro data if needed
     Parameters:
     - actual_markers: A list of strings representing the names of actual markers.
-    - segment_connections: A dictionary where each key is a segment name and its value is a dictionary
+    - segment_connections: Optional; A dictionary where each key is a segment name and its value is a dictionary
       with information about that segment (e.g., 'proximal', 'distal' marker names).
     - virtual_markers: Optional; a dictionary with information necessary to compute virtual markers.
     - joint_hierarchy: Optional; a dictionary with joint names as keys and lists of connected marker names as values.
-
+    - anthropometric_data: Optional; a dictionary containing segment mass percentages
+    
     Returns:
     - An instance of the Skeleton class that represents the complete skeletal model including markers, segments,
       and optionally, joint hierarchy data.
@@ -53,14 +53,13 @@ def create_skeleton_model(
         virtual_markers=virtual_markers
     )
     # Construct the Segments object which includes segment connection information.
-    segments = Segments(
-        markers=marker_hub, 
-        segment_connections={name: Segment(**segment) for name, segment in segment_connections.items()}
-    )
 
-    skeleton_model = Skeleton(markers=marker_hub, segments=segments)
+    skeleton_model = Skeleton(markers=marker_hub)
 
     # If joint hierarchy data is provided, add it to the Skeleton model.
+    if segment_connections:
+        skeleton_model.add_segments(segment_connections)
+
     if joint_hierarchy:
         skeleton_model.add_joint_hierarchy(joint_hierarchy)
 

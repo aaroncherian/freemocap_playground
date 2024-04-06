@@ -9,13 +9,13 @@ def enforce_rigid_bones_from_skeleton(skeleton:Skeleton):
 
     bone_lengths_and_statistcs = calculate_bone_lengths_and_statistics(
         marker_data=skeleton.marker_data, 
-        segment_connections=skeleton.segments.segment_connections
+        segment_connections=skeleton.segments
     )
 
 
     rigid_marker_data = enforce_rigid_bones(
         marker_data=skeleton.marker_data, 
-        segment_connections=skeleton.segments.segment_connections, 
+        segment_connections=skeleton.segments, 
         bone_lengths_and_statistics=bone_lengths_and_statistcs, 
         joint_hierarchy=skeleton.joint_hierarchy
     )

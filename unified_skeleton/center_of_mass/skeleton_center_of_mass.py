@@ -22,7 +22,7 @@ def get_all_segment_markers(skeleton: Skeleton) -> Dict[str, Dict[str, np.ndarra
     segment_positions = {}
 
     # Iterate over each segment defined in the skeleton
-    for segment_name in skeleton.segments.segment_connections.keys():
+    for segment_name in skeleton.segments.keys():
         # Retrieve the proximal and distal marker positions for the current segment
         # The get_segment_markers method of the Skeleton class is used for this retrieval
         # which is expected to return a dictionary with 'proximal' and 'distal' marker positions
