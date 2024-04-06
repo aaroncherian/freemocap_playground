@@ -65,7 +65,7 @@ def create_skeleton_model(
         skeleton_model.add_joint_hierarchy(joint_hierarchy)
 
     if anthropometric_data:
-        skeleton_model.anthropometric_data = anthropometric_data
+        skeleton_model.add_anthropometric_data(anthropometric_data)
 
     # Create and return the Skeleton instance that brings together the markers and segments into a single model.
     return skeleton_model

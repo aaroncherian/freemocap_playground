@@ -34,11 +34,11 @@ def calculate_all_segments_com(
         distal = segment_positions[segment_name]["distal"]
 
         # Retrieve the COM length percentage from the anthropometric data
-        com_length_percentage = segment_info["segment_com_length"]
+        com_length = segment_info.segment_com_length
 
         # Calculate the COM position for the segment based on the proximal and distal positions,
         # and the COM length percentage
-        segment_com = proximal + (distal - proximal) * com_length_percentage
+        segment_com = proximal + (distal - proximal) * com_length
 
         # Store the calculated COM position in the segment_com_data dictionary
         segment_com_data[segment_name] = segment_com

@@ -21,7 +21,7 @@ def calculate_total_body_center_of_mass(segment_center_of_mass_data: Dict[str, n
         # Retrieve the COM position for the current segment
         segment_com = segment_center_of_mass_data.get(segment_name)
         # Retrieve the mass percentage for the current segment
-        segment_mass_percentage = segment_info.get('segment_com_percentage')
+        segment_mass_percentage = segment_info.segment_com_percentage
 
         # Add the weighted segment COM to the total COM for each frame
         total_body_com += segment_com * segment_mass_percentage

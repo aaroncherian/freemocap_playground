@@ -17,7 +17,7 @@ def enforce_rigid_bones_from_skeleton(skeleton:Skeleton):
         marker_data=skeleton.marker_data, 
         segment_connections=skeleton.segments.segment_connections, 
         bone_lengths_and_statistics=bone_lengths_and_statistcs, 
-        joint_hierarchy=skeleton.joint_hierarchy.joint_hierarchy
+        joint_hierarchy=skeleton.joint_hierarchy
     )
 
     return rigid_marker_data

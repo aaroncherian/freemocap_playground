@@ -5,6 +5,7 @@ import numpy as np
 
 from .marker_models.marker_hub import MarkerHub
 from .joint_hierarchy import JointHierarchy
+from .anthropometric_data import AnthropometricData
 from .segments import Segments
 
 class Skeleton(BaseModel):
@@ -68,7 +69,7 @@ class Skeleton(BaseModel):
         Parameters:
         - joint_hierarchy: A dictionary with joint names as keys and lists of connected marker names as values.
         """
-        self.joint_hierarchy = JointHierarchy(markers=self.markers, joint_hierarchy=joint_hierarchy)
+        self.joint_hierarchy = JointHierarchy(markers=self.markers, joint_hierarchy=joint_hierarchy).joint_hierarchy
 
     def add_anthropometric_data(self, anthropometric_data: Dict[str, Dict[str, float]]):
         """
@@ -77,7 +78,7 @@ class Skeleton(BaseModel):
         Parameters:
         - anthropometric_data: A dictionary containing segment mass percentages.
         """
-        self.anthropometric_data = anthropometric_data
+        self.anthropometric_data = AnthropometricData(anthropometric_data=anthropometric_data).anthropometric_data
 
     @property
     def trajectories(self):
