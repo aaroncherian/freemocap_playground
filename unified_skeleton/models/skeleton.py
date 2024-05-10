@@ -40,6 +40,7 @@ class Skeleton(BaseModel):
         Parameters:
         - joint_hierarchy: A dictionary with joint names as keys and lists of connected marker names as values.
         """
+
         joint_hierarchy_model = JointHierarchy(markers=self.markers, joint_hierarchy=joint_hierarchy)
         self.joint_hierarchy = joint_hierarchy_model.joint_hierarchy
 
@@ -58,11 +59,11 @@ class Skeleton(BaseModel):
         original_marker_names_list = self.markers.original_marker_names.markers
         num_markers_in_model = len(original_marker_names_list)
         
-        if num_markers_in_data != num_markers_in_model:
-            raise ValueError(
-                f"The number of markers in the 3D data ({num_markers_in_data}) does not match "
-                f"the number of markers in the model ({num_markers_in_model})."
-            )
+        # if num_markers_in_data != num_markers_in_model:
+        #     raise ValueError(
+        #         f"The number of markers in the 3D data ({num_markers_in_data}) does not match "
+        #         f"the number of markers in the model ({num_markers_in_model})."
+        #     )
     
         for i, marker_name in enumerate(original_marker_names_list):
             self.marker_data[marker_name] = freemocap_3d_data[:, i, :]

@@ -473,9 +473,9 @@ marker_hub = create_marker_hub(marker_list=mediapipe_body, virtual_markers=virtu
 segments = Segments(markers=marker_hub, segment_connections= {name: Segment(**segment) for name, segment in segment_connections.items()})
 
 
-path_to_session_folder = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_55_21_TF01_leg_length_pos_5_trial_1')
-path_to_data_folder = path_to_session_folder / 'mediapipe_dlc_output_data'
-path_to_data = path_to_data_folder / 'mediapipe_body_3d_xyz.npy'
+path_to_session_folder = Path(r"D:\steen_pantsOn_gait_3_cameras")
+path_to_data_folder = path_to_session_folder / 'output_data'/'openpose_data'
+path_to_data = path_to_data_folder / 'openpose_body_hands_face_xyz.npy'
 
 freemocap_3d_data = np.load(path_to_data)
 
