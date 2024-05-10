@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from typing import Tuple
 
-from qualisys.qualisys_marker_preprocessing.synced_qualisys_tsv_reformatting import reformat_synced_qualisys_tsv_data
+from qualisys.qualisys_marker_preprocessing.synced_qualisys_tsv_reformatting import reformat_synced_qualisys_tsv_data_from_folder
 
 def create_freemocap_unix_timestamps(csv_path):
     df = pd.read_csv(csv_path)
@@ -159,12 +159,13 @@ def plot_shifted_signals(freemocap_data: pd.Series, qualisys_data: pd.Series, op
 
 
 # recording_folder_path = Path(r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\mediapipe_MDN_Trial_2_yolo")
-recording_folder_path = Path(r"E:\prosthetic_validation\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1")
-freemocap_csv_path = recording_folder_path / 'synchronized_videos' / 'timestamps' / 'unix_synced_timestamps.csv'
-qualisys_tsv_path = recording_folder_path / 'qualisys_data' / 'flexion_neutral_trial_1_tracked_with_header.tsv'
-freemocap_body_csv = recording_folder_path / 'mediapipe_output_data' / 'mediapipe_body_3d_xyz.csv'
-header_line_count = 13
-synced_tsv_name = 'synchronized_markers.tsv'
+recording_folder_path = Path(r"D:\2024-04-25_P01\1.0_recordings\sesh_2024-04-25_14_45_59_P01_NIH_Trial1")
+# freemocap_csv_path = recording_folder_path / 'synchronized_videos' / 'timestamps' / 'unix_synced_timestamps.csv'
+freemocap_csv_path = recording_folder_path / 'synchronized_videos' / 'unix_synced_timestamps.csv'
+qualisys_tsv_path = recording_folder_path / 'qualisys_data' / 'qualisys_exported_markers.tsv'
+freemocap_body_csv = recording_folder_path / 'output_data' / 'mediapipe_body_3d_xyz.csv'
+header_line_count = 11
+synced_tsv_name = 'synchronized_qualisys_markers.tsv'
 
 # freemocap_csv_path = Path(
 #     r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\synchronized_videos\timestamps\unix_synced_timestamps.csv")
@@ -187,10 +188,11 @@ synchronized_qualisys_df = synchronize_qualisys_data(qualisys_df_with_unix, free
 print(synchronized_qualisys_df.head())
 
 freemocap_body_df = pd.read_csv(freemocap_body_csv)
-freemocap_data =  freemocap_body_df['right_foot_index_y']
-qualisys_data = synchronized_qualisys_df['RTOE Y'] 
+freemocap_data =  freemocap_body_df['left_shoulder_y']
+qualisys_data = synchronized_qualisys_df['LFrontShoulder Y'] 
 
-optimal_lag = calculate_optimal_lag(freemocap_data[:], qualisys_data[:])
+optimal_lag = calculate_optimal_lag(freemocap_data[2000:4000], qualisys_data[2000:4000])
+optimal_lag = 3
 
 print(f"Optimal lag: {optimal_lag}")
 
@@ -204,11 +206,11 @@ qualisys_df_with_unix_lag_corrected = insert_qualisys_timestamp_column(qualisys_
 
 synchronized_qualisys_df = synchronize_qualisys_data(qualisys_df_with_unix_lag_corrected, freemocap_timestamps)
 
-qualisys_data = synchronized_qualisys_df['RLatWrist Y'] 
+qualisys_data = synchronized_qualisys_df['LTOE Y'] 
 
-optimal_lag = calculate_optimal_lag(freemocap_data[5800:6800], qualisys_data[5800:6800])
+optimal_lag = calculate_optimal_lag(freemocap_data[:], qualisys_data[:])
 
-# optimal_lag = 3
+optimal_lag = 3
 
 print(f"Optimal lag: {optimal_lag}")
 
@@ -217,12 +219,12 @@ plot_shifted_signals(freemocap_data, qualisys_data, optimal_lag)
 assert synchronized_qualisys_df.shape[1] == qualisys_df.shape[
     1], "qualisys_synchronized_df does not have the same number of columns as qualisys_original_df"
 assert synchronized_qualisys_df.shape[0] == len(
-    freemocap_timestamps), "qualisys_synchronized_df does not have the same number of rows as freemocdap_timestamps"
+    freemocap_timestamps), "qualisys_synchronized_df does not have the same number of rows as freemocap_timestamps"
 
 synchronized_qualisys_df.to_csv(recording_folder_path/'qualisys_data'/synced_tsv_name, sep="\t", index=False)
 # synchronized_qualisys_df.to_csv(Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\qualisys\flexion_neutral_trial_1_tracked_with_header_synchronized.tsv"),
 #                                 sep="\t", index=False)
 
-reformat_synced_qualisys_tsv_data(recording_folder_path, synced_tsv_name)
+reformat_synced_qualisys_tsv_data_from_folder(recording_folder_path, synchronized_qualisys_df)
 print('Saved synced TSV and reformatted CSV')
 f = 2   
