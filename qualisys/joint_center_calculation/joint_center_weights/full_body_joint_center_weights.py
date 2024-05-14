@@ -4,6 +4,14 @@ joint_center_weights = {
         'right_head': [.5, .5, .5],
     },
 
+    'left_ear': {
+        'left_head': [1, 1, 1],
+    },
+
+    'right_ear': {
+        'right_head': [1, 1, 1],
+    },
+
     'right_shoulder': {
         'right_front_shoulder': [.5, .5, .5],
         'right_back_shoulder': [.5, .5, .5],
