@@ -1,4 +1,7 @@
 from skellyalign.models.recording_config import RecordingConfig
+from skellyalign.utilities.data_handlers import DataProcessor
+from skellyalign.align_things import get_best_transformation_matrix_ransac, apply_transformation
+from skellyalign.plots.scatter_3d import plot_3d_scatter
 from mdn_validation_marker_set import markers_to_extract, qualisys_nih_markers, mediapipe_markers
 from pathlib import Path
 import numpy as np
@@ -34,6 +37,15 @@ qualisys_model.integrate_freemocap_3d_data(qualisys_data)
 freemocap_model.virtual_marker_names
 
 print(freemocap_model.marker_data_as_numpy.shape)
+
+freemocap_data_processor = DataProcessor(data=freemocap_model.marker_data_as_numpy, marker_list=freemocap_model.marker_names, markers_for_alignment=markers_to_extract)
+qualisys_data_processor = DataProcessor(data=qualisys_model.marker_data_as_numpy, marker_list=qualisys_model.marker_names, markers_for_alignment=markers_to_extract)
+
+best_transformation_matrix = get_best_transformation_matrix_ransac(freemocap_data=freemocap_data_processor.extracted_data_3d, qualisys_data=qualisys_data_processor.extracted_data_3d, frames_to_sample = 20, max_iterations=50, inlier_threshold= 40, )
+
+freemocap_aligned_data = apply_transformation(best_transformation_matrix, freemocap_model.marker_data_as_numpy)
+
+plot_3d_scatter(freemocap_data=freemocap_aligned_data, qualisys_data=qualisys_model.marker_data_as_numpy)
 # from skellyalign.run_alignment import run_ransac_alignment
 
 # aligned_freemocap_data = run_ransac_alignment(sample_recording_config)
