@@ -1,25 +1,10 @@
-from distutils.log import debug
+
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from pathlib import Path 
-import socket
-import pickle
-from rich.progress import track
-import cv2
-from matplotlib.animation import FuncAnimation
-import matplotlib.animation as animation
-import matplotlib.ticker as mticker
-import sys 
-from datetime import datetime
-
-
 
 class SkeletonDataHolder:
     def __init__(self, skeleton_data, skeleton_indices_list,good_frame):
         self.skeleton_data = skeleton_data
         self.skeleton_indices_list = skeleton_indices_list
-
     
         self.set_indices_as_properties(skeleton_indices_list)
         self.good_frame_skeleton_data = self.get_good_frame_of_data(good_frame,skeleton_data)

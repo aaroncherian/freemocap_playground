@@ -3,8 +3,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from freemocap_utils import freemocap_data_loader
-from freemocap_utils.mediapipe_skeleton_builder import mediapipe_indices
+# from freemocap_utils import freemocap_data_loader
+# from freemocap_utils.mediapipe_skeleton_builder import mediapipe_indices
 from scipy import signal
 import scipy
 from freemocap_utils.skeleton_interpolation import interpolate_freemocap_data
@@ -55,17 +55,17 @@ def resample_data(data_to_resample:np.ndarray, original_framerate:float, framera
 
 
 
-path_to_freemocap_session_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_15_03_20_MDN_NIH_Trial4')
+path_to_freemocap_session_folder = Path(r'D:\2024-04-25_P01\1.0_recordings\P01_WalkRun_Trial1_four_cameras')
 freemocap_data = np.load(path_to_freemocap_session_folder/'output_data'/'mediaPipeSkel_3d_body_hands_face.npy')
 
-path_to_qualisys_session_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\qualisys_MDN_NIH_Trial4')
-qualisys_data = np.load(path_to_qualisys_session_folder/'output_data'/'qualisysSkel_3d.npy')
+path_to_qualisys_session_folder = path_to_freemocap_session_folder
+qualisys_data = np.load(path_to_qualisys_session_folder/'qualisys_data'/'qualisys_joint_centers_3d_xyz.npy')
 interpolated_qualisys_data = interpolate_freemocap_data(qualisys_data)
-filtered_qualisys_data = butterworth_filter_data(interpolated_qualisys_data,cutoff=6, sampling_rate=300, order=4)
+filtered_qualisys_data = butterworth_filter_data(interpolated_qualisys_data,cutoff=6, sampling_rate=29.954299049366554, order=4)
 
-freemocap_framerate = 29.981535782044638
-qualisys_framerate = 300
+freemocap_framerate = 29.954282127686497
+qualisys_framerate = 29.954299049366554
 
 resampled_qualisys_data = resample_data(data_to_resample=filtered_qualisys_data, original_framerate=qualisys_framerate, framerate_to_resample_to=freemocap_framerate)
-np.save(path_to_qualisys_session_folder/'output_data'/'downsampled_qualisys_skel_3d.npy', resampled_qualisys_data)
+np.save(path_to_qualisys_session_folder/'qualisys_data'/'downsampled_qualisys_joint_centers_3d_xyz.npy', resampled_qualisys_data)
 
