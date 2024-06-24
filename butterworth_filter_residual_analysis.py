@@ -8,6 +8,7 @@ from freemocap_utils.mediapipe_skeleton_builder import mediapipe_indices
 
 # Load FreeMoCap data
 path_to_freemocap_folder = Path(r"D:\2024-04-25_P01\1.0_recordings\sesh_2024-04-25_15_44_19_P01_WalkRun_Trial1")
+# path_to_freemocap_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_14_40_56_MDN_NIH_Trial2')
 path_to_freemocap_output_data = path_to_freemocap_folder/'output_data'/'raw_data'/'mediapipe3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
 freemocap_data = np.load(path_to_freemocap_output_data)
 freemocap_data_ankle = freemocap_data[:, mediapipe_indices.index('left_heel'), 1]
@@ -62,10 +63,15 @@ def find_optimal_cutoff(data, sampling_rate, order, cutoff_range):
     tail_cutoff_range = cutoff_range[flattening_idx:]
     tail_rmses = rmses[flattening_idx:]
     slope, intercept, _, _, _ = linregress(tail_cutoff_range, tail_rmses)
-    
     # Plot the regression line
     regression_line = slope * tail_cutoff_range + intercept
     plt.plot(tail_cutoff_range, regression_line, 'gray', linestyle='--', label='Regression Line')
+    plt.plot([0, tail_cutoff_range[-1]], [intercept, regression_line[-1]], 'gray', linestyle='--')
+
+    # # Rest of the code...
+    # # Plot the regression line
+    # regression_line = slope * tail_cutoff_range + intercept
+    # plt.plot(tail_cutoff_range, regression_line, 'gray', linestyle='--', label='Regression Line')
     
     # Plot the threshold line
     plt.axhline(y=intercept, color='r', linestyle='--', label='Threshold')
