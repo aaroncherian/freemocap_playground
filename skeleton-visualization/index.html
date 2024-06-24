@@ -96,24 +96,15 @@
             // Clear previous data
             dataGroup.clear();
 
-            // Create geometry for all points
-            const geometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(data.length * 3);
+            // Create spheres for all points
+            const sphereGeometry = new THREE.SphereGeometry(1, 16, 16); // Adjust the size and resolution as needed
+            const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
             for (let i = 0; i < data.length; i++) {
-                positions[i * 3] = data[i][0] / 10; // Scaling down the coordinates
-                positions[i * 3 + 1] = data[i][1] / 10; // Scaling down the coordinates
-                positions[i * 3 + 2] = data[i][2] / 10; // Scaling down the coordinates
+                const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                sphere.position.set(data[i][0] / 10, data[i][1] / 10, data[i][2] / 10); // Scaling down the coordinates
+                dataGroup.add(sphere);
             }
-
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-            // Create material
-            const material = new THREE.PointsMaterial({ color: 0x000000, size: 5 });
-
-            // Create points and add to group
-            const points = new THREE.Points(geometry, material);
-            dataGroup.add(points);
         }
 
         // Set up camera position
