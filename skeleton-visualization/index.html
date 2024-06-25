@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Motion Capture Data Visualizer</title>
+    <title>3D Motion Capture Data Visualizer with 2D Trajectory</title>
     <style>
-        body { margin: 0; }
+        body { margin: 0; overflow: hidden; }
         canvas { display: block; }
+        #chart-container {
+            position: absolute;
+            bottom: 100px;
+            left: 0;
+            width: 100%;
+            height: 300px; /* Fixed height for the chart */
+        }
         #control-container {
             position: absolute;
             bottom: 20px;
@@ -22,6 +29,8 @@
             margin-right: 10px;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
     <script>
         const socket = new WebSocket('ws://localhost:8001');
         socket.addEventListener('message', function (event) {
@@ -33,6 +42,9 @@
     </script>
 </head>
 <body>
+    <div id="chart-container">
+        <canvas id="trajectoryChart"></canvas>
+    </div>
     <div id="control-container">
         <button id="play-pause">Play</button>
         <input type="range" min="0" max="29" value="0" class="slider" id="frame-slider">
@@ -53,13 +65,16 @@
 
         // Fetch initial data
         let allFramesData = [];
+        let trajectoryData = [];
         fetch('/data')
             .then(response => response.json())
             .then(data => {
                 allFramesData = data;
-                console.log('Data fetched:', allFramesData); // Debugging statement
+                console.log('Data fetched:', allFramesData);
                 if (allFramesData.length > 0) {
                     visualizeData(allFramesData[0]);
+                    generateTrajectoryData();
+                    initChart();
                 } else {
                     console.error('No data available');
                 }
@@ -71,13 +86,21 @@
                 frameNumber.textContent = `Frame: 0 / ${allFramesData.length - 1}`;
             }).catch(error => console.error('Error fetching data:', error));
 
+        // Generate mock trajectory data
+        function generateTrajectoryData() {
+            trajectoryData = allFramesData.map((frame, index) => ({
+                x: index,
+                y: Math.sin(index * 0.1) * 50 + 100 // Mock data for visualization
+            }));
+        }
+
         // Set up the scene, camera, and renderer
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xffffff);
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000); // Increased far plane
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+        document.body.insertBefore(renderer.domElement, document.body.firstChild);
 
         // Add lights
         const ambientLight = new THREE.AmbientLight(0x404040);
@@ -92,24 +115,22 @@
 
         // Function to visualize data for a specific frame
         function visualizeData(data) {
-            console.log('Visualizing data for frame:', data); // Debugging statement
-            // Clear previous data
+            console.log('Visualizing data for frame:', data);
             dataGroup.clear();
 
-            // Create spheres for all points
-            const sphereGeometry = new THREE.SphereGeometry(1, 16, 16); // Adjust the size and resolution as needed
+            const sphereGeometry = new THREE.SphereGeometry(1, 16, 16);
             const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
             for (let i = 0; i < data.length; i++) {
                 const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                sphere.position.set(data[i][0] / 10, data[i][1] / 10, data[i][2] / 10); // Scaling down the coordinates
+                sphere.position.set(data[i][0] / 10, data[i][1] / 10, data[i][2] / 10);
                 dataGroup.add(sphere);
             }
         }
 
         // Set up camera position
-        camera.position.set(0, 0, 500); // Move the camera further away
-        camera.lookAt(0, 0, 0); // Ensure the camera is looking at the origin
+        camera.position.set(0, 0, 500);
+        camera.lookAt(0, 0, 0);
 
         // Add orbit controls
         const controls = new OrbitControls(camera, renderer.domElement);
@@ -135,6 +156,57 @@
             visualizeData(allFramesData[currentFrame]);
             slider.value = currentFrame;
             frameNumber.textContent = `Frame: ${currentFrame} / ${allFramesData.length - 1}`;
+            updateChartMarker(currentFrame);
+        }
+
+        // Chart.js setup
+        let chart;
+        function initChart() {
+            const ctx = document.getElementById('trajectoryChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Trajectory',
+                        data: trajectoryData,
+                        borderColor: '#000000',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom'
+                        }
+                    },
+                    animation: false,
+                    plugins: {
+                        annotation: {
+                            annotations: {
+                                line1: {
+                                    type: 'line',
+                                    xMin: 0,
+                                    xMax: 0,
+                                    borderColor: 'rgb(255, 99, 132)',
+                                    borderWidth: 2,
+                                    mode: 'vertical'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChartMarker(frame) {
+            if (chart && chart.options.plugins.annotation.annotations.line1) {
+                chart.options.plugins.annotation.annotations.line1.xMin = frame;
+                chart.options.plugins.annotation.annotations.line1.xMax = frame;
+                chart.update();
+            }
         }
 
         // Animation loop
@@ -155,6 +227,9 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            if (chart) {
+                chart.resize();
+            }
         }
     </script>
 </body>
