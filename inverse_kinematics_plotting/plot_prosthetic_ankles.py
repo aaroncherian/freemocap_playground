@@ -33,13 +33,13 @@ for i, (path, label) in enumerate(zip(paths_to_freemocap_folders, labels)):
         name=f'Right Ankle Angle ({label})'
     ), row=i+1, col=1)
     
-    # Add left ankle angle plot
-    fig.add_trace(go.Scatter(
-        x=ik_data['time'],
-        y=ik_data['ankle_angle_l'],
-        mode='lines',
-        name=f'Left Ankle Angle ({label})'
-    ), row=i+1, col=1)
+    # # Add left ankle angle plot
+    # fig.add_trace(go.Scatter(
+    #     x=ik_data['time'],
+    #     y=ik_data['ankle_angle_l'],
+    #     mode='lines',
+    #     name=f'Left Ankle Angle ({label})'
+    # ), row=i+1, col=1)
     
     # Update y-axis title for each subplot
     fig.update_yaxes(title_text=f'Angle (degrees) ({label})', row=i+1, col=1)
