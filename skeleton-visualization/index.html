@@ -18,11 +18,10 @@
             width: 50%;
             margin-left: auto;
             margin-right: auto;
-            
         }
         #chart-container {
-            width: 90%;
-            height: 40%; /* 2D chart takes up 30% of the height */
+            width: 100%;
+            height: 40%;
             position: relative;
             margin-left: auto;
             margin-right: auto;
@@ -43,8 +42,7 @@
             margin-right: 10px;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
         const socket = new WebSocket('ws://localhost:8001');
         socket.addEventListener('message', function (event) {
@@ -58,7 +56,7 @@
 <body>
     <div id="graph-container"></div>
     <div id="chart-container">
-        <canvas id="trajectoryChart"></canvas>
+        <div id="trajectoryChart"></div>
     </div>
     <div id="control-container">
         <button id="play-pause">Play</button>
@@ -119,7 +117,6 @@
         renderer.setPixelRatio(window.devicePixelRatio); // Set the pixel ratio for better clarity
         container.appendChild(renderer.domElement);
 
-        
         // Add lights
         const ambientLight = new THREE.AmbientLight(0x404040);
         scene.add(ambientLight);
@@ -136,7 +133,7 @@
             console.log('Visualizing data for frame:', data);
             dataGroup.clear();
 
-            const sphereGeometry = new THREE.SphereGeometry(1, 16, 16);
+            const sphereGeometry = new THREE.SphereGeometry(2, 16, 16);
             const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
             for (let i = 0; i < data.length; i++) {
@@ -152,39 +149,6 @@
 
         // Add orbit controls
         const controls = new OrbitControls(camera, renderer.domElement);
-
-        // // Add a 3D grid
-        // const gridSize = 2000;
-        // const gridDivisions = 20;
-        // const gridHelper = new THREE.GridHelper(gridSize, gridDivisions, 0x888888, 0x888888);
-        // scene.add(gridHelper);
-
-        // // Add grid and axes
-        // const size = 1000;
-        // const divisions = 20;    
-
-        // // Ground grid (x-y plane)
-        // const gridHelper = new THREE.GridHelper(size, divisions);
-        // gridHelper.position.set(0, -size/2, 0);
-        // scene.add(gridHelper);
-
-        // // Side grid (y-z plane)
-        // const sideGridHelper = new THREE.GridHelper(size, divisions);
-        // sideGridHelper.position.set(-size/2, 0, 0);
-        // sideGridHelper.rotation.x = Math.PI / 2;
-        // scene.add(sideGridHelper);
-
-        // // Front grid (x-z plane)
-        // const frontGridHelper = new THREE.GridHelper(size, divisions);
-        // frontGridHelper.rotation.z = Math.PI / 2;
-        // frontGridHelper.position.set(0, 0, -size/2);
-
-        // scene.add(frontGridHelper);
-
-        // // Axes
-        // const axesHelper = new THREE.AxesHelper(size / 2);
-        // scene.add(axesHelper);
-
 
         // Set up frame slider and play button
         const slider = document.getElementById('frame-slider');
@@ -210,54 +174,65 @@
             updateChartMarker(currentFrame);
         }
 
-        // Chart.js setup
-        let chart;
+        // Plotly setup
         function initChart() {
-            const ctx = document.getElementById('trajectoryChart').getContext('2d');
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets: [{
-                        label: 'Trajectory',
-                        data: trajectoryData,
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
-                    }]
+            const trace1 = {
+                x: trajectoryData.map(d => d.x),
+                y: trajectoryData.map(d => d.y),
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Trajectory',
+                line: { color: 'black' }
+            };
+
+            const layout = {
+                xaxis: {
+                    title: 'Frame'
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            type: 'linear',
-                            position: 'bottom'
-                        }
-                    },
-                    animation: false,
-                    plugins: {
-                        annotation: {
-                            annotations: {
-                                line1: {
-                                    type: 'line',
-                                    xMin: 0,
-                                    xMax: 0,
-                                    borderColor: 'rgb(255, 99, 132)',
-                                    borderWidth: 2,
-                                    mode: 'vertical'
-                                }
-                            }
-                        }
+                yaxis: {
+                    title: 'Value'
+                },
+                shapes: [{
+                    type: 'line',
+                    x0: 0,
+                    x1: 0,
+                    y0: 0,
+                    y1: 1,
+                    yref: 'paper',
+                    line: {
+                        color: 'rgb(255, 99, 132)',
+                        width: 2
                     }
-                }
-            });
+                }],
+                autosize: true,
+                margin: {
+                    l: 50,
+                    r: 50,
+                    b: 50,
+                    t: 20,
+                    pad: 4
+                },
+                height: document.getElementById('chart-container').clientHeight
+            };
+
+            Plotly.newPlot('trajectoryChart', [trace1], layout, {responsive: true});
         }
 
         function updateChartMarker(frame) {
-            if (chart && chart.options.plugins.annotation.annotations.line1) {
-                chart.options.plugins.annotation.annotations.line1.xMin = frame;
-                chart.options.plugins.annotation.annotations.line1.xMax = frame;
-                chart.update();
-            }
+            Plotly.relayout('trajectoryChart', {
+                shapes: [{
+                    type: 'line',
+                    x0: frame,
+                    x1: frame,
+                    y0: 0,
+                    y1: 1,
+                    yref: 'paper',
+                    line: {
+                        color: 'rgb(255, 99, 132)',
+                        width: 2
+                    }
+                }]
+            });
         }
 
         // Animation loop
@@ -279,9 +254,7 @@
             camera.aspect = graphContainer.clientWidth / graphContainer.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(graphContainer.clientWidth, graphContainer.clientHeight);
-            if (chart) {
-                chart.resize();
-            }
+            Plotly.Plots.resize(document.getElementById('trajectoryChart'));
         }
 
         // Initial resize call to set correct dimensions
