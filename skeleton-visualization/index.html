@@ -116,6 +116,7 @@
         const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 10000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio); // Set the pixel ratio for better clarity
         container.appendChild(renderer.domElement);
 
         
