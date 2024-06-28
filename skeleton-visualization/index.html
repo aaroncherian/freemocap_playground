@@ -136,6 +136,18 @@
         const dataGroup = new THREE.Group();
         scene.add(dataGroup);
 
+        const grid_size = 500;
+        const grid_divisions = 10;
+        const gridHelper = new THREE.GridHelper(grid_size, grid_divisions);
+        gridHelper.rotation.x = Math.PI / 2;
+        scene.add(gridHelper);
+
+        const axesHelper = new THREE.AxesHelper(5);
+        scene.add(axesHelper);
+
+        // camera.position.set(0, 0, 500);
+        // camera.lookAt(0, 0, 0);
+
         // Function to visualize data for a specific frame
         function visualizeData(data) {
             console.log('Visualizing data for frame:', data);
@@ -152,8 +164,9 @@
         }
 
         // Set up camera position
-        camera.position.set(0, 0, 500);
+        camera.position.set(0, 250, 500);
         camera.lookAt(0, 0, 0);
+        camera.up.set(0, 0, 1);
 
         // Add orbit controls
         const controls = new OrbitControls(camera, renderer.domElement);
@@ -184,11 +197,15 @@
 
         // Plotly setup
         function initChart(data_to_plot) {
-            const x_values = Array.from({ length: data_to_plot.length }, (_, i) => i);
+            const frames = Array.from({ length: data_to_plot.x.length }, (_, i) => i);
+            
+            const x_data = data_to_plot.x;
+            const y_data = data_to_plot.y;
+            const z_data = data_to_plot.z;
 
             const trace1 = {
-                x: x_values,
-                y: data_to_plot,
+                x: frames,
+                y: y_data,
                 type: 'scatter',
                 mode: 'lines',
                 name: 'Trajectory',

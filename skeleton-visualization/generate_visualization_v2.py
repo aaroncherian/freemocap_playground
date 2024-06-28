@@ -53,9 +53,18 @@ class HttpHandler(SimpleHTTPRequestHandler):
 
             mediapipe_indices = MediapipeModelInfo.body_landmark_names
             right_ankle_index = mediapipe_indices.index('right_ankle')
-            right_ankle_data = np_data[:, right_ankle_index, 0].tolist()  # Extracting the x-coordinate data
+            data_x = np_data[:, right_ankle_index, 0].tolist()
+            data_y = np_data[:, right_ankle_index, 1].tolist()
+            data_z = np_data[:, right_ankle_index, 2].tolist()
+
+            trajectory_data = {
+                'x': data_x,
+                'y': data_y,
+                'z': data_z
+            }
+
             
-            response = json.dumps(right_ankle_data)
+            response = json.dumps(trajectory_data)
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
