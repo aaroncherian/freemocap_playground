@@ -9,6 +9,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
 
+from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
 # HTTP Server
 class HttpHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -17,6 +18,9 @@ class HttpHandler(SimpleHTTPRequestHandler):
             self.path = '/skeleton-visualization/index.html'
         elif self.path == '/data':
             self.serve_data()
+            return
+        elif self.path == '/trajectory_data':
+            self.serve_trajectory_data()
             return
         else:
             self.path = '/skeleton-visualization/' + self.path.lstrip('/')
@@ -41,6 +45,32 @@ class HttpHandler(SimpleHTTPRequestHandler):
             print(f"Error serving data: {e}")
             self.send_response(500)
             self.end_headers()
+
+    def serve_trajectory_data(self):
+        try:
+            path_to_data = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1\output_data\mediapipe_body_3d_xyz.npy"
+            np_data = np.load(path_to_data)
+
+            mediapipe_indices = MediapipeModelInfo.body_landmark_names
+            right_ankle_index = mediapipe_indices.index('right_ankle')
+            right_ankle_data = np_data[:, right_ankle_index, 0].tolist()  # Extracting the x-coordinate data
+            
+            response = json.dumps(right_ankle_data)
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(response.encode())
+            print("Trajectory data served successfully")
+
+        except Exception as e:
+            print(f"Error serving trajectory data: {e}")
+            self.send_response(500)
+            self.end_headers()
+            
+
+
+
+
 
 # WebSocket handler to notify clients about file changes
 connected_clients = set()

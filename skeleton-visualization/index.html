@@ -87,7 +87,7 @@
                 if (allFramesData.length > 0) {
                     visualizeData(allFramesData[0]);
                     generateTrajectoryData();
-                    initChart();
+                    // initChart();
                 } else {
                     console.error('No data available');
                 }
@@ -98,14 +98,22 @@
                 slider.max = allFramesData.length - 1;
                 frameNumber.textContent = `Frame: 0 / ${allFramesData.length - 1}`;
             }).catch(error => console.error('Error fetching data:', error));
+        
+        fetch('/trajectory_data')
+            .then(response => response.json())
+            .then(data => {
+                trajectoryData = data;
+                console.log('Trajectory data fetched:', trajectoryData);
+                initChart(trajectoryData);
+            }).catch(error => console.error('Error fetching trajectory data:', error));
 
-        // Generate mock trajectory data
-        function generateTrajectoryData() {
-            trajectoryData = allFramesData.map((frame, index) => ({
-                x: index,
-                y: Math.sin(index * 0.1) * 50 + 100 // Mock data for visualization
-            }));
-        }
+        // // Generate mock trajectory data
+        // function generateTrajectoryData() {
+        //     trajectoryData = allFramesData.map((frame, index) => ({
+        //         x: index,
+        //         y: Math.sin(index * 0.1) * 50 + 100 // Mock data for visualization
+        //     }));
+        // }
 
         // Set up the scene, camera, and renderer
         const container = document.getElementById('graph-container');
@@ -175,10 +183,12 @@
         }
 
         // Plotly setup
-        function initChart() {
+        function initChart(data_to_plot) {
+            const x_values = Array.from({ length: data_to_plot.length }, (_, i) => i);
+
             const trace1 = {
-                x: trajectoryData.map(d => d.x),
-                y: trajectoryData.map(d => d.y),
+                x: x_values,
+                y: data_to_plot,
                 type: 'scatter',
                 mode: 'lines',
                 name: 'Trajectory',
