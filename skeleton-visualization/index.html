@@ -21,7 +21,14 @@
         }
         #chart-container {
             width: 100%;
-            height: 40%;
+            height: 10%;
+            position: relative;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #ankle-angle-chart-container {
+            width: 100%;
+            height: 10%;
             position: relative;
             margin-left: auto;
             margin-right: auto;
@@ -58,6 +65,9 @@
     <div id="chart-container">
         <div id="trajectoryChart"></div>
     </div>
+    <div id="ankle-angle-chart-container">
+        <div id="ankleAngleChart"></div>
+    </div>
     <div id="control-container">
         <button id="play-pause">Play</button>
         <input type="range" min="0" max="29" value="0" class="slider" id="frame-slider">
@@ -79,6 +89,7 @@
         // Fetch initial data
         let allFramesData = [];
         let trajectoryData = [];
+        let ankleAngleData = [];
         fetch('/data')
             .then(response => response.json())
             .then(data => {
@@ -104,8 +115,16 @@
             .then(data => {
                 trajectoryData = data;
                 console.log('Trajectory data fetched:', trajectoryData);
-                initChart(trajectoryData);
+                initTrajectoryChart('trajectoryChart',trajectoryData);
             }).catch(error => console.error('Error fetching trajectory data:', error));
+
+        fetch('/ankle_angle_data')
+            .then(response => response.json())
+            .then(data => {
+                ankleAngleData = data;
+                console.log('Ankle angle data fetched:', ankleAngleData);
+                initAngleChart('ankleAngleChart',ankleAngleData);
+            }).catch(error => console.error('Error fetching ankle angle data:', error));
 
         // // Generate mock trajectory data
         // function generateTrajectoryData() {
@@ -192,11 +211,12 @@
             visualizeData(allFramesData[currentFrame]);
             slider.value = currentFrame;
             frameNumber.textContent = `Frame: ${currentFrame} / ${allFramesData.length - 1}`;
-            updateChartMarker(currentFrame);
+            updateChartMarker('trajectoryChart', currentFrame);
+            updateChartMarker('ankleAngleChart', currentFrame);
         }
 
         // Plotly setup
-        function initChart(data_to_plot) {
+        function initTrajectoryChart(id, data_to_plot) {
             const frames = Array.from({ length: data_to_plot.x.length }, (_, i) => i);
             
             const x_data = data_to_plot.x;
@@ -239,14 +259,61 @@
                     t: 20,
                     pad: 4
                 },
-                height: document.getElementById('chart-container').clientHeight
+                height: document.getElementById(id).clientHeight
             };
 
-            Plotly.newPlot('trajectoryChart', [trace1], layout, {responsive: true});
+            Plotly.newPlot(id, [trace1], layout, {responsive: true});
         }
 
-        function updateChartMarker(frame) {
-            Plotly.relayout('trajectoryChart', {
+        function initAngleChart(id, data_to_plot) {
+            const frames = Array.from({ length: data_to_plot.length }, (_, i) => i);
+            
+            const data = data_to_plot;
+
+            const trace1 = {
+                x: frames,
+                y: data,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Ankle Angle',
+                line: { color: 'black' }
+            };
+
+            const layout = {
+                xaxis: {
+                    title: 'Frame'
+                },
+                yaxis: {
+                    title: 'Value'
+                },
+                shapes: [{
+                    type: 'line',
+                    x0: 0,
+                    x1: 0,
+                    y0: 0,
+                    y1: 1,
+                    yref: 'paper',
+                    line: {
+                        color: 'rgb(255, 99, 132)',
+                        width: 2
+                    }
+                }],
+                autosize: true,
+                margin: {
+                    l: 50,
+                    r: 50,
+                    b: 50,
+                    t: 20,
+                    pad: 4
+                },
+                height: document.getElementById(id).clientHeight
+            };
+
+            Plotly.newPlot(id, [trace1], layout, {responsive: true});
+        }
+
+        function updateChartMarker(chartId, frame) {
+            Plotly.relayout(chartId, {
                 shapes: [{
                     type: 'line',
                     x0: frame,

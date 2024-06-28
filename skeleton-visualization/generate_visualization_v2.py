@@ -8,7 +8,7 @@ import webbrowser
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
-
+import pandas as pd
 from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
 # HTTP Server
 class HttpHandler(SimpleHTTPRequestHandler):
@@ -21,6 +21,9 @@ class HttpHandler(SimpleHTTPRequestHandler):
             return
         elif self.path == '/trajectory_data':
             self.serve_trajectory_data()
+            return
+        elif self.path == '/ankle_angle_data':
+            self.serve_ankle_angle_data()
             return
         else:
             self.path = '/skeleton-visualization/' + self.path.lstrip('/')
@@ -75,6 +78,27 @@ class HttpHandler(SimpleHTTPRequestHandler):
             print(f"Error serving trajectory data: {e}")
             self.send_response(500)
             self.end_headers()
+
+    def serve_ankle_angle_data(self):
+        try:
+            path_to_ik_data = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1\output_data\IK_results.mot"
+            ik_data =  pd.read_csv(path_to_ik_data, sep='\t', skiprows=10)
+            right_ankle_angle = ik_data['ankle_angle_r'].tolist()
+
+            response = json.dumps(right_ankle_angle)
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(response.encode())
+            print("Ankle angle data served successfully")
+
+        except Exception as e:
+            print(f"Error serving ankle angle data: {e}")
+            self.send_response(500)
+            self.end_headers()
+
+
+
             
 
 
