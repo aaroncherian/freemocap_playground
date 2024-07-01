@@ -191,8 +191,6 @@
         fpsInput.addEventListener('input', function() {
             fps = parseInt(this.value);
         });
-        
-        let lastFrameTime = 0;
 
         slider.addEventListener('input', function() {
             currentFrame = parseInt(this.value);
@@ -327,23 +325,35 @@
         }
 
         // Animation loop
+        let lastFrameTime = 0;
+        let frameInterval = 1000 / fps; // Calculate once, update when fps changes
+
         function animate(timestamp) {
             requestAnimationFrame(animate);
             
             if (isPlaying) {
-                const timePerFrame = 1000 / fps;
+                const elapsed = timestamp - lastFrameTime;
                 
-                if (timestamp - lastFrameTime >= timePerFrame) {
+                if (elapsed >= frameInterval) {
+                    // Adjust for any extra time beyond the desired interval
+                    lastFrameTime = timestamp - (elapsed % frameInterval);
+                    
                     currentFrame = (currentFrame + 1) % allFramesData.length;
                     updateVisualization();
-                    lastFrameTime = timestamp;
                 }
             }
             
             controls.update();
             renderer.render(scene, camera);
         }
-        animate();
+
+        // Update frameInterval when fps changes
+        fpsInput.addEventListener('input', function() {
+            fps = parseInt(this.value);
+            frameInterval = 1000 / fps;
+        });
+
+        animate(0); // Start the animation loop
 
         // Handle window resizing
         window.addEventListener('resize', onWindowResize, false);
