@@ -70,8 +70,8 @@
     </div>
     <div id="control-container">
         <button id="play-pause">Play</button>
-        <input type="range" min="0" max="29" value="0" class="slider" id="frame-slider">
-        <span id="frame-number">Frame: 0 / 29</span>
+        <input type="range" min="0" value="0" class="slider" id="frame-slider">
+        <span id="frame-number">Frame: 0</span>
     </div>
     <script type="importmap">
         {
@@ -90,6 +90,9 @@
         let allFramesData = [];
         let trajectoryData = [];
         let ankleAngleData = [];
+        const slider = document.getElementById('frame-slider');
+        const frameNumber = document.getElementById('frame-number');
+
         fetch('/data')
             .then(response => response.json())
             .then(data => {
@@ -97,15 +100,11 @@
                 console.log('Data fetched:', allFramesData);
                 if (allFramesData.length > 0) {
                     visualizeData(allFramesData[0]);
-                    generateTrajectoryData();
-                    // initChart();
                 } else {
                     console.error('No data available');
                 }
 
                 // Adjust slider max value based on the number of frames
-                const slider = document.getElementById('frame-slider');
-                const frameNumber = document.getElementById('frame-number');
                 slider.max = allFramesData.length - 1;
                 frameNumber.textContent = `Frame: 0 / ${allFramesData.length - 1}`;
             }).catch(error => console.error('Error fetching data:', error));
@@ -115,7 +114,7 @@
             .then(data => {
                 trajectoryData = data;
                 console.log('Trajectory data fetched:', trajectoryData);
-                initTrajectoryChart('trajectoryChart',trajectoryData);
+                initTrajectoryChart('trajectoryChart', trajectoryData);
             }).catch(error => console.error('Error fetching trajectory data:', error));
 
         fetch('/ankle_angle_data')
@@ -123,16 +122,8 @@
             .then(data => {
                 ankleAngleData = data;
                 console.log('Ankle angle data fetched:', ankleAngleData);
-                initAngleChart('ankleAngleChart',ankleAngleData);
+                initAngleChart('ankleAngleChart', ankleAngleData);
             }).catch(error => console.error('Error fetching ankle angle data:', error));
-
-        // // Generate mock trajectory data
-        // function generateTrajectoryData() {
-        //     trajectoryData = allFramesData.map((frame, index) => ({
-        //         x: index,
-        //         y: Math.sin(index * 0.1) * 50 + 100 // Mock data for visualization
-        //     }));
-        // }
 
         // Set up the scene, camera, and renderer
         const container = document.getElementById('graph-container');
@@ -164,9 +155,6 @@
         const axesHelper = new THREE.AxesHelper(5);
         scene.add(axesHelper);
 
-        // camera.position.set(0, 0, 500);
-        // camera.lookAt(0, 0, 0);
-
         // Function to visualize data for a specific frame
         function visualizeData(data) {
             console.log('Visualizing data for frame:', data);
@@ -191,8 +179,6 @@
         const controls = new OrbitControls(camera, renderer.domElement);
 
         // Set up frame slider and play button
-        const slider = document.getElementById('frame-slider');
-        const frameNumber = document.getElementById('frame-number');
         const playPauseButton = document.getElementById('play-pause');
         let isPlaying = false;
         let currentFrame = 0;
@@ -209,10 +195,10 @@
 
         function updateVisualization() {
             visualizeData(allFramesData[currentFrame]);
-            slider.value = currentFrame;
             frameNumber.textContent = `Frame: ${currentFrame} / ${allFramesData.length - 1}`;
             updateChartMarker('trajectoryChart', currentFrame);
             updateChartMarker('ankleAngleChart', currentFrame);
+            slider.value = currentFrame;
         }
 
         // Plotly setup
@@ -349,6 +335,7 @@
             camera.updateProjectionMatrix();
             renderer.setSize(graphContainer.clientWidth, graphContainer.clientHeight);
             Plotly.Plots.resize(document.getElementById('trajectoryChart'));
+            Plotly.Plots.resize(document.getElementById('ankleAngleChart'));
         }
 
         // Initial resize call to set correct dimensions
