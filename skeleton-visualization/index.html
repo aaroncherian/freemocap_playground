@@ -8,38 +8,48 @@
         body { 
             margin: 0; 
             padding: 0;
-            overflow: hidden; 
+            overflow: auto; 
             display: flex; 
             flex-direction: column; 
-            height: 100vh; 
+            height: 100vh;
+            background-color: #f0f0f0; 
         }
         #graph-container {
-            flex: 1;
+            flex: 0 0 50%;
             width: 50%;
             margin-left: auto;
             margin-right: auto;
+            margin-top: 10px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        #chart-container {
-            width: 100%;
-            height: 10%;
+        .chart-container {
+            width: 95%;
+            flex: 0 0 20%;
             position: relative;
             margin-left: auto;
             margin-right: auto;
+            margin-top: 5px;
+            background-color: #fff;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
-        #ankle-angle-chart-container {
-            width: 100%;
-            height: 10%;
-            position: relative;
-            margin-left: auto;
-            margin-right: auto;
-        }
+
+        #trajectoryChart, #ankleAngleChart {
+        width: 100%;
+        height: 100%;  /* Ensure the chart takes full height of its container */
+        border-radius: 25px;
+    }
+        
         #control-container {
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            right: 0;
-            text-align: center;
+            flex: 0 0 8%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* padding: 1px; */
         }
+
         #frame-slider {
             width: 70%;
             vertical-align: middle;
@@ -62,10 +72,10 @@
 </head>
 <body>
     <div id="graph-container"></div>
-    <div id="chart-container">
+    <div id="trajectory-chart-container" class="chart-container">
         <div id="trajectoryChart"></div>
     </div>
-    <div id="ankle-angle-chart-container">
+    <div id="ankle-angle-chart-container" class = "chart-container">
         <div id="ankleAngleChart"></div>
     </div>
     <div id="control-container">
@@ -227,25 +237,38 @@
                 line: { color: 'black' }
             };
 
+            const traceDot = {
+                x: [frames[0]],
+                y: [y_data[0]],
+                mode: 'markers',
+                marker: {
+                    size: 10,
+                    color: '#009aa6'
+                },
+                showlegend: false
+            };
+
+
             const layout = {
                 xaxis: {
-                    title: 'Frame'
+                    title: 'Frame',
+                    range: [0, frames[frames.length - 1]]
                 },
                 yaxis: {
-                    title: 'Value'
+                    title: 'Trajectory'
                 },
-                shapes: [{
-                    type: 'line',
-                    x0: 0,
-                    x1: 0,
-                    y0: 0,
-                    y1: 1,
-                    yref: 'paper',
-                    line: {
-                        color: 'rgb(255, 99, 132)',
-                        width: 2
-                    }
-                }],
+                // shapes: [{
+                //     type: 'line',
+                //     x0: 0,
+                //     x1: 0,
+                //     y0: 0,
+                //     y1: 1,
+                //     yref: 'paper',
+                //     line: {
+                //         color: 'rgb(255, 99, 132)',
+                //         width: 2
+                //     }
+                // }],
                 autosize: true,
                 margin: {
                     l: 50,
@@ -257,7 +280,7 @@
                 height: document.getElementById(id).clientHeight
             };
 
-            Plotly.newPlot(id, [trace1], layout, {responsive: true});
+            Plotly.newPlot(id, [trace1, traceDot], layout, {responsive: true});
         }
 
         function initAngleChart(id, data_to_plot) {
@@ -274,25 +297,38 @@
                 line: { color: 'black' }
             };
 
+            const traceDot = {
+                x: [frames[0]],
+                y: [data[0]],
+                mode: 'markers',
+                marker: {
+                    size: 10,
+                    color: '#009aa6'
+                },
+                showlegend: false
+            };
+
             const layout = {
                 xaxis: {
-                    title: 'Frame'
+                    title: 'Frame',
+                    range: [0, frames[frames.length - 1]]
+
                 },
                 yaxis: {
-                    title: 'Value'
+                    title: 'Angle'
                 },
-                shapes: [{
-                    type: 'line',
-                    x0: 0,
-                    x1: 0,
-                    y0: 0,
-                    y1: 1,
-                    yref: 'paper',
-                    line: {
-                        color: 'rgb(255, 99, 132)',
-                        width: 2
-                    }
-                }],
+                // shapes: [{
+                //     type: 'line',
+                //     x0: 0,
+                //     x1: 0,
+                //     y0: 0,
+                //     y1: 1,
+                //     yref: 'paper',
+                //     line: {
+                //         color: 'rgb(255, 99, 132)',
+                //         width: 2
+                //     }
+                // }],
                 autosize: true,
                 margin: {
                     l: 50,
@@ -304,23 +340,26 @@
                 height: document.getElementById(id).clientHeight
             };
 
-            Plotly.newPlot(id, [trace1], layout, {responsive: true});
+            Plotly.newPlot(id, [trace1, traceDot], layout, {responsive: true});
         }
 
         function updateChartMarker(chartId, frame) {
-            Plotly.relayout(chartId, {
-                shapes: [{
-                    type: 'line',
-                    x0: frame,
-                    x1: frame,
-                    y0: 0,
-                    y1: 1,
-                    yref: 'paper',
-                    line: {
-                        color: 'rgb(255, 99, 132)',
-                        width: 2
-                    }
-                }]
+            const chart = document.getElementById(chartId);
+            const x = chart.data[0].x[frame];
+            const y = chart.data[0].y[frame];
+
+            Plotly.animate(chartId, {
+                data: [{ x: [x], y: [y] }],
+                traces: [1],
+                layout: {}
+            }, {
+                transition: {
+                    duration: 0
+                },
+                frame: {
+                    duration: 0,
+                    redraw: false
+                }
             });
         }
 
