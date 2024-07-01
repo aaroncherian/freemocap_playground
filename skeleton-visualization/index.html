@@ -72,6 +72,8 @@
         <button id="play-pause">Play</button>
         <input type="range" min="0" value="0" class="slider" id="frame-slider">
         <span id="frame-number">Frame: 0</span>
+        <label for="fps-input">FPS:</label>
+        <input type="number" id="fps-input" value="30" min="1" style="width:60px;">
     </div>
     <script type="importmap">
         {
@@ -182,6 +184,15 @@
         const playPauseButton = document.getElementById('play-pause');
         let isPlaying = false;
         let currentFrame = 0;
+
+        let fps = 30;
+        const fpsInput = document.getElementById('fps-input');
+
+        fpsInput.addEventListener('input', function() {
+            fps = parseInt(this.value);
+        });
+        
+        let lastFrameTime = 0;
 
         slider.addEventListener('input', function() {
             currentFrame = parseInt(this.value);
@@ -316,12 +327,19 @@
         }
 
         // Animation loop
-        function animate() {
+        function animate(timestamp) {
             requestAnimationFrame(animate);
+            
             if (isPlaying) {
-                currentFrame = (currentFrame + 1) % allFramesData.length;
-                updateVisualization();
+                const timePerFrame = 1000 / fps;
+                
+                if (timestamp - lastFrameTime >= timePerFrame) {
+                    currentFrame = (currentFrame + 1) % allFramesData.length;
+                    updateVisualization();
+                    lastFrameTime = timestamp;
+                }
             }
+            
             controls.update();
             renderer.render(scene, camera);
         }
