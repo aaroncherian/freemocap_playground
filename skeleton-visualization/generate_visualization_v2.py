@@ -10,6 +10,7 @@ from watchdog.events import FileSystemEventHandler
 import time
 import pandas as pd
 from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
+from skellymodels.create_model_skeleton import create_mediapipe_skeleton_model
 # HTTP Server
 class HttpHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -54,11 +55,13 @@ class HttpHandler(SimpleHTTPRequestHandler):
             path_to_data = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1\output_data\mediapipe_body_3d_xyz.npy"
             np_data = np.load(path_to_data)
 
-            mediapipe_indices = MediapipeModelInfo.body_landmark_names
-            right_ankle_index = mediapipe_indices.index('right_ankle')
-            data_x = np_data[:, right_ankle_index, 0].tolist()
-            data_y = np_data[:, right_ankle_index, 1].tolist()
-            data_z = np_data[:, right_ankle_index, 2].tolist()
+            mediapipe_skeleton = create_mediapipe_skeleton_model()
+            mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
+
+            data = mediapipe_skeleton.trajectories['right_ankle']
+            data_x = data[:, 0].tolist()
+            data_y = data[:, 1].tolist()
+            data_z = data[:, 2].tolist()
 
             trajectory_data = {
                 'x': data_x,
