@@ -34,12 +34,16 @@ class HttpHandler(SimpleHTTPRequestHandler):
         try:
             path_to_data = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1\output_data\mediapipe_body_3d_xyz.npy"
             np_data = np.load(path_to_data)
+            
+            mediapipe_skeleton = create_mediapipe_skeleton_model()
+            mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
+            response = mediapipe_skeleton.to_json()
 
-            # Reshape and prepare the data for JSON response
-            num_frames, num_markers, _ = np_data.shape
-            data = [[np_data[frame, marker].tolist() for marker in range(num_markers)] for frame in range(num_frames)]
+            # # Reshape and prepare the data for JSON response
+            # num_frames, num_markers, _ = np_data.shape
+            # data = [[np_data[frame, marker].tolist() for marker in range(num_markers)] for frame in range(num_frames)]
 
-            response = json.dumps(data)
+            # response = json.dumps(data)
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
