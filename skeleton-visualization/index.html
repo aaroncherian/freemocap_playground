@@ -8,31 +8,48 @@
         body { 
             margin: 0; 
             padding: 0;
-            overflow: hidden; 
+            overflow: auto; 
             display: flex; 
             flex-direction: column; 
-            height: 100vh; 
+            height: 100vh;
+            background-color: #f6f6f6; 
         }
         #graph-container {
-            flex: 1;
+            flex: 0 0 50%;
             width: 50%;
             margin-left: auto;
             margin-right: auto;
+            margin-top: 10px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        #chart-container {
-            width: 100%;
-            height: 40%;
+        .chart-container {
+            width: 95%;
+            flex: 0 0 20%;
             position: relative;
             margin-left: auto;
             margin-right: auto;
+            margin-top: 5px;
+            background-color: #fff;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
+
+        #trajectoryChart, #ankleAngleChart {
+        width: 100%;
+        height: 100%;  /* Ensure the chart takes full height of its container */
+        border-radius: 25px;
+    }
+        
         #control-container {
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            right: 0;
-            text-align: center;
+            flex: 0 0 8%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* padding: 1px; */
         }
+
         #frame-slider {
             width: 70%;
             vertical-align: middle;
@@ -55,13 +72,18 @@
 </head>
 <body>
     <div id="graph-container"></div>
-    <div id="chart-container">
+    <div id="trajectory-chart-container" class="chart-container">
         <div id="trajectoryChart"></div>
+    </div>
+    <div id="ankle-angle-chart-container" class = "chart-container">
+        <div id="ankleAngleChart"></div>
     </div>
     <div id="control-container">
         <button id="play-pause">Play</button>
-        <input type="range" min="0" max="29" value="0" class="slider" id="frame-slider">
-        <span id="frame-number">Frame: 0 / 29</span>
+        <input type="range" min="0" value="0" class="slider" id="frame-slider">
+        <span id="frame-number">Frame: 0</span>
+        <label for="fps-input">FPS:</label>
+        <input type="number" id="fps-input" value="30" min="1" style="width:60px;">
     </div>
     <script type="importmap">
         {
@@ -79,41 +101,45 @@
         // Fetch initial data
         let allFramesData = [];
         let trajectoryData = [];
+        let ankleAngleData = [];
+        let segmentConnections = [];
+        const slider = document.getElementById('frame-slider');
+        const frameNumber = document.getElementById('frame-number');
+
         fetch('/data')
             .then(response => response.json())
             .then(data => {
                 allFramesData = data;
                 console.log('Data fetched:', allFramesData);
-                if (allFramesData.length > 0) {
-                    visualizeData(allFramesData[0]);
-                    generateTrajectoryData();
-                    // initChart();
+                if (allFramesData.num_frames > 0) {
+                    visualizeData(0);
                 } else {
                     console.error('No data available');
                 }
 
+                segmentConnections = data.segments
+                console.log('Segments fetched', segmentConnections)
                 // Adjust slider max value based on the number of frames
-                const slider = document.getElementById('frame-slider');
-                const frameNumber = document.getElementById('frame-number');
-                slider.max = allFramesData.length - 1;
-                frameNumber.textContent = `Frame: 0 / ${allFramesData.length - 1}`;
+                slider.max = allFramesData.num_frames - 1;
+                frameNumber.textContent = `Frame: 0 / ${allFramesData.num_frames - 1}`;
             }).catch(error => console.error('Error fetching data:', error));
+    
         
         fetch('/trajectory_data')
             .then(response => response.json())
             .then(data => {
                 trajectoryData = data;
                 console.log('Trajectory data fetched:', trajectoryData);
-                initChart(trajectoryData);
+                initTrajectoryChart('trajectoryChart', trajectoryData);
             }).catch(error => console.error('Error fetching trajectory data:', error));
 
-        // // Generate mock trajectory data
-        // function generateTrajectoryData() {
-        //     trajectoryData = allFramesData.map((frame, index) => ({
-        //         x: index,
-        //         y: Math.sin(index * 0.1) * 50 + 100 // Mock data for visualization
-        //     }));
-        // }
+        fetch('/ankle_angle_data')
+            .then(response => response.json())
+            .then(data => {
+                ankleAngleData = data;
+                console.log('Ankle angle data fetched:', ankleAngleData);
+                initAngleChart('ankleAngleChart', ankleAngleData);
+            }).catch(error => console.error('Error fetching ankle angle data:', error));
 
         // Set up the scene, camera, and renderer
         const container = document.getElementById('graph-container');
@@ -140,28 +166,85 @@
         const grid_divisions = 10;
         const gridHelper = new THREE.GridHelper(grid_size, grid_divisions);
         gridHelper.rotation.x = Math.PI / 2;
+        const gridLine = new THREE.Line3(gridHelper.geometry.attributes.position.array[0], gridHelper.geometry.attributes.position.array[1]);
         scene.add(gridHelper);
 
         const axesHelper = new THREE.AxesHelper(5);
         scene.add(axesHelper);
 
-        // camera.position.set(0, 0, 500);
-        // camera.lookAt(0, 0, 0);
+        function displayAnkleAngle(frame) {
+            // Get the position of the ankle marker
+            const ankle = dataGroup.getObjectByName('right_ankle').position;
+
+            // Get the pre-calculated ankle angle for the current frame
+            const angle = ankleAngleData[frame];
+
+            // Create a canvas to draw the angle text
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            context.font = '24px Arial';
+            context.fillStyle = '#5c5e64';
+            const text1 = "Ankle Angle: "
+            context.fillText(text1, 0, 24);
+
+
+            const text2 = angle.toFixed(1) + '°';
+            context.fillStyle = '#009aa6';
+            context.fillText(text2, context.measureText(text1).width, 24);
+            
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(50, 25, 1); // Adjust the size of the sprite
+
+            // Position the sprite near the ankle joint
+            sprite.position.set(ankle.x, ankle.y + 40, ankle.z); // Adjust the offset as needed
+
+            // Remove existing sprite if any
+            const existingSprite = dataGroup.getObjectByName('ankleAngleText');
+            if (existingSprite) {
+                dataGroup.remove(existingSprite);
+            }
+            sprite.name = 'ankleAngleText';
+            dataGroup.add(sprite);
+        }
+
 
         // Function to visualize data for a specific frame
-        function visualizeData(data) {
-            console.log('Visualizing data for frame:', data);
+        function visualizeData(frame) {
+            console.log('Visualizing data for frame:', frame);
             dataGroup.clear();
 
             const sphereGeometry = new THREE.SphereGeometry(2, 16, 16);
             const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
-            for (let i = 0; i < data.length; i++) {
-                const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                sphere.position.set(data[i][0] / 10, data[i][1] / 10, data[i][2] / 10);
-                dataGroup.add(sphere);
+            for (const markerName in allFramesData.trajectories) {
+                const markerData = allFramesData.trajectories[markerName];
+                if (markerData && markerData[frame]) {
+                    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                    sphere.position.set(markerData[frame][0] / 10, markerData[frame][1] / 10, markerData[frame][2] / 10);
+                    sphere.name = markerName;
+                    dataGroup.add(sphere);
+                }
             }
+
+            const lineVertices = []
+            for (const [segmentName, segmentData] of Object.entries(segmentConnections)){
+                lineVertices.length = 0
+                for (const [connectionPoint, markerName] of Object.entries(segmentData)){
+                    lineVertices.push(dataGroup.getObjectByName(markerName).position.clone())
+                    // console.log(`${segmentName}: ${markerName}`)
+                }
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints(lineVertices);
+                const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+                const lineObject = new THREE.Line(lineGeometry, lineMaterial);
+                dataGroup.add(lineObject);
+            }
+
+                // console.log(lineVertices)
         }
+        
 
         // Set up camera position
         camera.position.set(0, 250, 500);
@@ -172,11 +255,16 @@
         const controls = new OrbitControls(camera, renderer.domElement);
 
         // Set up frame slider and play button
-        const slider = document.getElementById('frame-slider');
-        const frameNumber = document.getElementById('frame-number');
         const playPauseButton = document.getElementById('play-pause');
         let isPlaying = false;
         let currentFrame = 0;
+
+        let fps = 30;
+        const fpsInput = document.getElementById('fps-input');
+
+        fpsInput.addEventListener('input', function() {
+            fps = parseInt(this.value);
+        });
 
         slider.addEventListener('input', function() {
             currentFrame = parseInt(this.value);
@@ -189,14 +277,16 @@
         });
 
         function updateVisualization() {
-            visualizeData(allFramesData[currentFrame]);
+            visualizeData(currentFrame);
+            frameNumber.textContent = `Frame: ${currentFrame} / ${allFramesData.num_frames - 1}`;
+            updateChartMarker('trajectoryChart', currentFrame);
+            updateChartMarker('ankleAngleChart', currentFrame);
             slider.value = currentFrame;
-            frameNumber.textContent = `Frame: ${currentFrame} / ${allFramesData.length - 1}`;
-            updateChartMarker(currentFrame);
+            displayAnkleAngle(currentFrame);
         }
 
         // Plotly setup
-        function initChart(data_to_plot) {
+        function initTrajectoryChart(id, data_to_plot) {
             const frames = Array.from({ length: data_to_plot.x.length }, (_, i) => i);
             
             const x_data = data_to_plot.x;
@@ -212,25 +302,38 @@
                 line: { color: 'black' }
             };
 
+            const traceDot = {
+                x: [frames[0]],
+                y: [y_data[0]],
+                mode: 'markers',
+                marker: {
+                    size: 10,
+                    color: '#009aa6'
+                },
+                showlegend: false
+            };
+
+
             const layout = {
                 xaxis: {
-                    title: 'Frame'
+                    title: 'Frame',
+                    range: [0, frames[frames.length - 1]]
                 },
                 yaxis: {
-                    title: 'Value'
+                    title: 'Trajectory'
                 },
-                shapes: [{
-                    type: 'line',
-                    x0: 0,
-                    x1: 0,
-                    y0: 0,
-                    y1: 1,
-                    yref: 'paper',
-                    line: {
-                        color: 'rgb(255, 99, 132)',
-                        width: 2
-                    }
-                }],
+                // shapes: [{
+                //     type: 'line',
+                //     x0: 0,
+                //     x1: 0,
+                //     y0: 0,
+                //     y1: 1,
+                //     yref: 'paper',
+                //     line: {
+                //         color: 'rgb(255, 99, 132)',
+                //         width: 2
+                //     }
+                // }],
                 autosize: true,
                 margin: {
                     l: 50,
@@ -239,40 +342,122 @@
                     t: 20,
                     pad: 4
                 },
-                height: document.getElementById('chart-container').clientHeight
+                height: document.getElementById(id).clientHeight
             };
 
-            Plotly.newPlot('trajectoryChart', [trace1], layout, {responsive: true});
+            Plotly.newPlot(id, [trace1, traceDot], layout, {responsive: true});
         }
 
-        function updateChartMarker(frame) {
-            Plotly.relayout('trajectoryChart', {
-                shapes: [{
-                    type: 'line',
-                    x0: frame,
-                    x1: frame,
-                    y0: 0,
-                    y1: 1,
-                    yref: 'paper',
-                    line: {
-                        color: 'rgb(255, 99, 132)',
-                        width: 2
-                    }
-                }]
+        function initAngleChart(id, data_to_plot) {
+            const frames = Array.from({ length: data_to_plot.length }, (_, i) => i);
+            
+            const data = data_to_plot;
+
+            const trace1 = {
+                x: frames,
+                y: data,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Ankle Angle',
+                line: { color: 'black' }
+            };
+
+            const traceDot = {
+                x: [frames[0]],
+                y: [data[0]],
+                mode: 'markers',
+                marker: {
+                    size: 10,
+                    color: '#009aa6'
+                },
+                showlegend: false
+            };
+
+            const layout = {
+                xaxis: {
+                    title: 'Frame',
+                    range: [0, frames[frames.length - 1]]
+
+                },
+                yaxis: {
+                    title: 'Angle'
+                },
+                // shapes: [{
+                //     type: 'line',
+                //     x0: 0,
+                //     x1: 0,
+                //     y0: 0,
+                //     y1: 1,
+                //     yref: 'paper',
+                //     line: {
+                //         color: 'rgb(255, 99, 132)',
+                //         width: 2
+                //     }
+                // }],
+                autosize: true,
+                margin: {
+                    l: 50,
+                    r: 50,
+                    b: 50,
+                    t: 20,
+                    pad: 4
+                },
+                height: document.getElementById(id).clientHeight
+            };
+
+            Plotly.newPlot(id, [trace1, traceDot], layout, {responsive: true});
+        }
+
+        function updateChartMarker(chartId, frame) {
+            const chart = document.getElementById(chartId);
+            const x = chart.data[0].x[frame];
+            const y = chart.data[0].y[frame];
+
+            Plotly.animate(chartId, {
+                data: [{ x: [x], y: [y] }],
+                traces: [1],
+                layout: {}
+            }, {
+                transition: {
+                    duration: 0
+                },
+                frame: {
+                    duration: 0,
+                    redraw: false
+                }
             });
         }
 
         // Animation loop
-        function animate() {
+        let lastFrameTime = 0;
+        let frameInterval = 1000 / fps; // Calculate once, update when fps changes
+
+        function animate(timestamp) {
             requestAnimationFrame(animate);
+            
             if (isPlaying) {
-                currentFrame = (currentFrame + 1) % allFramesData.length;
-                updateVisualization();
+                const elapsed = timestamp - lastFrameTime;
+                
+                if (elapsed >= frameInterval) {
+                    // Adjust for any extra time beyond the desired interval
+                    lastFrameTime = timestamp - (elapsed % frameInterval);
+                    
+                    currentFrame = (currentFrame + 1) % allFramesData.num_frames;
+                    updateVisualization();
+                }
             }
+            
             controls.update();
             renderer.render(scene, camera);
         }
-        animate();
+
+        // Update frameInterval when fps changes
+        fpsInput.addEventListener('input', function() {
+            fps = parseInt(this.value);
+            frameInterval = 1000 / fps;
+        });
+
+        animate(0); // Start the animation loop
 
         // Handle window resizing
         window.addEventListener('resize', onWindowResize, false);
@@ -282,6 +467,7 @@
             camera.updateProjectionMatrix();
             renderer.setSize(graphContainer.clientWidth, graphContainer.clientHeight);
             Plotly.Plots.resize(document.getElementById('trajectoryChart'));
+            Plotly.Plots.resize(document.getElementById('ankleAngleChart'));
         }
 
         // Initial resize call to set correct dimensions

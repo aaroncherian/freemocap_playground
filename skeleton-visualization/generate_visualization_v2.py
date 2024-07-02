@@ -8,10 +8,19 @@ import webbrowser
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
-
+import pandas as pd
 from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
+from skellymodels.create_model_skeleton import create_mediapipe_skeleton_model
+from pathlib import Path
 # HTTP Server
+recording_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1')
+# recording_folder_path = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1')
+output_data_folder_path = recording_folder_path / 'output_data'
+data_3d_path = output_data_folder_path / 'mediapipe_body_3d_xyz.npy'
+ik_results_path = output_data_folder_path / 'IK_results.mot'
+
 class HttpHandler(SimpleHTTPRequestHandler):
+    
     def do_GET(self):
         print(f"Requested path: {self.path}")
         if self.path == '/':
@@ -22,20 +31,26 @@ class HttpHandler(SimpleHTTPRequestHandler):
         elif self.path == '/trajectory_data':
             self.serve_trajectory_data()
             return
+        elif self.path == '/ankle_angle_data':
+            self.serve_ankle_angle_data()
+            return
         else:
             self.path = '/skeleton-visualization/' + self.path.lstrip('/')
         return SimpleHTTPRequestHandler.do_GET(self)
 
     def serve_data(self):
         try:
-            path_to_data = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1\output_data\mediapipe_body_3d_xyz.npy"
-            np_data = np.load(path_to_data)
+            np_data = np.load(data_3d_path)
+            
+            mediapipe_skeleton = create_mediapipe_skeleton_model()
+            mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
+            response = mediapipe_skeleton.to_json()
 
-            # Reshape and prepare the data for JSON response
-            num_frames, num_markers, _ = np_data.shape
-            data = [[np_data[frame, marker].tolist() for marker in range(num_markers)] for frame in range(num_frames)]
+            # # Reshape and prepare the data for JSON response
+            # num_frames, num_markers, _ = np_data.shape
+            # data = [[np_data[frame, marker].tolist() for marker in range(num_markers)] for frame in range(num_frames)]
 
-            response = json.dumps(data)
+            # response = json.dumps(data)
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -48,14 +63,15 @@ class HttpHandler(SimpleHTTPRequestHandler):
 
     def serve_trajectory_data(self):
         try:
-            path_to_data = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1\output_data\mediapipe_body_3d_xyz.npy"
-            np_data = np.load(path_to_data)
+            np_data = np.load(data_3d_path)
 
-            mediapipe_indices = MediapipeModelInfo.body_landmark_names
-            right_ankle_index = mediapipe_indices.index('right_ankle')
-            data_x = np_data[:, right_ankle_index, 0].tolist()
-            data_y = np_data[:, right_ankle_index, 1].tolist()
-            data_z = np_data[:, right_ankle_index, 2].tolist()
+            mediapipe_skeleton = create_mediapipe_skeleton_model()
+            mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
+
+            data = mediapipe_skeleton.trajectories['right_ankle']
+            data_x = data[:, 0].tolist()
+            data_y = data[:, 1].tolist()
+            data_z = data[:, 2].tolist()
 
             trajectory_data = {
                 'x': data_x,
@@ -75,6 +91,27 @@ class HttpHandler(SimpleHTTPRequestHandler):
             print(f"Error serving trajectory data: {e}")
             self.send_response(500)
             self.end_headers()
+
+    def serve_ankle_angle_data(self):
+        try:
+
+            ik_data =  pd.read_csv(ik_results_path, sep='\t', skiprows=10)
+            right_ankle_angle = ik_data['ankle_angle_r'].tolist()
+
+            response = json.dumps(right_ankle_angle)
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(response.encode())
+            print("Ankle angle data served successfully")
+
+        except Exception as e:
+            print(f"Error serving ankle angle data: {e}")
+            self.send_response(500)
+            self.end_headers()
+
+
+
             
 
 
