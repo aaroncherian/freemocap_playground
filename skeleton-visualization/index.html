@@ -172,6 +172,39 @@
         const axesHelper = new THREE.AxesHelper(5);
         scene.add(axesHelper);
 
+        function displayAnkleAngle(frame) {
+            // Get the position of the ankle marker
+            const ankle = dataGroup.getObjectByName('right_ankle').position;
+
+            // Get the pre-calculated ankle angle for the current frame
+            const angle = ankleAngleData[frame];
+
+            // Create a canvas to draw the angle text
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            context.font = '24px Arial';
+            context.fillStyle = '#009aa6';
+            // const text1 = "Ankle Angle: "
+            context.fillText('Ankle Angle: ' + angle.toFixed(1) + '°', 0, 24);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(50, 25, 1); // Adjust the size of the sprite
+
+            // Position the sprite near the ankle joint
+            sprite.position.set(ankle.x, ankle.y + 40, ankle.z); // Adjust the offset as needed
+
+            // Remove existing sprite if any
+            const existingSprite = dataGroup.getObjectByName('ankleAngleText');
+            if (existingSprite) {
+                dataGroup.remove(existingSprite);
+            }
+            sprite.name = 'ankleAngleText';
+            dataGroup.add(sprite);
+        }
+
+
         // Function to visualize data for a specific frame
         function visualizeData(frame) {
             console.log('Visualizing data for frame:', frame);
@@ -205,6 +238,7 @@
 
                 // console.log(lineVertices)
         }
+        
 
         // Set up camera position
         camera.position.set(0, 250, 500);
@@ -242,6 +276,7 @@
             updateChartMarker('trajectoryChart', currentFrame);
             updateChartMarker('ankleAngleChart', currentFrame);
             slider.value = currentFrame;
+            displayAnkleAngle(currentFrame);
         }
 
         // Plotly setup
