@@ -190,16 +190,20 @@
                 }
             }
 
-            const shoulder1sphere = dataGroup.getObjectByName('left_shoulder');
-            const shoulder2sphere = dataGroup.getObjectByName('right_shoulder');
-
-            if (shoulder1sphere && shoulder2sphere) {
-                const points = [shoulder1sphere.position.clone(), shoulder2sphere.position.clone()];
-                const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const lineVertices = []
+            for (const [segmentName, segmentData] of Object.entries(segmentConnections)){
+                lineVertices.length = 0
+                for (const [connectionPoint, markerName] of Object.entries(segmentData)){
+                    lineVertices.push(dataGroup.getObjectByName(markerName).position.clone())
+                    // console.log(`${segmentName}: ${markerName}`)
+                }
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints(lineVertices);
                 const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
                 const lineObject = new THREE.Line(lineGeometry, lineMaterial);
                 dataGroup.add(lineObject);
             }
+
+                // console.log(lineVertices)
         }
 
         // Set up camera position
