@@ -183,9 +183,15 @@
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             context.font = '24px Arial';
+            context.fillStyle = '#5c5e64';
+            const text1 = "Ankle Angle: "
+            context.fillText(text1, 0, 24);
+
+
+            const text2 = angle.toFixed(1) + '°';
             context.fillStyle = '#009aa6';
-            // const text1 = "Ankle Angle: "
-            context.fillText('Ankle Angle: ' + angle.toFixed(1) + '°', 0, 24);
+            context.fillText(text2, context.measureText(text1).width, 24);
+            
 
             const texture = new THREE.CanvasTexture(canvas);
             const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
