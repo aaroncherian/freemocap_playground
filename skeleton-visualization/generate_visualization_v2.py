@@ -11,8 +11,16 @@ import time
 import pandas as pd
 from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
 from skellymodels.create_model_skeleton import create_mediapipe_skeleton_model
+from pathlib import Path
 # HTTP Server
+recording_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1')
+# recording_folder_path = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1')
+output_data_folder_path = recording_folder_path / 'output_data'
+data_3d_path = output_data_folder_path / 'mediapipe_body_3d_xyz.npy'
+ik_results_path = output_data_folder_path / 'IK_results.mot'
+
 class HttpHandler(SimpleHTTPRequestHandler):
+    
     def do_GET(self):
         print(f"Requested path: {self.path}")
         if self.path == '/':
@@ -32,8 +40,7 @@ class HttpHandler(SimpleHTTPRequestHandler):
 
     def serve_data(self):
         try:
-            path_to_data = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1\output_data\mediapipe_body_3d_xyz.npy"
-            np_data = np.load(path_to_data)
+            np_data = np.load(data_3d_path)
             
             mediapipe_skeleton = create_mediapipe_skeleton_model()
             mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
@@ -56,8 +63,7 @@ class HttpHandler(SimpleHTTPRequestHandler):
 
     def serve_trajectory_data(self):
         try:
-            path_to_data = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1\output_data\mediapipe_body_3d_xyz.npy"
-            np_data = np.load(path_to_data)
+            np_data = np.load(data_3d_path)
 
             mediapipe_skeleton = create_mediapipe_skeleton_model()
             mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
@@ -88,8 +94,8 @@ class HttpHandler(SimpleHTTPRequestHandler):
 
     def serve_ankle_angle_data(self):
         try:
-            path_to_ik_data = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1\output_data\IK_results.mot"
-            ik_data =  pd.read_csv(path_to_ik_data, sep='\t', skiprows=10)
+
+            ik_data =  pd.read_csv(ik_results_path, sep='\t', skiprows=10)
             right_ankle_angle = ik_data['ankle_angle_r'].tolist()
 
             response = json.dumps(right_ankle_angle)
