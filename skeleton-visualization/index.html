@@ -336,10 +336,14 @@
                 },
                 xaxis: {
                     title: 'Frame',
-                    range: [0, frames[frames.length - 1]]
+                    range: [0, frames[frames.length - 1]],
+                    showgrid: false,
+                    // zeroline:false,
                 },
                 yaxis: {
-                    title: 'Position (mm)'
+                    title: 'Position (mm)',
+                    // showgrid: false,
+
                 },
                 // shapes: [{
                 //     type: 'line',
@@ -353,9 +357,11 @@
                 //         width: 2
                 //     }
                 // }],
+                // plot_bgcolor: 'rgba(0, 0, 0, 0)',  // Transparent background for the plot area,
+                paper_bgcolor: 'rgba(0, 0, 0, 0)',  // Transparent background for the entire chart
                 autosize: true,
                 margin: {
-                    l: 50,
+                    l: 60,
                     r: 50,
                     b: 50,
                     t: 40,
