@@ -28,12 +28,9 @@ class HttpHandler(SimpleHTTPRequestHandler):
         elif self.path == '/data':
             self.serve_data()
             return
-        elif self.path == '/trajectory_data':
+        elif self.path.startswith('/trajectory_data'):
             self.serve_trajectory_data()
             return
-        # elif self.path == '/ankle_angle_data':
-        #     self.serve_ankle_angle_data()
-        #     return
         else:
             self.path = '/skeleton-visualization/' + self.path.lstrip('/')
         return SimpleHTTPRequestHandler.do_GET(self)
@@ -46,52 +43,50 @@ class HttpHandler(SimpleHTTPRequestHandler):
             mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
             response = mediapipe_skeleton.to_json()
 
-            # # Reshape and prepare the data for JSON response
-            # num_frames, num_markers, _ = np_data.shape
-            # data = [[np_data[frame, marker].tolist() for marker in range(num_markers)] for frame in range(num_frames)]
-
-            # response = json.dumps(data)
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(response.encode())
+            self.wfile.write(response.encode('utf-8'))
             print("Data served successfully")
         except Exception as e:
             print(f"Error serving data: {e}")
             self.send_response(500)
             self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
 
     def serve_trajectory_data(self):
         try:
             np_data = np.load(data_3d_path)
-
             mediapipe_skeleton = create_mediapipe_skeleton_model()
             mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
 
-            data = mediapipe_skeleton.trajectories['right_ankle']
-            data_x = data[:, 0].tolist()
-            data_y = data[:, 1].tolist()
-            data_z = data[:, 2].tolist()
+            # Parse the query string to get the joint name
+            query_components = dict(qc.split("=") for qc in self.path.split("?")[-1].split("&"))
+            joint = query_components.get('joint', 'right_ankle')  # Default to 'right_ankle' if no joint specified
 
-            trajectory_data = {
-                'x': data_x,
-                'y': data_y,
-                'z': data_z
-            }
-
-            
-            response = json.dumps(trajectory_data)
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(response.encode())
-            print("Trajectory data served successfully")
+            if joint in mediapipe_skeleton.trajectories:
+                data = mediapipe_skeleton.trajectories[joint]
+                trajectory_data = {
+                    'x': data[:, 0].tolist(),
+                    'y': data[:, 1].tolist(),
+                    'z': data[:, 2].tolist()
+                }
+                response = json.dumps(trajectory_data)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(response.encode())
+                print(f"Trajectory data for {joint} served successfully")
+            else:
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": f"Joint {joint} not found"}).encode())
 
         except Exception as e:
             print(f"Error serving trajectory data: {e}")
             self.send_response(500)
             self.end_headers()
-
     # def serve_ankle_angle_data(self):
     #     try:
 
