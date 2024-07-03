@@ -20,20 +20,16 @@ data_3d_path = output_data_folder_path / 'mediapipe_body_3d_xyz.npy'
 # ik_results_path = output_data_folder_path / 'IK_results.mot'
 
 class HttpHandler(SimpleHTTPRequestHandler):
-    
     def do_GET(self):
         print(f"Requested path: {self.path}")
         if self.path == '/':
             self.path = '/skeleton-visualization/index.html'
-        elif self.path == '/data':
+        elif self.path.startswith('/data'):
             self.serve_data()
             return
-        elif self.path == '/trajectory_data':
+        elif self.path.startswith('/trajectory_data'):
             self.serve_trajectory_data()
             return
-        # elif self.path == '/ankle_angle_data':
-        #     self.serve_ankle_angle_data()
-        #     return
         else:
             self.path = '/skeleton-visualization/' + self.path.lstrip('/')
         return SimpleHTTPRequestHandler.do_GET(self)
@@ -46,11 +42,6 @@ class HttpHandler(SimpleHTTPRequestHandler):
             mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
             response = mediapipe_skeleton.to_json()
 
-            # # Reshape and prepare the data for JSON response
-            # num_frames, num_markers, _ = np_data.shape
-            # data = [[np_data[frame, marker].tolist() for marker in range(num_markers)] for frame in range(num_frames)]
-
-            # response = json.dumps(data)
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -63,12 +54,16 @@ class HttpHandler(SimpleHTTPRequestHandler):
 
     def serve_trajectory_data(self):
         try:
+            query = self.path.split('?')[-1]
+            params = dict(qc.split("=") for qc in query.split("&"))
+            joint = params.get('joint', 'right_ankle')  # default to 'right_ankle' if no joint is specified
+
             np_data = np.load(data_3d_path)
 
             mediapipe_skeleton = create_mediapipe_skeleton_model()
             mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
 
-            data = mediapipe_skeleton.trajectories['right_ankle']
+            data = mediapipe_skeleton.trajectories[joint]
             data_x = data[:, 0].tolist()
             data_y = data[:, 1].tolist()
             data_z = data[:, 2].tolist()
@@ -79,13 +74,12 @@ class HttpHandler(SimpleHTTPRequestHandler):
                 'z': data_z
             }
 
-            
             response = json.dumps(trajectory_data)
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(response.encode())
-            print("Trajectory data served successfully")
+            print(f"Trajectory data served successfully for joint: {joint}")
 
         except Exception as e:
             print(f"Error serving trajectory data: {e}")
@@ -105,10 +99,10 @@ class HttpHandler(SimpleHTTPRequestHandler):
     #         self.wfile.write(response.encode())
     #         print("Ankle angle data served successfully")
 
-        except Exception as e:
-            print(f"Error serving ankle angle data: {e}")
-            self.send_response(500)
-            self.end_headers()
+        # except Exception as e:
+        #     print(f"Error serving ankle angle data: {e}")
+        #     self.send_response(500)
+        #     self.end_headers()
 
 
 
