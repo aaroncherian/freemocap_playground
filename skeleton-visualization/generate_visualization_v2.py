@@ -17,7 +17,7 @@ recording_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3
 # recording_folder_path = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1')
 output_data_folder_path = recording_folder_path / 'output_data'
 data_3d_path = output_data_folder_path / 'mediapipe_body_3d_xyz.npy'
-ik_results_path = output_data_folder_path / 'IK_results.mot'
+# ik_results_path = output_data_folder_path / 'IK_results.mot'
 
 class HttpHandler(SimpleHTTPRequestHandler):
     
@@ -31,9 +31,9 @@ class HttpHandler(SimpleHTTPRequestHandler):
         elif self.path == '/trajectory_data':
             self.serve_trajectory_data()
             return
-        elif self.path == '/ankle_angle_data':
-            self.serve_ankle_angle_data()
-            return
+        # elif self.path == '/ankle_angle_data':
+        #     self.serve_ankle_angle_data()
+        #     return
         else:
             self.path = '/skeleton-visualization/' + self.path.lstrip('/')
         return SimpleHTTPRequestHandler.do_GET(self)
@@ -92,18 +92,18 @@ class HttpHandler(SimpleHTTPRequestHandler):
             self.send_response(500)
             self.end_headers()
 
-    def serve_ankle_angle_data(self):
-        try:
+    # def serve_ankle_angle_data(self):
+    #     try:
 
-            ik_data =  pd.read_csv(ik_results_path, sep='\t', skiprows=10)
-            right_ankle_angle = ik_data['ankle_angle_r'].tolist()
+    #         ik_data =  pd.read_csv(ik_results_path, sep='\t', skiprows=10)
+    #         right_ankle_angle = ik_data['ankle_angle_r'].tolist()
 
-            response = json.dumps(right_ankle_angle)
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(response.encode())
-            print("Ankle angle data served successfully")
+    #         response = json.dumps(right_ankle_angle)
+    #         self.send_response(200)
+    #         self.send_header('Content-type', 'application/json')
+    #         self.end_headers()
+    #         self.wfile.write(response.encode())
+    #         print("Ankle angle data served successfully")
 
         except Exception as e:
             print(f"Error serving ankle angle data: {e}")
