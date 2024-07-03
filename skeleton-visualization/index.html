@@ -136,9 +136,9 @@
             .then(data => {
                 trajectoryData = data;
                 console.log('Trajectory data fetched:', trajectoryData);
-                initTrajectoryChart('xTrajectoryChart', trajectoryData.x);
-                initTrajectoryChart('yTrajectoryChart', trajectoryData.y);
-                initTrajectoryChart('zTrajectoryChart', trajectoryData.z);
+                initTrajectoryChart('xTrajectoryChart', trajectoryData.x, 'X');
+                initTrajectoryChart('yTrajectoryChart', trajectoryData.y, 'Y');
+                initTrajectoryChart('zTrajectoryChart', trajectoryData.z, 'Z');
                 synchronizeCharts(['xTrajectoryChart', 'yTrajectoryChart', 'zTrajectoryChart']);
             }).catch(error => console.error('Error fetching trajectory data:', error));
 
@@ -226,12 +226,14 @@
             dataGroup.clear();
 
             const sphereGeometry = new THREE.SphereGeometry(2, 16, 16);
-            const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const defaultSphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const chosenSphereMaterial = new THREE.MeshBasicMaterial({ color: 0x009aa6 });
 
             for (const markerName in allFramesData.trajectories) {
                 const markerData = allFramesData.trajectories[markerName];
                 if (markerData && markerData[frame]) {
-                    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                    const material = markerName === 'right_ankle' ? chosenSphereMaterial : defaultSphereMaterial;
+                    const sphere = new THREE.Mesh(sphereGeometry, material);
                     sphere.position.set(markerData[frame][0] / 10, markerData[frame][1] / 10, markerData[frame][2] / 10);
                     sphere.name = markerName;
                     dataGroup.add(sphere);
@@ -297,7 +299,7 @@
         }
 
         // Plotly setup
-        function initTrajectoryChart(id, data_to_plot) {
+        function initTrajectoryChart(id, data_to_plot, axis) {
             const frames = Array.from({ length: data_to_plot.length }, (_, i) => i);
             
             // const x_data = data_to_plot.x;
@@ -327,7 +329,7 @@
 
             const layout = {
                 title: {
-                    text: id,
+                    text: 'Right Ankle ' + axis + ' Trajectory',
                     font: {
                         // family: 'Arial Black',
                         size: 16,
@@ -341,7 +343,7 @@
                     // zeroline:false,
                 },
                 yaxis: {
-                    title: 'Position (mm)',
+                    title: axis + ' Position (mm)',
                     // showgrid: false,
 
                 },
