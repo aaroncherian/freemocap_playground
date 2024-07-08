@@ -13,7 +13,7 @@ from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
 from skellymodels.create_model_skeleton import create_mediapipe_skeleton_model
 from pathlib import Path
 # HTTP Server
-recording_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1')
+recording_folder_path = Path(r'D:\mdn_data\sesh_2023-05-17_13_37_32_MDN_treadmill_1')
 # recording_folder_path = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1')
 output_data_folder_path = recording_folder_path / 'output_data'
 data_3d_path = output_data_folder_path / 'mediapipe_body_3d_xyz.npy'
@@ -67,13 +67,15 @@ class HttpHandler(SimpleHTTPRequestHandler):
 
             mediapipe_skeleton = create_mediapipe_skeleton_model()
             mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
+            joint_name = 'left_ankle'
 
-            data = mediapipe_skeleton.trajectories['right_ankle']
+            data = mediapipe_skeleton.trajectories[joint_name]
             data_x = data[:, 0].tolist()
             data_y = data[:, 1].tolist()
             data_z = data[:, 2].tolist()
 
             trajectory_data = {
+                'name': joint_name,
                 'x': data_x,
                 'y': data_y,
                 'z': data_z
@@ -96,7 +98,7 @@ class HttpHandler(SimpleHTTPRequestHandler):
         try:
 
             ik_data =  pd.read_csv(ik_results_path, sep='\t', skiprows=10)
-            right_ankle_angle = ik_data['ankle_angle_r'].tolist()
+            right_ankle_angle = ik_data['ankle_angle_l'].tolist()
 
             response = json.dumps(right_ankle_angle)
             self.send_response(200)

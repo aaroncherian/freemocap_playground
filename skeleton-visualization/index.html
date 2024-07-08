@@ -103,6 +103,7 @@
         let trajectoryData = [];
         let ankleAngleData = [];
         let segmentConnections = [];
+        let currentJoint = null;
         const slider = document.getElementById('frame-slider');
         const frameNumber = document.getElementById('frame-number');
 
@@ -129,6 +130,7 @@
             .then(response => response.json())
             .then(data => {
                 trajectoryData = data;
+                currentJoint = trajectoryData.name;
                 console.log('Trajectory data fetched:', trajectoryData);
                 initTrajectoryChart('trajectoryChart', trajectoryData);
             }).catch(error => console.error('Error fetching trajectory data:', error));
@@ -174,7 +176,7 @@
 
         function displayAnkleAngle(frame) {
             // Get the position of the ankle marker
-            const ankle = dataGroup.getObjectByName('right_ankle').position;
+            const ankle = dataGroup.getObjectByName(currentJoint).position;
 
             // Get the pre-calculated ankle angle for the current frame
             const angle = ankleAngleData[frame];
@@ -216,12 +218,17 @@
             console.log('Visualizing data for frame:', frame);
             dataGroup.clear();
 
-            const sphereGeometry = new THREE.SphereGeometry(2, 16, 16);
-            const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+
+            const defaultGeometry = new THREE.SphereGeometry(2, 16, 16);
+            const selectedGeometry = new THREE.SphereGeometry(2.5, 16, 16);
+            const defaultSphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const selectedSphereMaterial = new THREE.MeshBasicMaterial({ color: 0x009aa6 });
 
             for (const markerName in allFramesData.trajectories) {
                 const markerData = allFramesData.trajectories[markerName];
                 if (markerData && markerData[frame]) {
+                    const sphereMaterial = markerName === currentJoint ? selectedSphereMaterial : defaultSphereMaterial;
+                    const sphereGeometry = markerName === currentJoint ? selectedGeometry : defaultGeometry;
                     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
                     sphere.position.set(markerData[frame][0] / 10, markerData[frame][1] / 10, markerData[frame][2] / 10);
                     sphere.name = markerName;
