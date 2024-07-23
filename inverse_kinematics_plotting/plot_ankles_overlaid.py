@@ -1,6 +1,7 @@
 import pandas as pd
 import plotly.graph_objs as go
 from pathlib import Path
+from plotly.subplots import make_subplots
 
 # List of paths to FreeMoCap folders
 paths_to_freemocap_folders = [
@@ -14,8 +15,8 @@ paths_to_freemocap_folders = [
 # Labels for the plots
 labels = ['-5.6', '-2.8', 'neutral', '+2.8', '+5.6']
 
-# Create a figure
-fig = go.Figure()
+# Create subplots
+fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("Right Knee Angle", "Right Ankle Angle"))
 
 # Loop over each path and label
 for path, label in zip(paths_to_freemocap_folders, labels):
@@ -27,18 +28,29 @@ for path, label in zip(paths_to_freemocap_folders, labels):
     # Add right ankle angle plot
     fig.add_trace(go.Scatter(
         x=ik_data['time'],
+        y=ik_data['knee_angle_r'],
+        mode='lines',
+        name=f'Right Knee Angle ({label})'
+    ), row=1, col=1)
+
+    # Add left ankle angle plot
+    fig.add_trace(go.Scatter(
+        x=ik_data['time'],
         y=ik_data['ankle_angle_r'],
         mode='lines',
         name=f'Right Ankle Angle ({label})'
-    ))
+    ), row=2, col=1)
 
 # Update layout
 fig.update_layout(
-    title='Ankle Angles Over Time for Different Flexion Angles',
+    title='Knee and Ankle Angles Over Time',
     xaxis_title='Time (s)',
     yaxis_title='Angle (degrees)',
     legend_title='Ankle Angles'
 )
+
+# Update x-axis title only for the bottom subplot
+fig.update_xaxes(title_text='Time (s)', row=2, col=1)
 
 # Show the figure
 fig.show()
