@@ -368,6 +368,13 @@
 
 
             const layout = {
+                title: {
+                    text: `${currentJoint.replace('_', ' ')} - Y Trajectory`,
+                    font: {
+                        size: 16,
+                        color: '#009aa6'
+                    },
+                },
                 xaxis: {
                     title: 'Frame',
                     range: [0, frames[frames.length - 1]]
@@ -389,10 +396,10 @@
                 // }],
                 autosize: true,
                 margin: {
-                    l: 50,
+                    l: 0,
                     r: 50,
                     b: 50,
-                    t: 20,
+                    t: 40,
                     pad: 4
                 },
                 height: document.getElementById(id).clientHeight
@@ -427,6 +434,13 @@
             };
 
             const layout = {
+                title: {
+                    text: `${currentJoint.replace('_', ' ')} - Angle`,
+                    font: {
+                        size: 16,
+                        color: '#009aa6'
+                    },
+                },
                 xaxis: {
                     title: 'Frame',
                     range: [0, frames[frames.length - 1]]
@@ -452,7 +466,7 @@
                     l: 50,
                     r: 50,
                     b: 50,
-                    t: 20,
+                    t: 40,
                     pad: 4
                 },
                 height: document.getElementById(id).clientHeight
