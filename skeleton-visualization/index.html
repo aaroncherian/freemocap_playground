@@ -188,6 +188,17 @@
             fetchAngleData(currentJoint);
         });
 
+        function syncCharts(sourceChartId, targetChartId, eventData) {
+            if (eventData['xaxis.autorange'] === true) {
+                Plotly.relayout(targetChartId, { 'xaxis.autorange': true, 'yaxis.autorange': true });
+            } else if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
+                const update = {
+                    'xaxis.range': [eventData['xaxis.range[0]'], eventData['xaxis.range[1]']]
+                };
+                Plotly.relayout(targetChartId, update);
+            }
+        }
+
         // Set up the scene, camera, and renderer
         const container = document.getElementById('graph-container');
         const scene = new THREE.Scene();
@@ -396,7 +407,7 @@
                 // }],
                 autosize: true,
                 margin: {
-                    l: 0,
+                    l: 50,
                     r: 50,
                     b: 50,
                     t: 40,
@@ -406,6 +417,16 @@
             };
 
             Plotly.newPlot(id, [trace1, traceDot], layout, {responsive: true});
+
+            document.getElementById(id).on('plotly_relayout', function(eventData) {
+                if (!eventData['xaxis.autorange']) {
+                    syncCharts(id, 'ankleAngleChart', eventData);
+                }
+            });
+
+            document.getElementById(id).on('plotly_doubleclick', function() {
+                syncCharts(id, 'ankleAngleChart',  { 'xaxis.autorange': true });
+            });
         }
 
         function initAngleChart(id, data_to_plot) {
@@ -473,6 +494,15 @@
             };
 
             Plotly.newPlot(id, [trace1, traceDot], layout, {responsive: true});
+            document.getElementById(id).on('plotly_relayout', function(eventData) {
+                if (!eventData['xaxis.autorange']) {
+                    syncCharts(id, 'trajectoryChart', eventData);
+                }
+            });
+
+            document.getElementById(id).on('plotly_doubleclick', function() {
+                syncCharts(id, 'trajectoryChart',  { 'xaxis.autorange': true });
+            });
         }
 
         function updateChartMarker(chartId, frame) {
