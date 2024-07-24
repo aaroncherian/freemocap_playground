@@ -13,18 +13,18 @@ from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
 from skellymodels.create_model_skeleton import create_mediapipe_skeleton_model
 from pathlib import Path
 # HTTP Server
-recording_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1')
-# recording_folder_path = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1')
+# recording_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1')
+recording_folder_path = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1')
 output_data_folder_path = recording_folder_path / 'output_data'
 data_3d_path = output_data_folder_path / 'mediapipe_body_3d_xyz.npy'
 ik_results_path = output_data_folder_path / 'IK_results.mot'
 
 joint_to_angle_mapping = {
     'right_hip': 'hip_flexion_r',
-    'right_knee': 'knee_angle_r',
-    'right_ankle': 'ankle_angle_r',
     'left_hip': 'hip_flexion_l',
+    'right_knee': 'knee_angle_r',
     'left_knee': 'knee_angle_l',
+    'right_ankle': 'ankle_angle_r',
     'left_ankle': 'ankle_angle_l'
 }
 
