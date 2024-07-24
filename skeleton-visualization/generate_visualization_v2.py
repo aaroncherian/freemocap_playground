@@ -23,6 +23,9 @@ joint_to_angle_mapping = {
     'right_hip': 'hip_flexion_r',
     'right_knee': 'knee_angle_r',
     'right_ankle': 'ankle_angle_r',
+    'left_hip': 'hip_flexion_l',
+    'left_knee': 'knee_angle_l',
+    'left_ankle': 'ankle_angle_l'
 }
 
 class HttpHandler(SimpleHTTPRequestHandler):
@@ -139,12 +142,6 @@ class HttpHandler(SimpleHTTPRequestHandler):
             print(f"Error serving ankle angle data: {e}")
             self.send_response(500)
             self.end_headers()
-
-
-
-            
-
-
 
 
 

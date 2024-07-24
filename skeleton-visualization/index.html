@@ -119,6 +119,9 @@
                     option.textContent = joint;
                     jointSelect.appendChild(option);
                 });
+                currentJoint = joints[0];
+                fetchAngleData(currentJoint);
+                fetchTrajectoryData(currentJoint);
             }).catch(error => console.error('Error fetching joint names:', error));
             
 
@@ -228,7 +231,7 @@
             const context = canvas.getContext('2d');
             context.font = '24px Arial';
             context.fillStyle = '#5c5e64';
-            const text1 = "Ankle Angle: "
+            const text1 = `${currentJoint} Angle: `
             context.fillText(text1, 0, 24);
 
 
