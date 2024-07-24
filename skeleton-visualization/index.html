@@ -109,6 +109,19 @@
         const slider = document.getElementById('frame-slider');
         const frameNumber = document.getElementById('frame-number');
 
+        fetch('/available_joint_names')
+            .then(response => response.json())
+            .then(joints => {
+                const jointSelect = document.getElementById('joint-select');
+                joints.forEach(joint => {
+                    const option = document.createElement('option');
+                    option.value = joint;
+                    option.textContent = joint;
+                    jointSelect.appendChild(option);
+                });
+            }).catch(error => console.error('Error fetching joint names:', error));
+            
+
         fetch('/data')
             .then(response => response.json())
             .then(data => {
@@ -128,22 +141,49 @@
             }).catch(error => console.error('Error fetching data:', error));
     
         
-        fetch('/trajectory_data')
-            .then(response => response.json())
-            .then(data => {
-                trajectoryData = data;
-                currentJoint = trajectoryData.name;
-                console.log('Trajectory data fetched:', trajectoryData);
-                initTrajectoryChart('trajectoryChart', trajectoryData);
-            }).catch(error => console.error('Error fetching trajectory data:', error));
+        // fetch('/trajectory_data')
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         trajectoryData = data;
+        //         currentJoint = trajectoryData.name;
+        //         console.log('Trajectory data fetched:', trajectoryData);
+        //         initTrajectoryChart('trajectoryChart', trajectoryData);
+        //     }).catch(error => console.error('Error fetching trajectory data:', error));
 
-        fetch('/ankle_angle_data')
-            .then(response => response.json())
-            .then(data => {
-                jointAngleData = data;
-                console.log('Ankle angle data fetched:', jointAngleData);
-                initAngleChart('ankleAngleChart', jointAngleData);
-            }).catch(error => console.error('Error fetching ankle angle data:', error));
+        // fetch('/ankle_angle_data')
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         jointAngleData = data;
+        //         console.log('Ankle angle data fetched:', jointAngleData);
+        //         initAngleChart('ankleAngleChart', jointAngleData);
+        //     }).catch(error => console.error('Error fetching ankle angle data:', error));
+
+        function fetchAngleData(joint){
+            fetch(`/joint_angle_data?joint=${joint}`)
+                .then(response => response.json())
+                .then (data => {
+                    jointAngleData = data;
+                    console.log('Angle data fetched for joint:', joint, jointAngleData);
+                    initAngleChart('ankleAngleChart', jointAngleData);
+                }).catch(error => console.error('Error fetching angle data:', error));
+        }
+        
+        function fetchTrajectoryData(joint){
+            fetch(`/trajectory_data?joint=${joint}`)
+                .then(response => response.json())
+                .then(data => {
+                    trajectoryData = data;
+                    console.log('Trajectory data fetched:', trajectoryData);
+                    initTrajectoryChart('trajectoryChart', trajectoryData);
+                }).catch(error => console.error('Error fetching trajectory data:', error));
+        }
+
+
+        document.getElementById('joint-select').addEventListener('change', function() {
+            currentJoint = this.value;
+            fetchTrajectoryData(currentJoint);
+            fetchAngleData(currentJoint);
+        });
 
         // Set up the scene, camera, and renderer
         const container = document.getElementById('graph-container');
@@ -284,6 +324,7 @@
             isPlaying = !isPlaying;
             this.textContent = isPlaying ? 'Pause' : 'Play';
         });
+
 
         function updateVisualization() {
             visualizeData(currentFrame);

@@ -13,11 +13,17 @@ from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
 from skellymodels.create_model_skeleton import create_mediapipe_skeleton_model
 from pathlib import Path
 # HTTP Server
-recording_folder_path = Path(r'D:\mdn_data\sesh_2023-05-17_13_37_32_MDN_treadmill_1')
+recording_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1')
 # recording_folder_path = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1')
 output_data_folder_path = recording_folder_path / 'output_data'
 data_3d_path = output_data_folder_path / 'mediapipe_body_3d_xyz.npy'
 ik_results_path = output_data_folder_path / 'IK_results.mot'
+
+joint_to_angle_mapping = {
+    'right_hip': 'hip_flexion_r',
+    'right_knee': 'knee_angle_r',
+    'right_ankle': 'ankle_angle_r',
+}
 
 class HttpHandler(SimpleHTTPRequestHandler):
     
@@ -28,15 +34,34 @@ class HttpHandler(SimpleHTTPRequestHandler):
         elif self.path == '/data':
             self.serve_data()
             return
-        elif self.path == '/trajectory_data':
+        elif self.path.startswith('/trajectory_data'):
             self.serve_trajectory_data()
             return
-        elif self.path == '/ankle_angle_data':
-            self.serve_ankle_angle_data()
+        elif self.path.startswith('/joint_angle_data'):
+            self.serve_joint_angle_data()
+            return
+        elif self.path == '/available_joint_names':
+            self.serve_available_joint_names()
             return
         else:
             self.path = '/skeleton-visualization/' + self.path.lstrip('/')
         return SimpleHTTPRequestHandler.do_GET(self)
+
+    def serve_available_joint_names(self):
+        try:
+            joint_names = list(joint_to_angle_mapping.keys())
+
+            response = json.dumps(joint_names)
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(response.encode())
+            print('Joint names served successfully')
+
+        except Exception as e:
+            print(f"Error serving data: {e}")
+            self.send_response(500)
+            self.end_headers()
 
     def serve_data(self):
         try:
@@ -63,11 +88,12 @@ class HttpHandler(SimpleHTTPRequestHandler):
 
     def serve_trajectory_data(self):
         try:
+            joint_name = self.path.split('?joint=')[1]
             np_data = np.load(data_3d_path)
 
             mediapipe_skeleton = create_mediapipe_skeleton_model()
             mediapipe_skeleton.integrate_freemocap_3d_data(np_data)
-            joint_name = 'left_ankle'
+            # joint_name = 'left_ankle'
 
             data = mediapipe_skeleton.trajectories[joint_name]
             data_x = data[:, 0].tolist()
@@ -94,11 +120,13 @@ class HttpHandler(SimpleHTTPRequestHandler):
             self.send_response(500)
             self.end_headers()
 
-    def serve_ankle_angle_data(self):
+    def serve_joint_angle_data(self):
         try:
+            joint_name = self.path.split('?joint=')[1]
+            angle_to_serve = joint_to_angle_mapping[joint_name]
 
             ik_data =  pd.read_csv(ik_results_path, sep='\t', skiprows=10)
-            right_ankle_angle = ik_data['ankle_angle_l'].tolist()
+            right_ankle_angle = ik_data[angle_to_serve].tolist()
 
             response = json.dumps(right_ankle_angle)
             self.send_response(200)
