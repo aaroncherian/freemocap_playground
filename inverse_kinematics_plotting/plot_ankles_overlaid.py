@@ -5,11 +5,11 @@ from plotly.subplots import make_subplots
 
 # List of paths to FreeMoCap folders
 paths_to_freemocap_folders = [
-    r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1',
-    r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_03_15_TF01_flexion_neg_2_8_trial_1',
-    r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1',
-    r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_09_05_TF01_flexion_pos_2_8_trial_1',
-    r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_12_36_TF01_flexion_pos_5_6_trial_1'
+    r'D:\prosthetic_validation\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1',
+    r'D:\prosthetic_validation\sesh_2023-06-07_12_03_15_TF01_flexion_neg_2_8_trial_1',
+    r'D:\prosthetic_validation\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1',
+    r'D:\prosthetic_validation\sesh_2023-06-07_12_09_05_TF01_flexion_pos_2_8_trial_1',
+    r'D:\prosthetic_validation\sesh_2023-06-07_12_12_36_TF01_flexion_pos_5_6_trial_1'
 ]
 
 # Labels for the plots
