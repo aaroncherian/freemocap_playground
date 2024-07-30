@@ -43,7 +43,7 @@
     </style>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
-        const socket = new WebSocket('ws://localhost:8001');
+        const socket = new WebSocket('ws://localhost:8000/ws');
         socket.addEventListener('message', function (event) {
             if (event.data === 'reload') {
                 console.log('Reloading page due to changes in HTML');
@@ -87,7 +87,7 @@
             .then(response => response.json())
             .then(joints => {
                 const jointSelect = document.getElementById('joint-select');
-                joints.forEach(joint => {
+                joints.joint_names.forEach(joint => {
                     const option = document.createElement('option');
                     option.value = joint;
                     option.textContent = joint;
@@ -270,7 +270,6 @@
             camera.aspect = graphContainer.clientWidth / graphContainer.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(graphContainer.clientWidth, graphContainer.clientHeight);
-            Plotly.Plots.resize(document.getElementById('ankleAngleChart'));
         }
 
         // Initial resize call to set correct dimensions
