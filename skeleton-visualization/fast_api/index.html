@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Motion Capture Data Visualizer with 2D Trajectory</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0;
+            overflow: auto; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh;
+            background-color: #fefefe; 
+        }
+        #graph-container {
+            flex: 0 0 50%;
+            width: 50%;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 10px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #control-container {
+            flex: 0 0 8%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* padding: 1px; */
+        }
+        #frame-slider {
+            width: 70%;
+            vertical-align: middle;
+        }
+        #play-pause {
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        const socket = new WebSocket('ws://localhost:8000/ws');
+        socket.addEventListener('message', function (event) {
+            if (event.data === 'reload') {
+                console.log('Reloading page due to changes in HTML');
+                location.reload();
+            }
+        });
+    </script>
+</head>
+<body>
+    <div id="graph-container"></div>
+    <div id="control-container">
+        <label for="joint-select"> Select joint: </label>
+        <select id="joint-select"> </select>    
+        <button id="play-pause">Play</button>
+        <input type="range" min="0" value="0" class="slider" id="frame-slider">
+        <span id="frame-number">Frame: 0</span>
+        <label for="fps-input">FPS:</label>
+        <input type="number" id="fps-input" value="30" min="1" style="width:60px;">
+    </div>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Fetch initial data
+        let allFramesData = [];
+        let segmentConnections = [];
+        let currentJoint = null;
+        const slider = document.getElementById('frame-slider');
+        const frameNumber = document.getElementById('frame-number');
+
+        fetch('/available_joint_names')
+            .then(response => response.json())
+            .then(joints => {
+                const jointSelect = document.getElementById('joint-select');
+                joints.joint_names.forEach(joint => {
+                    const option = document.createElement('option');
+                    option.value = joint;
+                    option.textContent = joint;
+                    jointSelect.appendChild(option);
+                });
+                currentJoint = joints[0];
+            }).catch(error => console.error('Error fetching joint names:', error));
+            
+
+        fetch('/data')
+            .then(response => response.json())
+            .then(data => {
+                allFramesData = data;
+                console.log('Data fetched:', allFramesData);
+                if (allFramesData.num_frames > 0) {
+                    visualizeData(0);
+                } else {
+                    console.error('No data available');
+                }
+
+                segmentConnections = data.segments
+                console.log('Segments fetched', segmentConnections)
+                // Adjust slider max value based on the number of frames
+                slider.max = allFramesData.num_frames - 1;
+                frameNumber.textContent = `Frame: 0 / ${allFramesData.num_frames - 1}`;
+            }).catch(error => console.error('Error fetching data:', error));
+    
+
+
+        document.getElementById('joint-select').addEventListener('change', function() {
+            currentJoint = this.value;
+        });
+
+
+
+        // Set up the scene, camera, and renderer
+        const container = document.getElementById('graph-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff);
+        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 10000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio); // Set the pixel ratio for better clarity
+        container.appendChild(renderer.domElement);
+
+        // Add lights
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+
+        // Create a group to hold all the data points
+        const dataGroup = new THREE.Group();
+        scene.add(dataGroup);
+
+        const grid_size = 500;
+        const grid_divisions = 10;
+        const gridHelper = new THREE.GridHelper(grid_size, grid_divisions);
+        gridHelper.rotation.x = Math.PI / 2;
+        const gridLine = new THREE.Line3(gridHelper.geometry.attributes.position.array[0], gridHelper.geometry.attributes.position.array[1]);
+        scene.add(gridHelper);
+
+        const axesHelper = new THREE.AxesHelper(5);
+        scene.add(axesHelper);
+
+
+        // Function to visualize data for a specific frame
+        function visualizeData(frame) {
+            console.log('Visualizing data for frame:', frame);
+            dataGroup.clear();
+
+
+            const defaultGeometry = new THREE.SphereGeometry(2, 16, 16);
+            const selectedGeometry = new THREE.SphereGeometry(2.5, 16, 16);
+            const defaultSphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const selectedSphereMaterial = new THREE.MeshBasicMaterial({ color: 0x009aa6 });
+
+            for (const markerName in allFramesData.trajectories) {
+                const markerData = allFramesData.trajectories[markerName];
+                if (markerData && markerData[frame]) {
+                    const sphereMaterial = markerName === currentJoint ? selectedSphereMaterial : defaultSphereMaterial;
+                    const sphereGeometry = markerName === currentJoint ? selectedGeometry : defaultGeometry;
+                    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                    sphere.position.set(markerData[frame][0] / 10, markerData[frame][1] / 10, markerData[frame][2] / 10);
+                    sphere.name = markerName;
+                    dataGroup.add(sphere);
+                }
+            }
+
+            const lineVertices = []
+            for (const [segmentName, segmentData] of Object.entries(segmentConnections)){
+                lineVertices.length = 0
+                for (const [connectionPoint, markerName] of Object.entries(segmentData)){
+                    lineVertices.push(dataGroup.getObjectByName(markerName).position.clone())
+                    // console.log(`${segmentName}: ${markerName}`)
+                }
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints(lineVertices);
+                const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+                const lineObject = new THREE.Line(lineGeometry, lineMaterial);
+                dataGroup.add(lineObject);
+            }
+
+                // console.log(lineVertices)
+        }
+        
+
+        // Set up camera position
+        camera.position.set(0, 250, 500);
+        camera.lookAt(0, 0, 0);
+        camera.up.set(0, 0, 1);
+
+        // Add orbit controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+
+        // Set up frame slider and play button
+        const playPauseButton = document.getElementById('play-pause');
+        let isPlaying = false;
+        let currentFrame = 0;
+
+        let fps = 30;
+        const fpsInput = document.getElementById('fps-input');
+
+        fpsInput.addEventListener('input', function() {
+            fps = parseInt(this.value);
+        });
+
+        slider.addEventListener('input', function() {
+            currentFrame = parseInt(this.value);
+            updateVisualization();
+        });
+
+        playPauseButton.addEventListener('click', function() {
+            isPlaying = !isPlaying;
+            this.textContent = isPlaying ? 'Pause' : 'Play';
+        });
+
+
+        function updateVisualization() {
+            visualizeData(currentFrame);
+            frameNumber.textContent = `Frame: ${currentFrame} / ${allFramesData.num_frames - 1}`;
+            slider.value = currentFrame;
+        }
+
+        // Animation loop
+        let lastFrameTime = 0;
+        let frameInterval = 1000 / fps; // Calculate once, update when fps changes
+
+        function animate(timestamp) {
+            requestAnimationFrame(animate);
+            
+            if (isPlaying) {
+                const elapsed = timestamp - lastFrameTime;
+                
+                if (elapsed >= frameInterval) {
+                    // Adjust for any extra time beyond the desired interval
+                    lastFrameTime = timestamp - (elapsed % frameInterval);
+                    
+                    currentFrame = (currentFrame + 1) % allFramesData.num_frames;
+                    updateVisualization();
+                }
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Update frameInterval when fps changes
+        fpsInput.addEventListener('input', function() {
+            fps = parseInt(this.value);
+            frameInterval = 1000 / fps;
+        });
+
+        animate(0); // Start the animation loop
+
+        // Handle window resizing
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            const graphContainer = document.getElementById('graph-container');
+            camera.aspect = graphContainer.clientWidth / graphContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(graphContainer.clientWidth, graphContainer.clientHeight);
+        }
+
+        // Initial resize call to set correct dimensions
+        window.addEventListener('load', onWindowResize);
+    </script>
+</body>
+</html>
