@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      axios:
+        specifier: ^1.7.2
+        version: 1.7.2
       vue:
         specifier: ^3.4.29
         version: 3.4.35
@@ -298,8 +301,22 @@ packages:
   '@vue/shared@3.4.35':
     resolution: {integrity: sha512-hvuhBYYDe+b1G8KHxsQ0diDqDMA8D9laxWZhNAjE83VZb5UDaXl9Xnz7cGdDSyiHM90qqI/CyGMcpBpiDy6VVQ==}
 
+  asynckit@0.4.0:
+    resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
+
+  axios@1.7.2:
+    resolution: {integrity: sha512-2A8QhOMrbomlDuiLeK9XibIBzuHeRcqqNOHp0Cyp5EoJ1IFDh+XZH3A6BkXtv0K4gFGCI0Y4BM7B1wOEi0Rmgw==}
+
+  combined-stream@1.0.8:
+    resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
+    engines: {node: '>= 0.8'}
+
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
+
+  delayed-stream@1.0.0:
+    resolution: {integrity: sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==}
+    engines: {node: '>=0.4.0'}
 
   entities@4.5.0:
     resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
@@ -313,6 +330,19 @@ packages:
   estree-walker@2.0.2:
     resolution: {integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==}
 
+  follow-redirects@1.15.6:
+    resolution: {integrity: sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+
+  form-data@4.0.0:
+    resolution: {integrity: sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==}
+    engines: {node: '>= 6'}
+
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -320,6 +350,14 @@ packages:
 
   magic-string@0.30.11:
     resolution: {integrity: sha512-+Wri9p0QHMy+545hKww7YAu5NyzF8iomPL/RQazugQ9+Ez4Ic3mERMd8ZTX5rfK944j+560ZJi8iAwgak1Ac7A==}
+
+  mime-db@1.52.0:
+    resolution: {integrity: sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==}
+    engines: {node: '>= 0.6'}
+
+  mime-types@2.1.35:
+    resolution: {integrity: sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==}
+    engines: {node: '>= 0.6'}
 
   nanoid@3.3.7:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
@@ -332,6 +370,9 @@ packages:
   postcss@8.4.40:
     resolution: {integrity: sha512-YF2kKIUzAofPMpfH6hOi2cGnv/HrUlfucspc7pDyvv7kGdqXrfj8SCl/t8owkEgKEuu8ZcRjSOxFxVLqwChZ2Q==}
     engines: {node: ^10 || ^12 || >=14}
+
+  proxy-from-env@1.1.0:
+    resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
 
   rollup@4.19.1:
     resolution: {integrity: sha512-K5vziVlg7hTpYfFBI+91zHBEMo6jafYXpkMlqZjg7/zhIG9iHqazBf4xz9AVdjS9BruRn280ROqLI7G3OFRIlw==}
@@ -578,7 +619,23 @@ snapshots:
 
   '@vue/shared@3.4.35': {}
 
+  asynckit@0.4.0: {}
+
+  axios@1.7.2:
+    dependencies:
+      follow-redirects: 1.15.6
+      form-data: 4.0.0
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
+  combined-stream@1.0.8:
+    dependencies:
+      delayed-stream: 1.0.0
+
   csstype@3.1.3: {}
+
+  delayed-stream@1.0.0: {}
 
   entities@4.5.0: {}
 
@@ -610,12 +667,26 @@ snapshots:
 
   estree-walker@2.0.2: {}
 
+  follow-redirects@1.15.6: {}
+
+  form-data@4.0.0:
+    dependencies:
+      asynckit: 0.4.0
+      combined-stream: 1.0.8
+      mime-types: 2.1.35
+
   fsevents@2.3.3:
     optional: true
 
   magic-string@0.30.11:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
+
+  mime-db@1.52.0: {}
+
+  mime-types@2.1.35:
+    dependencies:
+      mime-db: 1.52.0
 
   nanoid@3.3.7: {}
 
@@ -626,6 +697,8 @@ snapshots:
       nanoid: 3.3.7
       picocolors: 1.0.1
       source-map-js: 1.2.0
+
+  proxy-from-env@1.1.0: {}
 
   rollup@4.19.1:
     dependencies:

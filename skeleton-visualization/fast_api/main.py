@@ -38,7 +38,7 @@ async def lifespan_manager(app:FastAPI):
 
 app = FastAPI(lifespan=lifespan_manager)
 
-origins = ["http://localhost:3000"]
+origins = ["http://localhost:5173"]  
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -47,7 +47,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="skeleton-visualization/fast_api"), name="static")
+# app.mount("/static", StaticFiles(directory="skeleton-visualization/fast_api"), name="static")
 
 @app.get("/")
 async def get_index():
