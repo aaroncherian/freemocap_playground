@@ -74,16 +74,15 @@ onMounted(() => {
   const gridLine = new THREE.Line3(gridHelper.geometry.attributes.position.array[0], gridHelper.geometry.attributes.position.array[1]);
   scene.add(gridHelper);
 
-
-
+  let startingFrame = 0
 
   const animate = function () {
     requestAnimationFrame(animate);
 
     controls.update();
     renderer.render(scene, camera);
+    // visualizeData(startingFrame++);
   };
-
 
   fetchData();
   animate();
