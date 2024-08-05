@@ -9,5 +9,9 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@tresjs/core": "^4.2.5",
+    "three": "^0.167.1"
+  }
 }

@@ -1,21 +1,13 @@
 <template>
   <div id="app">
-    <SkeletonData />
-    <Test />
+    <ThreeJSScene />
   </div>
 </template>
 
-<script>
-import SkeletonData from './components/SkeletonData.vue';
-import Test from './components/plot_3d.vue';
-
-export default {
-  name: 'App',
-  components: {
-    SkeletonData,
-    Test
-  }
-};
+<script setup>
+import SkeletonData from "@/components/SkeletonData.vue";
+import ThreeJSScene from './components/Skeleton3DPlot.vue';
+import FullVisual from './components/one_page_visualization.vue'
 </script>
 
 <style>
