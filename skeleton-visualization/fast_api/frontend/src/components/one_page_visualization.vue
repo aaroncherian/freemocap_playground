@@ -40,11 +40,12 @@ onMounted(() => {
     }
   };
 
-  const visualizeData = (frame) => {
+  const visualizeData = (frame, data, group) => {
     console.log('Visualizing data for frame:', frame);
     clearDataGroup();
-    plotSpheresAsJoints(frame)
-    plotLinesAsConnections()
+
+    plotSpheresAsJoints(frame, data.value.trajectories, group)
+    plotLinesAsConnections(data.value.segments, group)
   };
 
   const clearDataGroup = () => {
@@ -56,37 +57,37 @@ onMounted(() => {
     }
   };
 
-  const plotSpheresAsJoints = (frame) => {
+  const plotSpheresAsJoints = (frame, trajectories, group) => {
 
     const defaultSphereGeometry = new THREE.SphereGeometry(2, 16, 16);
     const selectedSphereGeometry = new THREE.SphereGeometry(2.5, 16, 16);
     const defaultSphereMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
     const selectedSphereMaterial = new THREE.MeshBasicMaterial({color: 0x009aa6});
 
-    for (const markerName in skeletonData.value.trajectories) {
-      const markerData = skeletonData.value.trajectories[markerName];
+    for (const markerName in trajectories) {
+      const markerData = trajectories[markerName];
       if (markerData && markerData[frame]) {
         const sphereMaterial = defaultSphereMaterial;
         const sphereGeometry = defaultSphereGeometry;
         const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         sphere.position.set(markerData[frame][0] / 10, markerData[frame][1] / 10, markerData[frame][2] / 10);
         sphere.name = markerName;
-        skeletonDataGroup.add(sphere);
+        group.add(sphere);
       }
     }
   }
 
-  const plotLinesAsConnections = () => {
+  const plotLinesAsConnections = (connections, group) => {
     const lineVertices = [];
-    for (const [segmentName, segmentData] of Object.entries(skeletonData.value.segments)){
+    for (const [segmentName, segmentData] of Object.entries(connections)){
       lineVertices.length = 0
       for (const [connectionPoint, markerName] of Object.entries(segmentData)){
-        lineVertices.push(skeletonDataGroup.getObjectByName(markerName).position.clone())
+        lineVertices.push(group.getObjectByName(markerName).position.clone())
       }
       const lineGeometry = new THREE.BufferGeometry().setFromPoints(lineVertices);
       const lineMaterial = new THREE.LineBasicMaterial({color: 0x000000});
       const lineObject = new THREE.Line(lineGeometry, lineMaterial);
-      skeletonDataGroup.add(lineObject);
+      group.add(lineObject);
     }
   }
 
@@ -125,7 +126,7 @@ onMounted(() => {
   animate();
 
   watch(currentFrameNumber, (newFrame) => {
-    visualizeData(newFrame)
+    visualizeData(newFrame, skeletonData, skeletonDataGroup)
   });
   // Handle window resize
   const handleResize = () => {
