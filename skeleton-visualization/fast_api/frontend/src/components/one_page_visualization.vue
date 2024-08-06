@@ -2,7 +2,13 @@
   <div class="main-container">
     <div ref="container" class="threejs-container"></div>
     <div ref="controlContainer" class="control-container">
-      <input ref="frameSlider" type="range" min="0" v-model="currentFrameNumber" :max="maxFrames" class="slider">
+      <input
+          ref="frameSlider"
+          type="range"
+          min="0"
+          v-model="currentFrameNumber"
+          :max="maxFrames"
+          class="slider">
       <span class="frame-label"> Frame: {{ currentFrameNumber }} </span>
     </div>
   </div>
@@ -26,9 +32,8 @@ onMounted(() => {
       const response = await api.getData();
       skeletonData.value = response.data;
       console.log('Skeleton data fetched: ', skeletonData.value);
-      // visualizeData(100);
-      maxFrames.value = skeletonData.value.num_frames - 1;  // Update max frames
-      console.log('Max set to:', maxFrames.value);
+      maxFrames.value = skeletonData.value.num_frames - 1;
+      console.log('Max frames set to:', maxFrames.value);
       currentFrameNumber.value = 0;
     } catch (error) {
       console.error('Error fetching skeleton data', error);
@@ -37,7 +42,21 @@ onMounted(() => {
 
   const visualizeData = (frame) => {
     console.log('Visualizing data for frame:', frame);
-    sphereDataGroup.clear();
+    clearDataGroup();
+    plotSpheresAsJoints(frame)
+    plotLinesAsConnections()
+  };
+
+  const clearDataGroup = () => {
+    while (skeletonDataGroup.children.length > 0) {
+      const child = skeletonDataGroup.children[0];
+      skeletonDataGroup.remove(child);
+      child.geometry.dispose();
+      child.material.dispose();
+    }
+  };
+
+  const plotSpheresAsJoints = (frame) => {
 
     const defaultSphereGeometry = new THREE.SphereGeometry(2, 16, 16);
     const selectedSphereGeometry = new THREE.SphereGeometry(2.5, 16, 16);
@@ -52,10 +71,24 @@ onMounted(() => {
         const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         sphere.position.set(markerData[frame][0] / 10, markerData[frame][1] / 10, markerData[frame][2] / 10);
         sphere.name = markerName;
-        sphereDataGroup.add(sphere);
+        skeletonDataGroup.add(sphere);
       }
     }
-  };
+  }
+
+  const plotLinesAsConnections = () => {
+    const lineVertices = [];
+    for (const [segmentName, segmentData] of Object.entries(skeletonData.value.segments)){
+      lineVertices.length = 0
+      for (const [connectionPoint, markerName] of Object.entries(segmentData)){
+        lineVertices.push(skeletonDataGroup.getObjectByName(markerName).position.clone())
+      }
+      const lineGeometry = new THREE.BufferGeometry().setFromPoints(lineVertices);
+      const lineMaterial = new THREE.LineBasicMaterial({color: 0x000000});
+      const lineObject = new THREE.Line(lineGeometry, lineMaterial);
+      skeletonDataGroup.add(lineObject);
+    }
+  }
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xffffff);
@@ -72,8 +105,8 @@ onMounted(() => {
 
   const controls = new OrbitControls(camera, renderer.domElement);
 
-  const sphereDataGroup = new THREE.Group();
-  scene.add(sphereDataGroup);
+  const skeletonDataGroup = new THREE.Group();
+  scene.add(skeletonDataGroup);
   const grid_size = 500;
   const grid_divisions = 10;
   const gridHelper = new THREE.GridHelper(grid_size, grid_divisions);
