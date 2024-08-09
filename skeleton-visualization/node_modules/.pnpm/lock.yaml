@@ -11,6 +11,9 @@ importers:
       '@tresjs/core':
         specifier: ^4.2.5
         version: 4.2.5(three@0.167.1)(vue@3.4.35)
+      pinia:
+        specifier: ^2.2.1
+        version: 2.2.1(vue@3.4.35)
       three:
         specifier: ^0.167.1
         version: 0.167.1
@@ -110,6 +113,18 @@ packages:
 
   picocolors@1.0.1:
     resolution: {integrity: sha512-anP1Z8qwhkbmu7MFP5iTt+wQKXgwzf7zTyGlcdzabySa9vd0Xt392U0rVmz9poOaBj0uHJKyyo9/upk0HrEQew==}
+
+  pinia@2.2.1:
+    resolution: {integrity: sha512-ltEU3xwiz5ojVMizdP93AHi84Rtfz0+yKd8ud75hr9LVyWX2alxp7vLbY1kFm7MXFmHHr/9B08Xf8Jj6IHTEiQ==}
+    peerDependencies:
+      '@vue/composition-api': ^1.4.0
+      typescript: '>=4.4.4'
+      vue: ^2.6.14 || ^3.3.0
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
+      typescript:
+        optional: true
 
   postcss@8.4.40:
     resolution: {integrity: sha512-YF2kKIUzAofPMpfH6hOi2cGnv/HrUlfucspc7pDyvv7kGdqXrfj8SCl/t8owkEgKEuu8ZcRjSOxFxVLqwChZ2Q==}
@@ -265,6 +280,12 @@ snapshots:
   nanoid@3.3.7: {}
 
   picocolors@1.0.1: {}
+
+  pinia@2.2.1(vue@3.4.35):
+    dependencies:
+      '@vue/devtools-api': 6.6.3
+      vue: 3.4.35
+      vue-demi: 0.14.10(vue@3.4.35)
 
   postcss@8.4.40:
     dependencies:

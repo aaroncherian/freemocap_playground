@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@tresjs/core": "^4.2.5",
+    "pinia": "^2.2.1",
     "three": "^0.167.1"
   }
 }
