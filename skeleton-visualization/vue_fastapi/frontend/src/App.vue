@@ -1,15 +1,26 @@
+<script setup>
+import SkeletonData from "@/components/SkeletonData.vue";
+import Visualizer from './components/Visualizer.vue'
+</script>
+
 <template>
   <div id="app">
-    <FullVisual />
+    <Visualizer />
   </div>
 </template>
 
-<script setup>
-import SkeletonData from "@/components/SkeletonData.vue";
-import ThreeJSScene from './components/Skeleton3DPlot.vue';
-import FullVisual from './components/one_page_visualization.vue'
-</script>
-
 <style>
-/* Add some global styles if needed */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+#app {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+}
 </style>

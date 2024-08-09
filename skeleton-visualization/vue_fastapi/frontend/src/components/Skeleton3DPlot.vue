@@ -1,8 +1,5 @@
 <template>
-  <div class="main-container">
-    <div ref="container" class="threejs-container"></div>
-  </div>
-
+  <div ref="container" class="threejs-container"></div>
 </template>
 
 <script setup>
@@ -82,7 +79,9 @@ onMounted(() => {
   scene.background = new THREE.Color(0xffffff);
 
   const renderer = new THREE.WebGLRenderer();
-  renderer.setSize(window.innerWidth * 0.8, window.innerHeight * 0.6); // Adjust size here
+
+
+  renderer.setSize(container.value.clientWidth, container.value.clientHeight);
   renderer.setPixelRatio(window.devicePixelRatio); // Set the pixel ratio for better clarity
   container.value.appendChild(renderer.domElement);
 
@@ -117,9 +116,9 @@ onMounted(() => {
   });
   // Handle window resize
   const handleResize = () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = container.value.clientWidth / container.value.clientHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth * 0.8, window.innerHeight * 0.6); // Adjust size here
+    renderer.setSize(container.value.clientWidth, container.value.clientHeight);
   };
 
   window.addEventListener('resize', handleResize);
@@ -132,25 +131,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.main-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
-
 .threejs-container {
-  width: 80%;
-  height: 60vh;
-  background-color: #000000;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-
-.frame-label {
-  color: black;
-}
 </style>
