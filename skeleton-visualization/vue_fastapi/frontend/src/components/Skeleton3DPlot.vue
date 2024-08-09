@@ -1,58 +1,88 @@
 <template>
-  <div ref="container" class="threejs-container"></div>
+  <div class="main-container">
+    <div ref="container" class="threejs-container"></div>
+  </div>
+
 </template>
 
 <script setup>
-import {ref, onMounted, onBeforeUnmount} from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import api from '../services/api';
 
-
 const container = ref(null);
+const currentFrameNumber = ref(null);
 let skeletonData = ref([]);
 
 onMounted(() => {
-
-
   const fetchData = async () => {
     try {
       const response = await api.getData();
-      skeletonData = response.data;
-      visualizeData(100)
+      skeletonData.value = response.data;
+      console.log('Skeleton data fetched: ', skeletonData.value);
+      currentFrameNumber.value = 0;
     } catch (error) {
       console.error('Error fetching skeleton data', error);
     }
-  }
+  };
 
-  const visualizeData = (frame) => {
+  const visualizeData = (frame, data, group) => {
     console.log('Visualizing data for frame:', frame);
-    sphereDataGroup.clear();
+    clearDataGroup();
+
+    plotSpheresAsJoints(frame, data.value.trajectories, group)
+    plotLinesAsConnections(data.value.segments, group)
+  };
+
+  const clearDataGroup = () => {
+    while (skeletonDataGroup.children.length > 0) {
+      const child = skeletonDataGroup.children[0];
+      skeletonDataGroup.remove(child);
+      child.geometry.dispose();
+      child.material.dispose();
+    }
+  };
+
+  const plotSpheresAsJoints = (frame, trajectories, group) => {
 
     const defaultSphereGeometry = new THREE.SphereGeometry(2, 16, 16);
     const selectedSphereGeometry = new THREE.SphereGeometry(2.5, 16, 16);
-    const defaultSphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const selectedSphereMaterial = new THREE.MeshBasicMaterial({ color: 0x009aa6 });
+    const defaultSphereMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
+    const selectedSphereMaterial = new THREE.MeshBasicMaterial({color: 0x009aa6});
 
-    for (const markerName in skeletonData.trajectories) {
-      const markerData = skeletonData.trajectories[markerName];
+    for (const markerName in trajectories) {
+      const markerData = trajectories[markerName];
       if (markerData && markerData[frame]) {
         const sphereMaterial = defaultSphereMaterial;
         const sphereGeometry = defaultSphereGeometry;
         const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         sphere.position.set(markerData[frame][0] / 10, markerData[frame][1] / 10, markerData[frame][2] / 10);
         sphere.name = markerName;
-        sphereDataGroup.add(sphere);
+        group.add(sphere);
       }
     }
   }
 
+  const plotLinesAsConnections = (connections, group) => {
+    const lineVertices = [];
+    for (const [segmentName, segmentData] of Object.entries(connections)) {
+      lineVertices.length = 0
+      for (const [connectionPoint, markerName] of Object.entries(segmentData)) {
+        lineVertices.push(group.getObjectByName(markerName).position.clone())
+      }
+      const lineGeometry = new THREE.BufferGeometry().setFromPoints(lineVertices);
+      const lineMaterial = new THREE.LineBasicMaterial({color: 0x000000});
+      const lineObject = new THREE.Line(lineGeometry, lineMaterial);
+      group.add(lineObject);
+    }
+  }
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xffffff);
 
   const renderer = new THREE.WebGLRenderer();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(window.innerWidth * 0.8, window.innerHeight * 0.6); // Adjust size here
   renderer.setPixelRatio(window.devicePixelRatio); // Set the pixel ratio for better clarity
   container.value.appendChild(renderer.domElement);
 
@@ -63,10 +93,8 @@ onMounted(() => {
 
   const controls = new OrbitControls(camera, renderer.domElement);
 
-
-
-  const sphereDataGroup = new THREE.Group();
-  scene.add(sphereDataGroup);
+  const skeletonDataGroup = new THREE.Group();
+  scene.add(skeletonDataGroup);
   const grid_size = 500;
   const grid_divisions = 10;
   const gridHelper = new THREE.GridHelper(grid_size, grid_divisions);
@@ -74,24 +102,24 @@ onMounted(() => {
   const gridLine = new THREE.Line3(gridHelper.geometry.attributes.position.array[0], gridHelper.geometry.attributes.position.array[1]);
   scene.add(gridHelper);
 
-  let startingFrame = 0
 
   const animate = function () {
     requestAnimationFrame(animate);
-
     controls.update();
     renderer.render(scene, camera);
-    // visualizeData(startingFrame++);
   };
 
   fetchData();
   animate();
 
+  watch(currentFrameNumber, (newFrame) => {
+    visualizeData(newFrame, skeletonData, skeletonDataGroup)
+  });
   // Handle window resize
   const handleResize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth * 0.8, window.innerHeight * 0.6); // Adjust size here
   };
 
   window.addEventListener('resize', handleResize);
@@ -104,12 +132,25 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.threejs-container {
-  width: 100%;
+.main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   height: 100vh;
+}
+
+.threejs-container {
+  width: 80%;
+  height: 60vh;
+  background-color: #000000;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #000000;
+}
+
+
+.frame-label {
+  color: black;
 }
 </style>
