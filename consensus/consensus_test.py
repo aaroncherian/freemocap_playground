@@ -2,6 +2,8 @@ import plotly.graph_objs as go
 import numpy as np
 import itertools
 
+## if continuing on this, the todo would be loading jon's treadmill data, finding the exact right frame, getting qualisys data, and doing the alignment 
+
 class FreeMoCap3DPlotter:
     def __init__(self, data, frame):
         """
