@@ -11,8 +11,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@primevue/themes": "^4.0.5",
     "@tresjs/core": "^4.2.5",
     "pinia": "^2.2.1",
+    "primevue": "^4.0.5",
     "three": "^0.167.1"
   }
 }
