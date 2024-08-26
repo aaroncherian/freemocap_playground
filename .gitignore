@@ -3,3 +3,8 @@
 desktop.ini
 **/__pycache__
 **/.idea
+/skeleton-visualization/node_modules
+/skeleton-visualization/node_modules
+/skeleton-visualization/node_modules/.pnpm/node_modules
+/skeleton-visualization/node_modules
+/skeleton-visualization/node_modules/.pnpm
