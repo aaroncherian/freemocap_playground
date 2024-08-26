@@ -1,26 +1,21 @@
-<script setup>
-import SkeletonData from "@/components/SkeletonData.vue";
-import Visualizer from './components/Visualizer.vue'
-</script>
-
 <template>
   <div id="app">
-    <Visualizer />
+    <PrimeVueThreeJS  />
   </div>
 </template>
 
+<script setup>
+import PrimeVueThreeJS from './components/primevue/ThreeJSCard.vue';
+</script>
+
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
+body {
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
+  padding: 2rem;
 }
 </style>

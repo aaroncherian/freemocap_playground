@@ -52,7 +52,7 @@ app.add_middleware(
 @app.get("/")
 async def get_index():
     logger.info("Serving index.html")
-    return FileResponse("skeleton-visualization/fast_api/index.html")
+    return FileResponse("skeleton-visualization/vue_fastapi/index.html")
 
 @app.get("/available_joint_names")
 async def get_available_joint_names():
