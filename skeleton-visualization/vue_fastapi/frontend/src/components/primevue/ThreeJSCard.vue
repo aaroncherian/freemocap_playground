@@ -1,7 +1,6 @@
 <template>
   <div class="card">
-    <h5>Three.js Scene</h5>
-    <div class="mt-3">
+    <div class="mt-3" style="flex-grow: 1;">
       <ThreeJSScene :width="width" :height="height" />
     </div>
   </div>
@@ -10,7 +9,19 @@
 <script setup>
 import ThreeJSScene from '../SimpleBox.vue';
 
-// You can adjust these values directly here
-const width = '400px';
-const height = '100px';
+// Set width and height as strings
+const width = '100%';
+const height = '100%';
 </script>
+
+<style scoped>
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Ensure the card takes full height */
+  width: 100%; /* Ensure the card takes full width */
+  padding: 1rem;
+}
+
+
+</style>
