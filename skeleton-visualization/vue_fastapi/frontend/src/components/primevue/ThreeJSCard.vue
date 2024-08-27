@@ -7,7 +7,7 @@
 </template>
 
 <script setup>
-import ThreeJSScene from '../SimpleBox.vue';
+import ThreeJSScene from '../Skeleton3DPlot.vue';
 
 // Set width and height as strings
 const width = '100%';

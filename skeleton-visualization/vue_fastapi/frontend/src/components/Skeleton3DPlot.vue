@@ -12,6 +12,18 @@ const container = ref(null);
 const currentFrameNumber = ref(null);
 let skeletonData = ref([]);
 
+const props = defineProps({
+  width: {
+    type: String,
+    default: '100%'
+  },
+  height: {
+    type: String,
+    default: '100%'
+  }
+});
+
+
 onMounted(() => {
   const fetchData = async () => {
     try {
@@ -121,6 +133,8 @@ onMounted(() => {
     renderer.setSize(container.value.clientWidth, container.value.clientHeight);
   };
 
+  setTimeout(handleResize, 0); // Trigger resize to ensure correct dimensions after initial load
+
   window.addEventListener('resize', handleResize);
 
   // Clean up on unmount
@@ -132,11 +146,8 @@ onMounted(() => {
 
 <style scoped>
 .threejs-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: v-bind(width);
+  height: v-bind(height);
 }
 
 </style>
