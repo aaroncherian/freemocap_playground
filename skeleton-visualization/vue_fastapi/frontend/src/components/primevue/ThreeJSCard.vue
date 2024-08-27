@@ -11,6 +11,6 @@
 import ThreeJSScene from '../SimpleBox.vue';
 
 // You can adjust these values directly here
-const width = '1000px';
-const height = '800px';
+const width = '400px';
+const height = '100px';
 </script>
