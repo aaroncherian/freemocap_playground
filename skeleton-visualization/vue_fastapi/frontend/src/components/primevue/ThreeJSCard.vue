@@ -21,6 +21,11 @@ const height = '100%';
   height: 100%; /* Ensure the card takes full height */
   width: 100%; /* Ensure the card takes full width */
   padding: 1rem;
+  border-radius: 15px;
+  background-color: #ffffff;
+  margin-top: 40px;
+  justify-content: center; /* Center content vertically */
+
 }
 
 

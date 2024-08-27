@@ -39,7 +39,6 @@ html, body, #app {
 .grid-item {
   grid-column: 3 / span 6; /* Start at column 3 and span 6 columns */
   grid-row: span 3; /* Span 4 out of 5 rows */
-  background-color: #707070; /* Just for visibility */
   display: flex;
   justify-content: center;
   align-items: center;
