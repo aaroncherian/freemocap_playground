@@ -3,11 +3,15 @@
     <div class="grid-item">
       <PrimeVueThreeJS />
     </div>
+    <div class = 'slider-item'>
+      <Slider />
+    </div>
   </div>
 </template>
 
 <script setup>
 import PrimeVueThreeJS from './components/primevue/ThreeJSCard.vue';
+import Slider from './components/animation_control_panel/Slider.vue'
 </script>
 
 <style>
@@ -42,5 +46,10 @@ html, body, #app {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.slider-item{
+  grid-column: 3 / span 6;
+  margin: 30px;
 }
 </style>

@@ -1,6 +1,6 @@
 <script setup>
 import ThreeJS from './Skeleton3DPlot.vue';
-import Slider from './Slider.vue';
+import Slider from './animation_control_panel/Slider.vue';
 </script>
 
 <template>
