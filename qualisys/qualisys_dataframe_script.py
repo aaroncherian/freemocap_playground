@@ -1,5 +1,5 @@
 
-from qualisys.joint_center_calculation.calculate_joint_centers import calculate_joint_centers
+from joint_center_calculation.calculate_joint_centers import calculate_joint_centers
 import pandas as pd
 from pathlib import Path
 
@@ -66,17 +66,21 @@ def main(original_qualisys_dataframe: pd.DataFrame, joint_center_weights: dict):
 
 if __name__ == '__main__':
     import numpy as np
-    from qualisys.joint_center_calculation.generic_mappings.full_body_generic_marker_mapping import qualisys_marker_mappings
-    from qualisys.joint_center_calculation.joint_center_weights.full_body_joint_center_weights import joint_center_weights
+    from joint_center_calculation.generic_mappings.full_body_generic_marker_mapping import qualisys_marker_mappings
+    from joint_center_calculation.joint_center_weights.full_body_joint_center_weights import joint_center_weights
+
+    from skellymodels.model_info.qualisys_model_info import QualisysModelInfo
 
     # from qualisys.joint_center_calculation.generic_mappings.prosthetic_generic_mappings import qualisys_marker_mappings
     # from qualisys.joint_center_calculation.joint_center_weights.prosthetic_joint_center_weights import joint_center_weights
     
-    from qualisys.qualisys_plotting import plot_3d_scatter
+    from qualisys_plotting import plot_3d_scatter
 
     # path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\mediapipe_MDN_Trial_2_yolo')
     # path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2')
-    path_to_recording_folder = Path(r'D:\2024-04-25_P01\1.0_recordings\sesh_2024-04-25_14_45_59_P01_NIH_Trial1')
+    # path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2')
+
+    path_to_recording_folder = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1')
     path_to_qualisys_folder = path_to_recording_folder / 'qualisys_data'
     path_to_qualisys_csv = path_to_qualisys_folder / 'qualisys_markers_dataframe.csv'
     save_path = path_to_qualisys_folder / 'qualisys_joint_centers_3d_xyz.npy'
@@ -85,7 +89,7 @@ if __name__ == '__main__':
 
     joint_centers_frame_marker_dimension,qualisys_markers_frame_marker_dimension = main(qualisys_dataframe, joint_center_weights)
 
-    post_process_task_worker = TaskWorkerThread(raw_skeleton_data=joint_centers_frame_marker_dimension, task_list= [TASK_INTERPOLATION, TASK_FILTERING], settings=default_settings)
+    post_process_task_worker = TaskWorkerThread(raw_skeleton_data=joint_centers_frame_marker_dimension, landmark_names=QualisysModelInfo.landmark_names, task_list= [TASK_INTERPOLATION, TASK_FILTERING], settings=default_settings)
     post_process_task_worker.run()
     filt_interp_joint_centers_frame_marker_dimension = post_process_task_worker.tasks[TASK_FILTERING]['result']
 
