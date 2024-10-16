@@ -16,37 +16,40 @@ x_error_df = rmse_data[rmse_data['coordinate'] == 'x_error']
 y_error_df = rmse_data[rmse_data['coordinate'] == 'y_error']
 z_error_df = rmse_data[rmse_data['coordinate'] == 'z_error']
 
-# Create subplots for each dimension (x, y, z)
+# Find the maximum RMSE value across all dimensions for consistent x-axis range
+max_rmse = max(x_error_df['RMSE'].max(), y_error_df['RMSE'].max(), z_error_df['RMSE'].max())
+
+# Create subplots for each dimension (x, y, z) in horizontal layout (3 columns, 1 row)
 fig = psub.make_subplots(
-    rows=3, cols=1, shared_xaxes=True,
+    rows=1, cols=3, shared_yaxes=True,  # Horizontal layout
     subplot_titles=('RMSE in X Dimension', 'RMSE in Y Dimension', 'RMSE in Z Dimension'),
-    vertical_spacing=0.05  # Reduced vertical spacing
+    horizontal_spacing=0.05  # Reduced horizontal spacing
 )
 
-# Set the y-axis range for consistency across subplots
-y_axis_range = [0, 70]
-
-# X dimension
+# X dimension with rounded numbers
 fig.add_trace(
-    go.Bar(x=x_error_df['marker'], y=x_error_df['RMSE'], name='X RMSE', marker_color='royalblue', width=0.6), 
+    go.Bar(x=x_error_df['RMSE'], y=x_error_df['marker'], name='X RMSE', marker_color='royalblue', 
+           orientation='h', text=x_error_df['RMSE'].round(1), textposition='auto'),  # Rounded to 1 decimal
     row=1, col=1
 )
 
-# Y dimension
+# Y dimension with rounded numbers
 fig.add_trace(
-    go.Bar(x=y_error_df['marker'], y=y_error_df['RMSE'], name='Y RMSE', marker_color='seagreen', width=0.6), 
-    row=2, col=1
+    go.Bar(x=y_error_df['RMSE'], y=y_error_df['marker'], name='Y RMSE', marker_color='seagreen', 
+           orientation='h', text=y_error_df['RMSE'].round(1), textposition='auto'),  # Rounded to 1 decimal
+    row=1, col=2
 )
 
-# Z dimension
+# Z dimension with darker red and white text
 fig.add_trace(
-    go.Bar(x=z_error_df['marker'], y=z_error_df['RMSE'], name='Z RMSE', marker_color='tomato', width=0.6), 
-    row=3, col=1
+    go.Bar(x=z_error_df['RMSE'], y=z_error_df['marker'], name='Z RMSE', marker_color='darkred',  # Darker red
+           orientation='h', text=z_error_df['RMSE'].round(1), textposition='auto', textfont=dict(color='white')),  # White text
+    row=1, col=3
 )
 
 # Update layout for aesthetics
 fig.update_layout(
-    height=900, width=1000,
+    height=600, width=1200,
     title_text="RMSE for X, Y, and Z Dimensions for Each Marker",
     title_font=dict(size=20, color='black', family='Arial'),
     showlegend=False,
@@ -55,15 +58,16 @@ fig.update_layout(
     margin=dict(l=50, r=50, t=80, b=50)
 )
 
-# Set consistent Y-axis range for all subplots and add Y-axis labels
-fig.update_yaxes(range=y_axis_range, showgrid=True, gridwidth=0.5, gridcolor='lightgray', title_text="RMSE (mm)")
+# Set consistent X-axis range for all subplots and enable vertical gridlines (along the x-axis)
+fig.update_xaxes(range=[0, max_rmse], title_text="RMSE (mm)", showgrid=True, gridwidth=0.5, gridcolor='lightgray')
 
-# Update x-axis to improve readability with bold font
-fig.update_xaxes(
-    tickangle=45,
-    tickfont=dict(size=14, family="Arial", color="black"),  # Bold font for X-axis labels
-    showgrid=False
-)
+# Set Y-axis only for the first plot (X dimension), increase the font size for marker names
+fig.update_yaxes(showgrid=False, title_text="Markers", row=1, col=1)
+fig.update_yaxes(showticklabels=False, row=1, col=2)  # Remove Y labels for Y dimension
+fig.update_yaxes(showticklabels=False, row=1, col=3)  # Remove Y labels for Z dimension
+
+# Update Y-axis tick font size for bigger marker names
+fig.update_yaxes(tickfont=dict(size=14))
 
 # Show the plot
 fig.show()
