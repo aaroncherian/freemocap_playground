@@ -27,7 +27,7 @@ fig = go.Figure()
 fig.add_trace(go.Bar(
     x=total_rmse_df['Dimension'], 
     y=total_rmse_df['Total RMSE'], 
-    marker_color=['royalblue', 'seagreen', 'darkred'],  # Colors for X, Y, Z
+    marker_color=['darkred', 'seagreen', 'royalblue'],  # Colors for X, Y, Z
     text=total_rmse_df['Total RMSE'],  # Show RMSE values
     textposition='auto'
 ))
@@ -39,11 +39,11 @@ fig.update_layout(
     yaxis_title="Total RMSE (mm)",
     title_font=dict(size=20, color='black', family='Arial'),
     plot_bgcolor='white',
-    font=dict(size=12),
-    height=600, width=600,
+    font=dict(size=26),
+    height=1000, width=1000,
     margin=dict(l=50, r=50, t=80, b=50),
     xaxis=dict(
-        tickfont=dict(size=24)  # Larger font for X, Y, Z labels
+        tickfont=dict(size=30)  # Larger font for X, Y, Z labels
     ),
     yaxis=dict(
         showgrid=True, gridwidth=0.5, gridcolor='lightgray'  # Horizontal gridlines

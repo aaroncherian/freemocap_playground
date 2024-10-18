@@ -28,7 +28,7 @@ fig = psub.make_subplots(
 
 # X dimension with rounded numbers
 fig.add_trace(
-    go.Bar(x=x_error_df['RMSE'], y=x_error_df['marker'], name='X RMSE', marker_color='royalblue', 
+    go.Bar(x=x_error_df['RMSE'], y=x_error_df['marker'], name='X RMSE', marker_color='darkred', 
            orientation='h', text=x_error_df['RMSE'].round(1), textposition='auto'),  # Rounded to 1 decimal
     row=1, col=1
 )
@@ -42,19 +42,19 @@ fig.add_trace(
 
 # Z dimension with darker red and white text
 fig.add_trace(
-    go.Bar(x=z_error_df['RMSE'], y=z_error_df['marker'], name='Z RMSE', marker_color='darkred',  # Darker red
+    go.Bar(x=z_error_df['RMSE'], y=z_error_df['marker'], name='Z RMSE', marker_color='royalblue',  # Darker red
            orientation='h', text=z_error_df['RMSE'].round(1), textposition='auto', textfont=dict(color='white')),  # White text
     row=1, col=3
 )
 
 # Update layout for aesthetics
 fig.update_layout(
-    height=600, width=1200,
+    height=800, width=1400,
     title_text="RMSE for X, Y, and Z Dimensions for Each Marker",
-    title_font=dict(size=20, color='black', family='Arial'),
+    title_font=dict(size=22, color='black', family='Arial'),
     showlegend=False,
     plot_bgcolor='white',
-    font=dict(size=12),
+    font=dict(size=16),
     margin=dict(l=50, r=50, t=80, b=50)
 )
 
