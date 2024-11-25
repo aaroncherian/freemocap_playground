@@ -1,9 +1,11 @@
 from pathlib import Path
 import numpy as np
-from freemocap_utils.mediapipe_skeleton_builder import mediapipe_indices
+from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 
+
+mediapipe_indices = MediapipeModelInfo.body_landmark_names
 
 def load_specific_marker_data(marker_data:np.ndarray, joint_to_use:str, axis_to_use:int):
     #for axis to use, 0 = x axis, 1 = y axis, 2 = z axis

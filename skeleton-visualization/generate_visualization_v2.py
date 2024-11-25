@@ -14,8 +14,8 @@ from skellymodels.create_model_skeleton import create_mediapipe_skeleton_model, 
 from pathlib import Path
 # HTTP Server
 
-# recording_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1')
-recording_folder_path = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1')
+recording_folder_path = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1')
+# recording_folder_path = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1')
 output_data_folder_path = recording_folder_path / 'output_data'
 tracker_type = 'mediapipe'
 data_3d_path = output_data_folder_path / f'{tracker_type}_body_3d_xyz.npy'
@@ -34,7 +34,7 @@ tracker_type = 'mediapipe'
 # data_3d_path = output_data_folder_path / 'openpose_body_3d_xyz.npy'
 data_3d_path = output_data_folder_path / f'{tracker_type}_body_3d_xyz.npy'
 # data_3d_path = output_data_folder_path / 'raw_data'/'openpose_3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
-# ik_results_path = output_data_folder_path / 'IK_results.mot'
+ik_results_path = output_data_folder_path / 'IK_results.mot'
 
 
 class HttpHandler(SimpleHTTPRequestHandler):

@@ -78,9 +78,9 @@ if __name__ == '__main__':
 
     # path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\mediapipe_MDN_Trial_2_yolo')
     # path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2')
-    # path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2')
+    path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2')
 
-    path_to_recording_folder = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1')
+    # path_to_recording_folder = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1')
     path_to_qualisys_folder = path_to_recording_folder / 'qualisys_data'
     path_to_qualisys_csv = path_to_qualisys_folder / 'qualisys_markers_dataframe.csv'
     save_path = path_to_qualisys_folder / 'qualisys_joint_centers_3d_xyz.npy'
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     }
     
     plot_3d_scatter(data_arrays_to_plot)
-    np.save(save_path, filt_interp_joint_centers_frame_marker_dimension)
+    # np.save(save_path, filt_interp_joint_centers_frame_marker_dimension)
 
     
 

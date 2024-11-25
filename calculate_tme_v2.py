@@ -233,7 +233,7 @@ def plot_3d_trajectory_tme_deviation(data, TME):
 
 
 # Load data
-path_to_com_data = Path(r"D:\2024-08-01_treadmill_KK_JSM_ATC\1.0_recordings\sesh_2024-08-01_16_18_26_JSM_wrecking_ball\output_data\rigid_bones_data\center_of_mass_data\total_body_center_of_mass_xyz.npy")
+path_to_com_data = Path(r"D:\2024-08-01_treadmill_KK_JSM_ATC\1.0_recordings\sesh_2024-08-01_16_22_49_JSM_kettlebell\saved_data\npy\center_of_mass_frame_name_xyz.npy")
 weight_lbs = 180 #lbs this was just a random guess don't get mad Jon
 fps = 30
 frames_to_use = None # [start_frame, end_frame], specify None to use all frames or [start_frame, None] to use from start_frame to the end

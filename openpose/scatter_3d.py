@@ -73,3 +73,11 @@ def plot_3d_scatter(data_3d_dict: dict):
 
     # Show the plot
     fig.show()
+
+
+if __name__ == '__main__':
+    array = np.load(r'C:\Users\aaron\Documents\HumonLab\rgd_sample_array.npy')
+
+    data_3d_dict = {'mediapipe_with_depth': array}
+    plot_3d_scatter(data_3d_dict)
+    f = 2
