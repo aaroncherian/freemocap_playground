@@ -58,7 +58,7 @@ pose_estimator = mp_pose.Pose(
 )
 
 
-input_video_filepath = Path(r"D:\2024-04-25_P01\1.0_recordings\sesh_2024-04-25_15_55_43_P01_WalkRun_Trial2\synchronized_videos\sesh_2024-04-25_15_55_43_P01_WalkRun_Trial2_synced_Cam5.mp4")
+input_video_filepath = Path(r"D:\2024-04-25_P01\1.0_recordings\sesh_2024-04-25_15_55_43_P01_WalkRun_Trial2\synchronized_videos\sesh_2024-04-25_15_55_43_P01_WalkRun_Trial2_synced_Cam6.mp4")
 
 cap = cv2.VideoCapture(str(input_video_filepath))
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -96,7 +96,7 @@ for frame_number in iterator:
 cap.release()
 
 mediapipe_with_depth_array = process_recorded_data(pose_data, width, height, depth_data)
-np.save(r'D:\2024-04-25_P01\1.0_recordings\sesh_2024-04-25_15_55_43_P01_WalkRun_Trial2\output_data\component_mediapipe_depth_pro\mediapipe_depth_pro_body_3d_xyz.npy', mediapipe_with_depth_array)
+np.save(r'D:\2024-04-25_P01\1.0_recordings\sesh_2024-04-25_15_55_43_P01_WalkRun_Trial2\output_data\component_mediapipe_depth_pro_side\mediapipe_depth_pro_body_3d_xyz.npy', mediapipe_with_depth_array)
 f = 2
 
 
@@ -117,5 +117,5 @@ f = 2
     #         # mediapipe_array.append([landmark_data.x*img.shape[0], landmark_data.y*img.shape[1]])
     #         x = landmark_data.x * img_width
     #         y = landmark_data.y * img_height
-    #         z = landmark_data.z * img_width  # Z is relative to the width
+    #         z = landmark_data.z * img_width  # Z is relative to the width10
     #         mediapipe_array.append([x, y, z])

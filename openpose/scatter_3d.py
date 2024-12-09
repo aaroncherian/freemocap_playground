@@ -76,7 +76,7 @@ def plot_3d_scatter(data_3d_dict: dict):
 
 
 if __name__ == '__main__':
-    array = np.load(r'C:\Users\aaron\Documents\HumonLab\rgd_sample_array.npy')
+    array = np.load(r'D:\2024-04-25_P01\1.0_recordings\sesh_2024-04-25_15_55_43_P01_WalkRun_Trial2\output_data\component_mediapipe_depth_pro\mediapipe_depth_pro_body_3d_xyz.npy')
 
     data_3d_dict = {'mediapipe_with_depth': array}
     plot_3d_scatter(data_3d_dict)
