@@ -231,7 +231,18 @@ def reformat_dataframe_to_fmc_shaped_numpy_array(dataframe:pd.DataFrame):
     data_flat = dataframe[marker_dataframe_columns].to_numpy()
     return  data_flat.reshape(num_frames, num_markers, 3)  # Shape: (frames, markers, dimensions)
 
+def convert_lag_from_frames_to_seconds(lag_frames: int, framerate: float) -> float:
+    """
+    Convert a lag from frames to seconds.
 
+    Parameters:
+        lag_frames (int): The lag in frames.
+        framerate (float): The framerate of the data.
+
+    Returns:
+        float: The lag in seconds.
+    """
+    return lag_frames / framerate
 
 
 header_length = get_header_length(qualisys_marker_tsv_path)
@@ -264,7 +275,7 @@ for joint_idx, joint_name in enumerate(qualisys_joint_center_names):
         qualisys_joint_center_trajectories[col_name] = qualisys_joint_center_trajectories_array[:, joint_idx, axis_idx]
 
 qualisys_joint_center_trajectories_with_unix = create_and_insert_unix_timestamp_column(
-    qualisys_joint_center_trajectories, 
+    qualisys_joint_center_trajectories.copy(), 
     qualisys_unix_start_time
 )
 freemocap_timestamps, framerate = create_freemocap_unix_timestamps(freemocap_csv_path)
@@ -292,6 +303,34 @@ for joint_center in common_joint_centers:
 median_lag = int(np.median(optimal_lag_list))
 print(f'The median optimal lag for all common markers is: {median_lag}')
 
+lag_seconds = convert_lag_from_frames_to_seconds(median_lag, framerate)
+
+print(f"Calculated lag in seconds: {lag_seconds}")
+
+
+lag_corrected_qualisys_joint_center_trajectories = create_and_insert_unix_timestamp_column(
+    qualisys_joint_center_trajectories, 
+    qualisys_unix_start_time,
+    lag_in_seconds=lag_seconds
+)
+
+
+lag_corrected_resampled_qualisys_joint_centers = resample_qualisys_data(lag_corrected_qualisys_joint_center_trajectories, freemocap_timestamps)
+lag_corrected_qualisys_joints_array = reformat_dataframe_to_fmc_shaped_numpy_array(lag_corrected_resampled_qualisys_joint_centers)
+
+lag_corrected_rotated_qualisys_joint_centers = run_skellyforge_rotation(lag_corrected_qualisys_joints_array, qualisys_joint_center_names)
+
+optimal_lag_list = []
+for joint_center in common_joint_centers:
+    qualisys_marker_idx = qualisys_joint_center_names.index(joint_center)
+    freemocap_marker_idx = freemocap_joint_center_names.index(joint_center)
+    qualisys_marker_data = lag_corrected_rotated_qualisys_joint_centers[:, qualisys_marker_idx, :]
+    freemocap_marker_data = rotated_freemocap_joint_centers[:, freemocap_marker_idx, :]
+    optimal_lag = calculate_optimal_lag(freemocap_marker_data, qualisys_marker_data)
+    optimal_lag_list.append(optimal_lag)
+
+median_lag = int(np.median(optimal_lag_list))
+print(f'The median optimal lag for all common markers is: {median_lag}')
 f = 2
 
 
