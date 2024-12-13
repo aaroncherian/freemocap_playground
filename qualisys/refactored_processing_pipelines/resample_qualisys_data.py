@@ -229,7 +229,7 @@ def reformat_dataframe_to_fmc_shaped_numpy_array(dataframe:pd.DataFrame):
     num_markers = len(marker_names)
     
     data_flat = dataframe[marker_dataframe_columns].to_numpy()
-    return  data_flat.reshape(num_frames, num_markers, 3)  # Shape: (frames, markers, dimensions)
+    return  data_flat.reshape(num_frames, num_markers, 3), marker_names  # Shape: (frames, markers, dimensions)
 
 def convert_lag_from_frames_to_seconds(lag_frames: int, framerate: float) -> float:
     """
@@ -249,7 +249,7 @@ header_length = get_header_length(qualisys_marker_tsv_path)
 qualisys_marker_trajectories = pd.read_csv(qualisys_marker_tsv_path, delimiter='\t', skiprows=header_length)
 qualisys_unix_start_time = get_starting_qualisys_timestamp(qualisys_marker_tsv_path)
 
-marker_data_formatted = reformat_dataframe_to_fmc_shaped_numpy_array(qualisys_marker_trajectories)
+marker_data_formatted, marker_names = reformat_dataframe_to_fmc_shaped_numpy_array(qualisys_marker_trajectories)
 
 marker_dataframe_columns =  qualisys_marker_trajectories.columns[~ qualisys_marker_trajectories.columns.str.contains(r'^(?:Frame|Time|unix_timestamps|Unnamed)', regex=True)]
 qualisys_marker_names = list(dict.fromkeys(col.split()[0] for col in marker_dataframe_columns))
@@ -281,7 +281,7 @@ qualisys_joint_center_trajectories_with_unix = create_and_insert_unix_timestamp_
 freemocap_timestamps, framerate = create_freemocap_unix_timestamps(freemocap_csv_path)
 resampled_qualisys_joint_centers = resample_qualisys_data(qualisys_joint_center_trajectories_with_unix, freemocap_timestamps)
 
-qualisys_joints_array = reformat_dataframe_to_fmc_shaped_numpy_array(resampled_qualisys_joint_centers)
+qualisys_joints_array,_ = reformat_dataframe_to_fmc_shaped_numpy_array(resampled_qualisys_joint_centers)
 
 freemocap_joint_center_names = MediapipeModelInfo.landmark_names
 freemocap_joint_centers = np.load(freemocap_data_path)
@@ -316,7 +316,7 @@ lag_corrected_qualisys_joint_center_trajectories = create_and_insert_unix_timest
 
 
 lag_corrected_resampled_qualisys_joint_centers = resample_qualisys_data(lag_corrected_qualisys_joint_center_trajectories, freemocap_timestamps)
-lag_corrected_qualisys_joints_array = reformat_dataframe_to_fmc_shaped_numpy_array(lag_corrected_resampled_qualisys_joint_centers)
+lag_corrected_qualisys_joints_array,_ = reformat_dataframe_to_fmc_shaped_numpy_array(lag_corrected_resampled_qualisys_joint_centers)
 
 lag_corrected_rotated_qualisys_joint_centers = run_skellyforge_rotation(lag_corrected_qualisys_joints_array, qualisys_joint_center_names)
 
@@ -334,102 +334,3 @@ print(f'The median optimal lag for all common markers is: {median_lag}')
 f = 2
 
 
-
-
-# num_total_data_points = num_frames * num_joints * 3
-# frame_data = np.repeat(qualisys_marker_trajectories['Frame'].values, num_joints * 3)
-# time_data = np.repeat(qualisys_marker_trajectories['Time'].values, num_joints * 3)
-# joint_data = np.tile(np.repeat(qualisys_joint_center_names, 3), num_frames)
-# axis_data = np.tile(['X', 'Y', 'Z'], num_frames * num_joints)
-# value_data = qualisys_joint_center_trajectories_array.flatten()
-
-# qualisys_joint_center_trajectories = pd.DataFrame({
-#     'Frame': frame_data,
-#     'Time': time_data,
-#     'Joint': joint_data,
-#     'Axis': axis_data,
-#     'Value': value_data
-# })
-
-# qualisys_joint_center_trajectories_with_unix = create_and_insert_unix_timestamp_column(qualisys_joint_center_trajectories, qualisys_unix_start_time)
-
-# freemocap_timestamps, framerate = create_freemocap_unix_timestamps(freemocap_csv_path)
-# resampled_qualisys_joint_centers = resample_qualisys_data(qualisys_joint_center_trajectories_with_unix, freemocap_timestamps)
-
-
-# header_length = get_header_length(qualisys_marker_tsv_path)
-# qualisys_markers = pd.read_csv(qualisys_marker_tsv_path, delimiter='\t', skiprows=header_length)
-# qualisys_unix_start_time = get_starting_qualisys_timestamp(qualisys_marker_tsv_path)
-# qualisys_markers_with_unix = create_and_insert_unix_timestamp_column(qualisys_markers, qualisys_unix_start_time)
-
-# marker_data_columns =  qualisys_markers_with_unix.columns[~ qualisys_markers_with_unix.columns.str.contains(r'^(?:Frame|Time|unix_timestamps|Unnamed)', regex=True)]
-# marker_names = list(dict.fromkeys(col.split()[0] for col in marker_data_columns))
-# marker_data_flat = qualisys_markers_with_unix[marker_data_columns].to_numpy()
-
-# num_frames = len(qualisys_markers_with_unix)
-# num_markers = len(marker_names)
-# marker_data_formatted = marker_data_flat.reshape(num_frames, num_markers, 3)  # Shape: (frames, markers, dimensions)
-# qualisys_marker_list = list(joint_center_weights.keys())
-# freemocap_marker_list = MediapipeModelInfo.landmark_names
-
-# qualisys_joint_centers = calculate_joint_centers(array_3d=marker_data_formatted, joint_center_weights=joint_center_weights, marker_names=marker_names)
-# num_joints = np.shape(qualisys_joint_centers)[1]
-
-# num_entries = num_frames * num_joints * 3
-# frame_data = np.repeat(qualisys_markers['Frame'].values, num_joints * 3)
-# time_data = np.repeat(qualisys_markers['Time'].values, num_joints * 3)
-# joint_data = np.tile(np.repeat(qualisys_marker_list, 3), num_frames)
-# axis_data = np.tile(['X', 'Y', 'Z'], num_frames * num_joints)
-# value_data = qualisys_joint_centers.flatten()
-
-# # Create tidy dataframe
-# tidy_joint_df = pd.DataFrame({
-#     'Frame': frame_data,
-#     'Time': time_data,
-#     'Joint': joint_data,
-#     'Axis': axis_data,
-#     'Value': value_data
-# })
-
-# tidy_joint_df_with_unix = create_and_insert_unix_timestamp_column(tidy_joint_df, qualisys_unix_start_time)
-
-
-
-# View the resultate = create_freemocap_unix_timestamps(freemocap_csv_path)
-
-# resampled_qualisys_markers = resample_qualisys_data(qualisys_markers_with_unix, freemocap_timestamps)
-
-
-# marker_data_columns =  resampled_qualisys_markers.columns[~ resampled_qualisys_markers.columns.str.contains(r'^(?:Frame|Time|unix_timestamps|Unnamed)', regex=True)]
-# marker_names = list(dict.fromkeys(col.split()[0] for col in marker_data_columns))
-# marker_data_flat = resampled_qualisys_markers[marker_data_columns].to_numpy()
-
-# num_frames = len(resampled_qualisys_markers)
-# num_markers = len(marker_names)
-# marker_data_formatted = marker_data_flat.reshape(num_frames, num_markers, 3)  # Shape: (frames, markers, dimensions)
-
-# qualisys_marker_list = list(joint_center_weights.keys())
-# freemocap_marker_list = MediapipeModelInfo.landmark_names
-
-# qualisys_joint_centers = calculate_joint_centers(array_3d=marker_data_formatted, joint_center_weights=joint_center_weights, marker_names=marker_names)
-
-# rotated_qualisys_joint_centers = run_skellyforge_rotation(qualisys_joint_centers, qualisys_marker_list)
-
-
-# freemocap_joint_centers = np.load(freemocap_data_path)
-# rotated_freemocap_joint_centers = run_skellyforge_rotation(freemocap_joint_centers, freemocap_marker_list)
-
-# common_markers = list(set(qualisys_marker_list) & set(freemocap_marker_list))
-
-# optimal_lag_list = []
-# for marker in common_markers:
-#     qualisys_marker_idx = qualisys_marker_list.index(marker)
-#     freemocap_marker_idx = freemocap_marker_list.index(marker)
-#     qualisys_marker_data = rotated_qualisys_joint_centers[:, qualisys_marker_idx, :]
-#     freemocap_marker_data = rotated_freemocap_joint_centers[:, freemocap_marker_idx, :]
-#     optimal_lag = calculate_optimal_lag(freemocap_marker_data, qualisys_marker_data)
-#     optimal_lag_list.append(optimal_lag)
-
-# median_lag = int(np.median(optimal_lag_list))
-# print(f'The median optimal lag for all common markers is: {median_lag}')
-f = 2
