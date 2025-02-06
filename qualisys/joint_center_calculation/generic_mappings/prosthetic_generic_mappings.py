@@ -3,6 +3,7 @@
 
 
 qualisys_marker_mappings = {
+
     "right_hip" : {
         "RIC": "right_upper_hip",
         "RPSIS": "right_back_upper_hip",

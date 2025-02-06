@@ -1,4 +1,5 @@
 joint_center_weights = {
+    
     'right_hip': {
         'right_upper_hip': [.25, .25, .25],
         'right_back_upper_hip': [.25, .25, .25],

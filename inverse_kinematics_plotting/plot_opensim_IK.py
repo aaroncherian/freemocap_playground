@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
-# import plotly.graph_objs as go
-# import plotly.subplots as sp
+import plotly.graph_objs as go
+import plotly.subplots as sp
 
 
 path_to_freemocap_folder = Path(r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_37_32_MDN_treadmill_1")
