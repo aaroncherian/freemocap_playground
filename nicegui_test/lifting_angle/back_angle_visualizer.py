@@ -3,7 +3,7 @@ from skellymodels.experimental.model_redo.tracker_info.model_info import ModelIn
 
 from back_angle_plot import BackAnglePlot
 from threejsplot import ThreeJSPlot
-from trunk_inclination_plot import TrunkInclinationPlot
+from trunk_inclination_plot import TrunkInclinationPlot, TrunkRotationPlot
 
 from pathlib import Path
 import numpy as np
@@ -40,12 +40,16 @@ back_plot = BackAnglePlot(azimuthal=spine_vector_azimuthal,
                          polar=spine_vector_polar,
                          vector_magnitude=spine_vector_magnitude)
 marker_viz = ThreeJSPlot(human=human)
-trunk_plots = TrunkInclinationPlot(polar_angle_data=spine_vector_polar)
+trunk_inclination_plot = TrunkInclinationPlot(polar_angle_data=spine_vector_polar)
+trunk_rotation_plot = TrunkRotationPlot(azimuthal_angle_data=spine_vector_azimuthal)
 
 with ui.row():
     marker_viz.create_scene()
     plot3d = ui.plotly(back_plot.create_figure()).classes('w-[800px] h-[800px]')
-    plot2d = trunk_plots.create_plot()  # Create and store plot
+    with ui.column():
+        inclination_plot2d = trunk_inclination_plot.create_plot()
+        rotation_plot2d = trunk_rotation_plot.create_plot()
+
 
 def update_label(event):
     frame_label.text = f'Frame: {int(event.value)}'
@@ -54,7 +58,8 @@ def on_slider_change(event):
     plot3d.update_figure(back_plot.update_plot(event.value))
     update_label(event)
     marker_viz.update_scene(event.value)
-    trunk_plots.update_plot(event.value)  # Now just needs frame_idx
+    trunk_inclination_plot.update_plot(event.value)
+    trunk_rotation_plot.update_plot(event.value)
 
 frame_label = ui.label('Frame: 0')
 ui.slider(

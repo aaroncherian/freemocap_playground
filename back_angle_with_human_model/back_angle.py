@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-path_to_recording = Path(r'C:\Users\Aaron\FreeMocap_Data\recording_sessions\recording_15_26_59_gmt-4__kk_bad_form')
+path_to_recording = Path(r'D:\recording_15_26_59_gmt-4__kk_bad_form')
 path_to_output_data = path_to_recording / 'output_data'/ 'mediapipe_body_3d_xyz.npy'
 
 
@@ -130,60 +130,31 @@ import plotly.graph_objects as go
 import plotly.io as pio
 
 # Create 3D figure with a reference hemisphere
+# plt.show()
+import plotly.graph_objects as go
+import plotly.io as pio
+
 fig = go.Figure()
-
-# Add a reference hemisphere (to visualize spherical motion)
-theta_grid = np.linspace(0, 2 * np.pi, 50)
-phi_grid = np.linspace(0, np.pi / 2, 25)  # Half-sphere to visualize inclination
-
-# Generate hemisphere mesh
-x_hemisphere = np.outer(np.sin(phi_grid), np.cos(theta_grid))
-y_hemisphere = np.outer(np.sin(phi_grid), np.sin(theta_grid))
-z_hemisphere = np.outer(np.cos(phi_grid), np.ones_like(theta_grid))
-
-fig.add_trace(go.Surface(
-    x=x_hemisphere, y=y_hemisphere, z=z_hemisphere,
-    colorscale="Blues", opacity=0.3, showscale=False,
-    name="Reference Hemisphere"
-))
 
 # Generate frames for animation
 frames = []
 for i in range(num_frames):
-    # Trunk vector
-    frame_vector = go.Scatter3d(
-        x=[0, x[i]], y=[0, y[i]], z=[0, z[i]],
+    frame = go.Scatter3d(
+        x=[0, x[i]],
+        y=[0, y[i]],
+        z=[0, z[i]],
         mode="lines+markers",
         line=dict(color="blue", width=5),
         marker=dict(size=5, color="red"),
         name=f"Frame {i}"
     )
-
-    # Azimuthal angle arc (XY-plane projection)
-    theta_arc_x = np.cos(np.linspace(0, spine_vector_azimuthal[i], 20))
-    theta_arc_y = np.sin(np.linspace(0, spine_vector_azimuthal[i], 20))
-    theta_arc_z = np.zeros_like(theta_arc_x)
-    theta_arc = go.Scatter3d(
-        x=theta_arc_x, y=theta_arc_y, z=theta_arc_z,
-        mode="lines", line=dict(color="green", width=3),
-        name=f"Azimuthal Rotation (θ)"
-    )
-
-    # Polar angle arc (Z-plane projection)
-    phi_arc_x = np.sin(np.linspace(0, spine_vector_polar[i], 20))
-    phi_arc_y = np.zeros_like(phi_arc_x)
-    phi_arc_z = np.cos(np.linspace(0, spine_vector_polar[i], 20))
-    phi_arc = go.Scatter3d(
-        x=phi_arc_x, y=phi_arc_y, z=phi_arc_z,
-        mode="lines", line=dict(color="red", width=3),
-        name=f"Inclination (φ)"
-    )
-
-    frames.append(go.Frame(data=[frame_vector, theta_arc, phi_arc], name=str(i)))
+    frames.append(go.Frame(data=[frame], name=str(i)))
 
 # Initialize figure with the first frame
 fig.add_trace(go.Scatter3d(
-    x=[0, x[0]], y=[0, y[0]], z=[0, z[0]],
+    x=[0, x[0]],
+    y=[0, y[0]],
+    z=[0, z[0]],
     mode="lines+markers",
     line=dict(color="blue", width=5),
     marker=dict(size=5, color="red"),
@@ -191,7 +162,7 @@ fig.add_trace(go.Scatter3d(
 
 # Update layout for animation controls
 fig.update_layout(
-    title="3D Trunk Orientation with Spherical Motion",
+    title="3D Trunk Orientation Animation",
     scene=dict(
         xaxis_title="X-axis (Side-to-Side)",
         yaxis_title="Y-axis (Forward-Backward)",
