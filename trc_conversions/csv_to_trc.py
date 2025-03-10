@@ -214,7 +214,7 @@ def csv_to_trc(input_file, output_file=None, frame_rate=None):
 
 
 
-csv_file_path = r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\output_data\component_qualisys_synced\marker_data_synced.csv"
-output_trc_path = r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\output_data\component_qualisys_synced\marker_data_synced.trc"
+csv_file_path = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2\output_data\component_qualisys_synced\qualisys_markers_synced.csv"
+output_trc_path = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2\output_data\component_qualisys_synced\qualisys_markers_synced.trc"
 sampling_freq = 30  # Hz
 csv_to_trc(csv_file_path, output_trc_path, frame_rate = sampling_freq)

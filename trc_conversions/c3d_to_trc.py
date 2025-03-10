@@ -94,7 +94,7 @@ def save_trc(df, labels, output_path, sampling_freq):
 
 
 # Example usage:
-c3d_file = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2\qualisys_data\MDN_treadmill_2_tracked.c3d"
+c3d_file = r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\qualisys_data\flexion_neutral_trial_1_tracked.c3d"
 trc_df,labels = c3d_to_trc(c3d_file, transform='OsimXYZ')
-output_path = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2\qualisys_data\MDN_treadmill_2_tracked.trc"
+output_path = r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\qualisys_data\flexion_neutral_trial_1_tracked.trc"
 save_trc(trc_df, labels, output_path, sampling_freq=300)  #
