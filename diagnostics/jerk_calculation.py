@@ -1,19 +1,11 @@
 import numpy as np 
 from pathlib import Path
 import pandas as pd
-from skellymodels.experimental.model_redo.tracker_info.model_info import MediapipeModelInfo
-
-model_info = MediapipeModelInfo()
-
-## RECORDING DATA
-path_to_recording = Path(r'C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_v1_4_6')
-freemocap_version = '1.4.6'
-
-path_to_raw_data = path_to_recording/'output_data'/'raw_data'/'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
-path_to_processed_data = path_to_recording/'output_data'/'mediapipe_skeleton_3d.npy'
+from skellymodels.experimental.model_redo.tracker_info.model_info import MediapipeModelInfo, ModelInfo
 
 
-## LOAD DATA
+
+
 
 def load_and_slice_data(path_to_data:Path, slice_of_data:slice):
     data = np.load(path_to_data)
@@ -59,52 +51,56 @@ def format_jerk_data_as_dataframe(
 
     return df
 
-# raw_data, raw_body_data, raw_hands_data = load_and_slice_data(path_to_data=path_to_raw_data,
-#                                                                                 body_slice=mediapipe_body_slice,
-#                                                                                 hands_slice=mediapipe_hands_slice)
 
-total_mean_jerk = {}
-mean_jerk_per_joint = {}
+def run(path_to_recording:Path,
+        model_info:ModelInfo,
+        freemocap_version:str,
+        ):
 
-raw_data, raw_body_data = load_and_slice_data(path_to_data= path_to_raw_data,
-                                              slice_of_data = model_info.aspect_order_and_slices['body'] )
-
-processed_data, processed_body_data = load_and_slice_data(path_to_data=path_to_processed_data,
-                                                          slice_of_data= model_info.aspect_order_and_slices['body'])
+    path_to_raw_data = path_to_recording/'output_data'/'raw_data'/'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
+    path_to_processed_data = path_to_recording/'output_data'/'mediapipe_skeleton_3d.npy'
 
 
-raw_body_jerk = calculate_jerk(raw_body_data)
-raw_total_mean_body_jerk, raw_mean_jerk_per_joint = calculate_jerk_statistics(jerk_3d_data=raw_body_jerk)
-total_mean_jerk['raw'] = raw_total_mean_body_jerk
-mean_jerk_per_joint['raw'] = raw_mean_jerk_per_joint
+
+    total_mean_jerk = {}
+    mean_jerk_per_joint = {}
+
+    raw_data, raw_body_data = load_and_slice_data(path_to_data= path_to_raw_data,
+                                                slice_of_data = model_info.aspect_order_and_slices['body'] )
+
+    processed_data, processed_body_data = load_and_slice_data(path_to_data=path_to_processed_data,
+                                                            slice_of_data= model_info.aspect_order_and_slices['body'])
 
 
-processed_body_jerk = calculate_jerk(processed_body_data)
-processed_total_mean_body_jerk, processed_mean_jerk_per_joint = calculate_jerk_statistics(jerk_3d_data=processed_body_jerk)
-total_mean_jerk['processed'] = processed_total_mean_body_jerk
-mean_jerk_per_joint['processed'] = processed_mean_jerk_per_joint
+    raw_body_jerk = calculate_jerk(raw_body_data)
+    raw_total_mean_body_jerk, raw_mean_jerk_per_joint = calculate_jerk_statistics(jerk_3d_data=raw_body_jerk)
+    total_mean_jerk['raw'] = raw_total_mean_body_jerk
+    mean_jerk_per_joint['raw'] = raw_mean_jerk_per_joint
 
 
-df = format_jerk_data_as_dataframe(total_mean_jerk=total_mean_jerk,
-                        mean_jerk_per_joint=mean_jerk_per_joint,
-                        freemocap_version=freemocap_version,
-                        joint_names = model_info.aspects['body'].tracked_points_names
-                        )
+    processed_body_jerk = calculate_jerk(processed_body_data)
+    processed_total_mean_body_jerk, processed_mean_jerk_per_joint = calculate_jerk_statistics(jerk_3d_data=processed_body_jerk)
+    total_mean_jerk['processed'] = processed_total_mean_body_jerk
+    mean_jerk_per_joint['processed'] = processed_mean_jerk_per_joint
 
 
-df.to_csv(path_to_recording/f'recording_diagnostics_{freemocap_version}.csv', index=False)
+    df = format_jerk_data_as_dataframe(total_mean_jerk=total_mean_jerk,
+                            mean_jerk_per_joint=mean_jerk_per_joint,
+                            freemocap_version=freemocap_version,
+                            joint_names = model_info.aspects['body'].tracked_points_names
+                            )
 
-# Print results for raw data
-print(f"Total mean RAW BODY Jerk: {raw_total_mean_body_jerk}")
-print(f"mean Jerk Per RAW BODY Joint:\n {raw_mean_jerk_per_joint}")
 
-# Print results
-print(f"Total mean BODY Jerk: {processed_total_mean_body_jerk}")
-print(f"mean Jerk Per BODY Joint:\n {processed_mean_jerk_per_joint}")
+    df.to_csv(Path(r'C:\Users\aaron\freemocap_data\recording_sessions')/'diagnostics'/f'recording_diagnostics_{freemocap_version}.csv', index=False)
 
-# processed_hands_jerk = calculate_jerk(processed_hands_data)
-# total_mean_hands_jerk = np.mean(np.abs(processed_hands_jerk))
 
-# print(f"Total mean HANDS Jerk: {total_mean_hands_jerk}")
+if __name__ == "__main__":
+    model_info = MediapipeModelInfo()
 
-f =2 
+    path_to_recording = Path(r'C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_v1_5_1')
+    freemocap_version = '1.5.1'
+
+    run(path_to_recording=path_to_recording,
+        model_info=model_info,
+        freemocap_version=freemocap_version)
+
