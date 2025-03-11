@@ -1,12 +1,13 @@
 import numpy as np 
 from pathlib import Path
+import pandas as pd
+from skellymodels.experimental.model_redo.tracker_info.model_info import MediapipeModelInfo
 
-## MEDIAPIPE SLICING DATA
-mediapipe_body_slice = slice(0,33)
-mediapipe_hands_slice = slice(33,75)
+model_info = MediapipeModelInfo()
 
 ## RECORDING DATA
 path_to_recording = Path(r'C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_v1_4_6')
+freemocap_version = '1.4.6'
 
 path_to_raw_data = path_to_recording/'output_data'/'raw_data'/'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
 path_to_processed_data = path_to_recording/'output_data'/'mediapipe_skeleton_3d.npy'
@@ -14,12 +15,9 @@ path_to_processed_data = path_to_recording/'output_data'/'mediapipe_skeleton_3d.
 
 ## LOAD DATA
 
-def load_and_slice_data(path_to_data:Path, body_slice:slice, hands_slice: slice):
+def load_and_slice_data(path_to_data:Path, slice_of_data:slice):
     data = np.load(path_to_data)
-    body_data = data[:, body_slice, :]
-    hands_data = data[:, hands_slice, :]
-
-    return data, body_data, hands_data
+    return data, data[:, slice_of_data, :]
 
 def calculate_jerk(position:np.ndarray): #NOTE: may want to divide by dt, but if we're just using this for comparison it may not be necessary. However if we do want dt, will either need timestamps or framerate as well
     velocity = np.diff(position, axis=0)
@@ -27,28 +25,86 @@ def calculate_jerk(position:np.ndarray): #NOTE: may want to divide by dt, but if
     jerk = np.diff(acceleration, axis=0)
 
     return jerk
+
+def calculate_jerk_statistics(jerk_3d_data:np.ndarray):
+    total_mean_jerk = np.nanmean((np.abs(jerk_3d_data)))
+    mean_jerk_per_joint = np.nanmean(np.abs(jerk_3d_data), axis = (0,2))
+
+    return total_mean_jerk, mean_jerk_per_joint
+
+def format_jerk_data_as_dataframe(
+    total_mean_jerk: dict, 
+    mean_jerk_per_joint: dict, 
+    freemocap_version: str, 
+    joint_names: list[str]
+):
+    """
+    Formats jerk data into a structured DataFrame where the version is stored properly in each row.
+    """
+    # Store total jerk values
+    total_jerk_rows = [
+        {"version": freemocap_version, "data_stage": data_type, "name": "total", "mean_jerk": total_jerk_mean}
+        for data_type, total_jerk_mean in total_mean_jerk.items()
+    ]
+
+    # Store per-joint jerk values
+    joint_jerk_rows = [
+        {"version": freemocap_version, "data_stage": data_type, "name": joint_name, "mean_jerk": jerk_value}
+        for data_type, jerk_per_joint in mean_jerk_per_joint.items()
+        for joint_name, jerk_value in zip(joint_names, jerk_per_joint)
+    ]
+
+    # Create the DataFrame
+    df = pd.DataFrame(total_jerk_rows + joint_jerk_rows)
+
+    return df
+
 # raw_data, raw_body_data, raw_hands_data = load_and_slice_data(path_to_data=path_to_raw_data,
 #                                                                                 body_slice=mediapipe_body_slice,
 #                                                                                 hands_slice=mediapipe_hands_slice)
 
+total_mean_jerk = {}
+mean_jerk_per_joint = {}
 
-processed_data, processed_body_data, processed_hands_data = load_and_slice_data(path_to_data=path_to_processed_data,
-                                                                                body_slice=mediapipe_body_slice,
-                                                                                hands_slice=mediapipe_hands_slice)
+raw_data, raw_body_data = load_and_slice_data(path_to_data= path_to_raw_data,
+                                              slice_of_data = model_info.aspect_order_and_slices['body'] )
 
+processed_data, processed_body_data = load_and_slice_data(path_to_data=path_to_processed_data,
+                                                          slice_of_data= model_info.aspect_order_and_slices['body'])
+
+
+raw_body_jerk = calculate_jerk(raw_body_data)
+raw_total_mean_body_jerk, raw_mean_jerk_per_joint = calculate_jerk_statistics(jerk_3d_data=raw_body_jerk)
+total_mean_jerk['raw'] = raw_total_mean_body_jerk
+mean_jerk_per_joint['raw'] = raw_mean_jerk_per_joint
 
 
 processed_body_jerk = calculate_jerk(processed_body_data)
-total_avg_jerk = np.mean(np.abs(processed_body_jerk))
-avg_jerk_per_joint = np.mean(np.abs(processed_body_jerk), axis=(0, 2))  # Shape: (num_joints,)
+processed_total_mean_body_jerk, processed_mean_jerk_per_joint = calculate_jerk_statistics(jerk_3d_data=processed_body_jerk)
+total_mean_jerk['processed'] = processed_total_mean_body_jerk
+mean_jerk_per_joint['processed'] = processed_mean_jerk_per_joint
+
+
+df = format_jerk_data_as_dataframe(total_mean_jerk=total_mean_jerk,
+                        mean_jerk_per_joint=mean_jerk_per_joint,
+                        freemocap_version=freemocap_version,
+                        joint_names = model_info.aspects['body'].tracked_points_names
+                        )
+
+
+df.to_csv(path_to_recording/f'recording_diagnostics_{freemocap_version}.csv', index=False)
+
+# Print results for raw data
+print(f"Total mean RAW BODY Jerk: {raw_total_mean_body_jerk}")
+print(f"mean Jerk Per RAW BODY Joint:\n {raw_mean_jerk_per_joint}")
 
 # Print results
-print(f"Total Average BODY Jerk: {total_avg_jerk}")
-print(f"Average Jerk Per BODY Joint:\n {avg_jerk_per_joint}")
+print(f"Total mean BODY Jerk: {processed_total_mean_body_jerk}")
+print(f"mean Jerk Per BODY Joint:\n {processed_mean_jerk_per_joint}")
 
-processed_hands_jerk = calculate_jerk(processed_hands_data)
-total_avg_hands_jerk = np.mean(np.abs(processed_hands_jerk))
+# processed_hands_jerk = calculate_jerk(processed_hands_data)
+# total_mean_hands_jerk = np.mean(np.abs(processed_hands_jerk))
 
-print(f"Total Average HANDS Jerk: {total_avg_hands_jerk}")
+# print(f"Total mean HANDS Jerk: {total_mean_hands_jerk}")
 
 f =2 
