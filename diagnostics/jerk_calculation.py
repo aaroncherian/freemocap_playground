@@ -59,6 +59,7 @@ def run(path_to_recording:Path,
 
     path_to_raw_data = path_to_recording/'output_data'/'raw_data'/'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
     path_to_processed_data = path_to_recording/'output_data'/'mediapipe_skeleton_3d.npy'
+    f = 2
 
 
 
@@ -97,8 +98,8 @@ def run(path_to_recording:Path,
 if __name__ == "__main__":
     model_info = MediapipeModelInfo()
 
-    path_to_recording = Path(r'C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_v1_5_1')
-    freemocap_version = '1.5.1'
+    path_to_recording = Path(r'C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_v1_5_4')
+    freemocap_version = 'current_aaron'
 
     run(path_to_recording=path_to_recording,
         model_info=model_info,

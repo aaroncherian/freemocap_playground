@@ -76,8 +76,9 @@ def plot_3d_scatter(data_3d_dict: dict):
 
 
 if __name__ == '__main__':
-    array = np.load(r'D:\2024-04-25_P01\1.0_recordings\sesh_2024-04-25_15_55_43_P01_WalkRun_Trial2\output_data\component_mediapipe_depth_pro\mediapipe_depth_pro_body_3d_xyz.npy')
+    philip_array = np.load(r"C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_philip\output_data\mediapipe_skeleton_3d.npy")[:,0:33,:]
+    aaron_array = np.load(r"C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_v1_5_4\output_data\mediapipe_skeleton_3d.npy")[:,0:33,:]
 
-    data_3d_dict = {'mediapipe_with_depth': array}
+    data_3d_dict = {'mediapipe_philip': philip_array, 'mediapipe_aaron':aaron_array}
     plot_3d_scatter(data_3d_dict)
     f = 2
