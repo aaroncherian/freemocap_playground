@@ -4,6 +4,10 @@ from pathlib import Path
 
 # Load the timestamp data
 path_to_recording = Path(r'D:\2025-03-13_JSM_pilot\freemocap_data\2025-03-13T16_12_14_gmt-4_jsm_pilot_treadmill_one')
+time_range = range(3800,3900)
+
+
+# time_range = None
 # path_to_recording = Path(r'D:\2025-03-13_JSM_pilot\freemocap_data\2025-03-13T16_20_37_gmt-4_pilot_jsm_treadmill_walking')
 # path_to_recording = Path(r'D:\2025-03-13_JSM_pilot\freemocap_data\2025-03-13T15_58_32_gmt-4_pilot_jsm_nih_trial_one')
 timestamp_path = path_to_recording / 'synchronized_videos' / f'{path_to_recording.stem}_timestamps.csv'
