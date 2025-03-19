@@ -76,26 +76,39 @@ def plot_3d_scatter(data_3d_dict: dict):
 
 
 if __name__ == '__main__':
-    # philip_array = np.load(r"C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_philip\output_data\raw_data\mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ (2).npy")[:,0:33,:]
-    # aaron_array = np.load(r"C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_v1_5_4\output_data\raw_data\mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy")[:,0:33,:]
-    windows_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_windows-latest (8)\output_data\mediapipe_skeleton_3d.npy") [:,0:33,:]
-    mac_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_macos-latest (10)\output_data\mediapipe_skeleton_3d.npy")[:,0:33,:]
-    linux_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_ubuntu-latest (9)\output_data\mediapipe_skeleton_3d.npy")[:,0:33,:]
-    # philip_data = np.load(r"C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_philip\output_data\mediapipe_skeleton_3d.npy")[:,0:33,:]
+    from pathlib import Path
+
+    windows_data_path = Path(r'D:\system_testing\super_organized_folder\standard_pipeline\test_data_artifacts_windows-latest_standard')
+    macos_data_path = Path(r'D:\system_testing\super_organized_folder\standard_pipeline\test_data_artifacts_macos-latest_standard')
+    ubuntu_data_path = Path(r'D:\system_testing\super_organized_folder\standard_pipeline\test_data_artifacts_ubuntu-latest_standard')
+
+    path_dict = {'windows': windows_data_path, 'macos': macos_data_path, 'ubuntu': ubuntu_data_path}
+
+    data_dict = {}
+
+    for system, path_name in path_dict.items():
+        data = np.load(path_name/'output_data'/'mediapipe_skeleton_3d.npy')[:,0:33,:]
+        data_dict[system] = data
+
+
+
+
+    # windows_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_windows-latest (8)\output_data\mediapipe_skeleton_3d.npy") [:,0:33,:]
+    # mac_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_macos-latest (10)\output_data\mediapipe_skeleton_3d.npy")[:,0:33,:]
+    # linux_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_ubuntu-latest (9)\output_data\mediapipe_skeleton_3d.npy")[:,0:33,:]
+
 
     from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
-    from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.good_frame_finder import find_good_frame
 
 
     import numpy as np
 
     from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
     
-    data_3d_dict_not_aligned = {'windows': windows_data, 'mac':mac_data, 'linux': linux_data}
 
     data_aligned = {}
 
-    for array_name, array in data_3d_dict_not_aligned.items():
+    for array_name, array in data_dict.items():
         good_frame = 103
 
         aligned_data = align_skeleton_with_origin(skeleton_data=array, skeleton_indices=MediapipeModelInfo.body_landmark_names, good_frame=good_frame)[0]   
