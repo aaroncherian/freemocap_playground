@@ -72,6 +72,8 @@ def run(path_to_recording:Path,
 
         cap.release()   
         this_vid_dlc_df.to_csv(dlc_video_folder_path/'CollectedData_Scorer.csv', index=False) #Need to change 'Scorer' to actual scorer name at some point
+        this_vid_dlc_df.to_hdf(dlc_video_folder_path/'CollectedData_Scorer.h5', key="df_with_missing", format = "table", mode="w") #if you're wondering why the key is `df_with_missing` its because that's what DLC uses so I'm matching that
+
         print(f'Saved DLC formmated CSV to {dlc_video_folder_path}')
         labeled_frames_per_video[video_name] = labeled_frames
 
