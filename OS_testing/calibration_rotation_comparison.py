@@ -66,6 +66,6 @@ def run_pairwise_rotation_calculation(path_to_folder_of_tomls: Path, num_cams: i
     return pd.DataFrame.from_dict(rotation_angles_dict)
 
 if __name__ == '__main__':
-    path_to_folder_of_tomls = Path(r"D:\system_testing\calibrations\calibrations_two")
+    path_to_folder_of_tomls = Path(r"D:\system_testing\super_organized_folder\numerically_sorted_videos\calibrations")
     df = run_pairwise_rotation_calculation(path_to_folder_of_tomls=path_to_folder_of_tomls, num_cams=3)
     print(df)

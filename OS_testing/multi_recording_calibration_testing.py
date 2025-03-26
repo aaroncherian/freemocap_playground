@@ -40,6 +40,15 @@ df_melted = df_combined.melt(id_vars=['ranks', 'id', 'metric'],
 grouped_stats = df_melted.groupby(['ranks', 'system', 'metric'])['value'].agg(['mean', 'std']).reset_index()
 grouped_stats.columns = ['ranks', 'system', 'metric', 'mean', 'std']
 
+# Generate and display the distance summary table
+distance_table = grouped_stats[grouped_stats['metric'] == 'distance'].pivot(index='system', columns='ranks', values='mean')
+
+# Rename columns for clarity
+distance_table.columns = [f'Rank {col}' for col in distance_table.columns]
+
+# Display the table
+print(distance_table)
+
 # Create subplot layout with 2 rows (top: distance, bottom: rotation)
 fig = sp.make_subplots(rows=2, cols=1, shared_xaxes=True, 
                        subplot_titles=("Mean Distance per Rank (Across All Recordings)", 

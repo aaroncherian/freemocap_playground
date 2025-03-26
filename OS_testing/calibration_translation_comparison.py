@@ -36,7 +36,7 @@ def run_pairwise_distance_calculation(path_to_folder_of_tomls:Path, num_cams:int
 
 if __name__ == '__main__':
 
-    path_to_folder_of_tomls = Path(r"D:\system_testing\calibrations\calibration_no_pin")
+    path_to_folder_of_tomls = Path(r"D:\system_testing\calibrations\calibrations_sorted_paths")
     df = run_pairwise_distance_calculation(path_to_folder_of_tomls=path_to_folder_of_tomls,
                                            num_cams=3)
     print(df)

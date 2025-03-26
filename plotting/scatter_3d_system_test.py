@@ -78,9 +78,9 @@ def plot_3d_scatter(data_3d_dict: dict):
 if __name__ == '__main__':
     from pathlib import Path
 
-    windows_data_path = Path(r'D:\system_testing\super_organized_folder\standard_pipeline\test_data_artifacts_windows-latest_standard')
-    macos_data_path = Path(r'D:\system_testing\super_organized_folder\standard_pipeline\test_data_artifacts_macos-latest_standard')
-    ubuntu_data_path = Path(r'D:\system_testing\super_organized_folder\standard_pipeline\test_data_artifacts_ubuntu-latest_standard')
+    windows_data_path = Path(r'D:\system_testing\super_organized_folder\sorting_all_paths_attempt_with_pin\test_data_artifacts_macos-latest')
+    macos_data_path = Path(r'D:\system_testing\super_organized_folder\pin_to_zero_commented_out\test_data_artifacts_macos-latest')
+    ubuntu_data_path = Path(r'D:\system_testing\super_organized_folder\single_calibration\test_data_artifacts_macos-latest')
 
     path_dict = {'windows': windows_data_path, 'macos': macos_data_path, 'ubuntu': ubuntu_data_path}
 
