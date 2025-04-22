@@ -7,8 +7,8 @@ from scipy.spatial import distance_matrix
 import numpy as np
 
 # --- Board layout ---
-charuco_rows = 4  # number of corner rows = squares_y - 1
-charuco_cols = 6  # number of corner cols = squares_x - 1
+charuco_rows = 5  # number of corner rows = squares_y - 1
+charuco_cols = 7  # number of corner cols = squares_x - 1
 expected_num_points = (charuco_rows-1) * (charuco_cols-1)  # 24
 
 square_size_mm = 58
