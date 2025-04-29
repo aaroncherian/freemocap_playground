@@ -151,7 +151,7 @@ import cv2
 ## ------- Make extrinsic parameters for two cameras -------- ##
 
 def create_plot(steps):
-    cam_colors = ['blue', 'orange', 'green']
+    cam_shapes = ['o', 's', '^']
     
     # Create just one figure outside the loop
     fig = plt.figure()
@@ -159,10 +159,10 @@ def create_plot(steps):
     ax.scatter(*[0,0,0], color='k', marker='o')
     
     # Plot all steps on the same figure
-    for i, (label, pts, marker, border) in enumerate(steps):
+    for i, (label, pts, color, border) in enumerate(steps):
         for cam_idx, p in enumerate(pts):
-            ax.scatter(*p, color=cam_colors[cam_idx],
-                      marker=marker, s=80,
+            ax.scatter(*p, color=color,
+                      marker=cam_shapes[cam_idx], s=80,
                       alpha=1.0 if i == 0 else 0.6,
                       label=f'{label}_{cam_idx}',
                       edgecolors='black' if border else None,
@@ -188,12 +188,12 @@ tvec_2 = np.array([ -1444.4499534004683, -234.75249030410643, -436.471133983029,
 
 original_tvecs = [tvec_0, tvec_1, tvec_2]
 rmatrices = [R0, R1, R2]
-steps.append(('cam_space', original_tvecs, 'o', False))
+steps.append(('cam_space', original_tvecs, 'blue', False))
 
 
 
 
-# create_plot(steps)
+create_plot(steps)
 
 
 #Pc = RPw + t [t is translation shift from world origin to camera origin in camera space]
@@ -204,39 +204,40 @@ def get_camera_loc_in_world_space(rmatrix,tvec):
     return -rmatrix.T@tvec
 
 original_cs = [get_camera_loc_in_world_space(rmatrix,tvec) for rmatrix, tvec in zip(rmatrices,original_tvecs)]
-steps.append(('world_space', original_cs, 's', False))
-# create_plot(steps)
+steps.append(('world_space', original_cs, 'blue', True))
+create_plot(steps)
 
 
 ##shifting translation with just tvecs
 tvecs_shifted = [tvec-original_tvecs[0] for tvec in original_tvecs]
-steps.append(('shifted_tvecs', tvecs_shifted, 'o', True))
-# create_plot(steps,)
+steps.append(('tvec_shift_cam_space', tvecs_shifted, 'purple', False))
+create_plot(steps,)
 
 shifted_cs = [get_camera_loc_in_world_space(rmatrix,tvec) for rmatrix, tvec in zip(rmatrices,tvecs_shifted)]
-steps.append(('shifted_world_space', shifted_cs, 's', True))
-# create_plot(steps)
+steps.append(('tvec_shift_world_space', shifted_cs, 'purple', True))
+create_plot(steps)
 
 
-remapped_cs = [c - original_cs[0] for c in original_cs]
-steps.append(('remapped_cs', remapped_cs, 'x', True))
-# create_plot(steps)
+# remapped_cs = [c - original_cs[0] for c in original_cs]
+# steps.append(('remapped_cs', remapped_cs, 'x', True))
+# # create_plot(steps)
 
 
-steps = []
-steps.append(('cam_space', original_tvecs, 'o', False))
-steps.append(('world_space', original_cs, 's', False))
+# steps = []
+# steps.append(('cam_space', original_tvecs, 'o', False))
+# steps.append(('world_space', original_cs, 's', False))
 
 ##now shifting by transforming into world space first
 cam_0_world_space_pos = get_camera_loc_in_world_space(rmatrix=R0, tvec=tvec_0) 
 
 transformed_tvecs = [tvec + rmatrix@cam_0_world_space_pos for tvec, rmatrix in zip(original_tvecs, rmatrices)]
-steps.append(('transformed_tvecs', transformed_tvecs, 'o', True))
+steps.append(('world_shift_cam_space', transformed_tvecs, 'green', False))
 
 transformed_cs = [get_camera_loc_in_world_space(rmatrix,tvec) for rmatrix, tvec in zip(rmatrices,transformed_tvecs)]
-steps.append(('transformed_world_space', transformed_cs, 's', True))
+steps.append(('world_shift_world_space', transformed_cs, 'green', True))
+create_plot(steps)
 
-steps.append(('shifted_world_space', shifted_cs, 'x', True))
+# steps.append(('shifted_world_space', shifted_cs, 'x', True))
 
 
 
@@ -255,14 +256,14 @@ shifted_cs = np.array(shifted_cs)
 transformed_cs = np.array(transformed_cs)
 
 compute_pairwise_distances("Original", original_cs)
-compute_pairwise_distances("Improperly shifted (tvec-based)", shifted_cs)
-compute_pairwise_distances("Properly shifted (world-space)", transformed_cs)
+compute_pairwise_distances("Tvec shift", shifted_cs)
+compute_pairwise_distances("World shift", transformed_cs)
 
 
 # remapped_cs = [c - original_cs[0] for c in original_cs]
 # steps.append(('remapped_cs', remapped_cs, 'x', True))
 
-create_plot(steps)
+# create_plot(steps)
 
 f = 2
 # def rot_z(theta):

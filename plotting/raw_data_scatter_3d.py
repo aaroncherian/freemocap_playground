@@ -39,7 +39,7 @@ def plot_3d_scatter(data_3d_dict: dict):
             mode='markers',
             name=label,
             marker=dict(size=4, opacity=0.8),
-            opacity=.7
+            opacity=.5
         ))
 
     # Update the layout with sliders and other settings
@@ -78,27 +78,21 @@ def plot_3d_scatter(data_3d_dict: dict):
 if __name__ == '__main__':
     from pathlib import Path
 
-    windows_data_path = Path(r'D:\system_testing\super_organized_folder\sorting_all_paths_attempt_with_pin\test_data_artifacts_macos-latest')
-    macos_data_path = Path(r'D:\system_testing\super_organized_folder\pin_to_zero_commented_out\test_data_artifacts_macos-latest')
-    ubuntu_data_path = Path(r'D:\system_testing\super_organized_folder\single_calibration\test_data_artifacts_macos-latest')
 
-    path_dict = {'windows': windows_data_path, 'macos': macos_data_path, 'ubuntu': ubuntu_data_path}
+    original_session = Path(r"D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-11-05-612Z_atc_test_walk_trial_2")
+    aligned_session = Path(r"D:\2025-04-23_atc_testing\freemocap\test_walk_aligned")
+
+    path_dict = {'original_calibration': original_session, 'aligned_calibration': aligned_session}
 
     data_dict = {}
 
     for system, path_name in path_dict.items():
-        data = np.load(path_name/'output_data'/'mediapipe_skeleton_3d.npy')[:,0:33,:]
+        data = np.load(path_name/'output_data'/'raw_data'/'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy')[:,0:33,:]
         data_dict[system] = data
 
 
 
-
-    # windows_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_windows-latest (8)\output_data\mediapipe_skeleton_3d.npy") [:,0:33,:]
-    # mac_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_macos-latest (10)\output_data\mediapipe_skeleton_3d.npy")[:,0:33,:]
-    # linux_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_ubuntu-latest (9)\output_data\mediapipe_skeleton_3d.npy")[:,0:33,:]
-
-
-    from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
+        from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
 
 
     import numpy as np
@@ -114,10 +108,6 @@ if __name__ == '__main__':
         aligned_data = align_skeleton_with_origin(skeleton_data=array, skeleton_indices=MediapipeModelInfo.body_landmark_names, good_frame=good_frame)[0]   
 
         data_aligned[array_name] = aligned_data
-
-
-
-
 
 
     plot_3d_scatter(data_aligned)

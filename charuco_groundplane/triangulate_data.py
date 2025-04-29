@@ -15,9 +15,10 @@ square_size_mm = 58
 per_frame_means = []
 
 # --- Load and clean 2D data ---
-path_to_recording = Path(r'C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_123_zero_rotation')
+path_to_recording = Path(r'D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-01-55-517Z_atc_test_calibration')
 path_to_2d_data = path_to_recording/'output_data'/'raw_data'/'charuco_2dData_numCams_numFrames_numTrackedPoints_pixelXY.npy'
-path_to_cal_toml = path_to_recording/'freemocap_test_data_123_zero_rotation_camera_calibration.toml'
+path_to_cal_toml = path_to_recording/f'{path_to_recording.stem}_camera_calibration.toml'
+path_to_save_3d_data = path_to_recording/'output_data'/'charuco_3d.npy'
 
 data_2d = np.load(path_to_2d_data, allow_pickle=True)
 shape = data_2d.shape
@@ -35,6 +36,8 @@ data_3d, *_ = triangulate_3d_data(
     anipose_calibration_object=load_anipose_calibration_toml_from_path(path_to_cal_toml),
     image_2d_data=clean_array
 )
+
+np.save(path_to_save_3d_data, data_3d)
 
 # --- Define true neighbor pairs from layout ---
 def get_charuco_neighbor_pairs(rows: int, cols: int):
