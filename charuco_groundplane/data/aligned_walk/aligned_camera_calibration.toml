@@ -1,0 +1,29 @@
+[cam_0]
+name = "2025-04-23_19-01-55-517Z_atc_test_calibration_camera_0"
+size = [ 720, 1280,]
+matrix = [ [ 846.0347296733139, 0.0, 359.5,], [ 0.0, 846.0347296733139, 639.5,], [ 0.0, 0.0, 1.0,],]
+distortions = [ -0.2660142913973319, 0.0, 0.0, 0.0, 0.0,]
+rotation = [ 2.1833511025110073, 0.8084631416212714, 1.102307351152838,]
+translation = [ 77.48823949696346, 877.9975906024199, 1836.4059425400828,]
+
+[cam_1]
+name = "2025-04-23_19-01-55-517Z_atc_test_calibration_camera_1"
+size = [ 720, 1280,]
+matrix = [ [ 893.4088902094318, 0.0, 359.5,], [ 0.0, 893.4088902094318, 639.5,], [ 0.0, 0.0, 1.0,],]
+distortions = [ -0.37521514277590956, 0.0, 0.0, 0.0, 0.0,]
+rotation = [ 0.4095473507772628, 1.0448313442196369, 1.2160979734246244,]
+translation = [ 263.97396399481045, 643.3212519912914, 2452.045091659231,]
+
+[cam_2]
+name = "2025-04-23_19-01-55-517Z_atc_test_calibration_camera_2"
+size = [ 720, 1280,]
+matrix = [ [ 914.8828373308311, 0.0, 359.5,], [ 0.0, 914.8828373308311, 639.5,], [ 0.0, 0.0, 1.0,],]
+distortions = [ -0.2810266065044807, 0.0, 0.0, 0.0, 0.0,]
+rotation = [ 1.1170066185990999, 1.1962989231113912, 1.2948332888997174,]
+translation = [ 57.279368360038006, 934.3507808101444, 2103.4469012531454,]
+
+[metadata]
+charuco_square_size = 127.0
+charuco_board_object = "CharucoBoardDefinition(aruco_marker_dict=< cv2.aruco.Dictionary 000001EC5863BB30>, number_of_squares_width=7, number_of_squares_height=5, black_square_side_length=1, aruco_marker_length_proportional=0.8)"
+path_to_recorded_videos = "D:\\2025-04-23_atc_testing\\freemocap\\2025-04-23_19-01-55-517Z_atc_test_calibration\\synchronized_videos"
+date_time_calibrated = "2025-04-28T15:12:42"

@@ -56,9 +56,9 @@ def create_3d_space_plot(camera_3d_locations: List[np.ndarray], charuco_3d_frame
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-
-    for camera in camera_3d_locations:
-        ax.scatter(*camera, color='blue', marker='o')
+    camera_markers = ['o', 's', '^']
+    for camera, marker in zip(camera_3d_locations,camera_markers):
+        ax.scatter(*camera, color='blue', marker=marker)
 
     ax.scatter(charuco_3d_frame[:, 0], charuco_3d_frame[:, 1], charuco_3d_frame[:, 2])
 
@@ -132,7 +132,7 @@ charuco_frame = charuco_3d[-1,:,:]
 x_vec = charuco_frame[5,:] - charuco_frame[0,:]
 y_vec = charuco_frame[18,:] - charuco_frame[0,:]
 
-# create_3d_space_plot(camera_3d_locations=original_cs, charuco_3d_frame=charuco_frame)
+create_3d_space_plot(camera_3d_locations=original_cs, charuco_3d_frame=charuco_frame)
 
 
 x_vec = charuco_frame[5] - charuco_frame[0]
@@ -170,7 +170,7 @@ new_cs = [
 charuco_new = (rotation_matrix.T @ (charuco_frame - new_origin).T).T 
 
 
-# create_3d_space_plot(camera_3d_locations=new_cs, charuco_3d_frame=charuco_new)
+create_3d_space_plot(camera_3d_locations=new_cs, charuco_3d_frame=charuco_new)
 
 new_calibration = calibration.copy()
 
