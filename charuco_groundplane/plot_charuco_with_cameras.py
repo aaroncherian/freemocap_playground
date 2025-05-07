@@ -12,44 +12,6 @@ from typing import List
 def get_unit_vector(vector):
     return vector/np.linalg.norm(vector)
 
-# def create_3d_space_plot(camera_3d_locations:List[np.ndarray], charuco_3d_frame: np.ndarray):
-
-#     fig = plt.figure()
-#     ax = fig.add_subplot(111, projection='3d')
-
-#     for camera in camera_3d_locations:
-#         ax.scatter(*camera, color = 'blue', marker = 'o')
-
-#     ax.scatter(charuco_3d_frame[:,0], charuco_3d_frame[:,1], charuco_3d_frame[:,2])
-
-#     x_vec = charuco_3d_frame[5,:] - charuco_3d_frame[0,:]
-#     y_vec = charuco_3d_frame[18,:] - charuco_3d_frame[0,:]
-
-#     x_hat = get_unit_vector(x_vec)
-#     y_hat_raw = get_unit_vector(y_vec)
-
-#     z_hat = np.cross(x_hat, y_hat_raw)
-#     z_hat = get_unit_vector(z_hat)
-
-#     y_hat = np.cross(x_hat, z_hat)
-#     y_hat = get_unit_vector(y_hat)
-
-#     ax.quiver(
-#         charuco_3d_frame[0,0], charuco_3d_frame[0,1], charuco_3d_frame[0,2],
-#         x_vec[0], x_vec[1], x_vec[2],
-#         color = 'red',
-#         normalize = False
-#     )
-
-#     ax.quiver(
-#         charuco_3d_frame[0,0], charuco_3d_frame[0,1], charuco_3d_frame[0,2],
-#         y_vec[0], y_vec[1], y_vec[2],
-#         color = 'green',
-#         normalize = False
-#     )
-
-#     # ax.scatter(charuco_3d[2,0], charuco_3d[2,1], charuco_3d[2,2], marker = 'x')
-#     plt.show()
 
 
 def create_3d_space_plot(camera_3d_locations: List[np.ndarray], charuco_3d_frame: np.ndarray):
@@ -69,8 +31,8 @@ def create_3d_space_plot(camera_3d_locations: List[np.ndarray], charuco_3d_frame
     x_hat = get_unit_vector(x_vec)
     y_hat_raw = get_unit_vector(y_vec)
 
-    z_hat = get_unit_vector(np.cross(y_hat_raw, x_hat))
-    y_hat = get_unit_vector(np.cross(x_hat, z_hat))
+    z_hat = get_unit_vector(np.cross(x_hat, y_hat_raw))
+    y_hat = get_unit_vector(np.cross(z_hat, x_hat))
 
     origin = charuco_3d_frame[0]
     length = 500  # adjust as needed to match your scene scale
@@ -83,10 +45,10 @@ def create_3d_space_plot(camera_3d_locations: List[np.ndarray], charuco_3d_frame
     ax.legend()
     plt.show()
 
-path_to_toml = Path(r"D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-01-55-517Z_atc_test_calibration\2025-04-23_19-01-55-517Z_atc_test_calibration_camera_calibration.toml")
-path_to_3d_charuco_data = Path(r"D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-01-55-517Z_atc_test_calibration\output_data\charuco_3d.npy")
+path_to_toml = Path(__file__).parents[0]/'data'/'original_walk'/"2025-04-23_19-01-55-517Z_atc_test_calibration_camera_calibration.toml"
+path_to_3d_charuco_data = Path(__file__).parents[0]/'data'/'original_walk'/"charuco_3d.npy"
 
-path_to_aligned_toml = Path(r"D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-01-55-517Z_atc_test_calibration\aligned_camera_calibration.toml")
+path_to_aligned_toml = Path(__file__).parents[0]/'data'/'aligned_walk'/"aligned_camera_calibration_v2.toml"
 
 
 with open(path_to_toml, 'r') as f:
@@ -141,8 +103,8 @@ y_vec = charuco_frame[18] - charuco_frame[0]
 x_hat = get_unit_vector(x_vec)
 y_hat_raw = get_unit_vector(y_vec)
 
-z_hat = get_unit_vector(np.cross(y_hat_raw, x_hat))
-y_hat = get_unit_vector(np.cross(x_hat, z_hat))
+z_hat = get_unit_vector(np.cross(x_hat, y_hat_raw))
+y_hat = get_unit_vector(np.cross(z_hat, x_hat))
 
 new_origin = charuco_frame[0]
 
