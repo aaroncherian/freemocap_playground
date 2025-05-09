@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 import numpy as np
 
-def plot_3d_scatter(data_3d_dict: dict, charuco_frame:np.ndarray):
+def plot_3d_scatter(data_3d_dict: dict):
     # Determine axis limits based on the data
     all_data = np.concatenate(list(data_3d_dict.values()), axis=1)
     
@@ -9,7 +9,7 @@ def plot_3d_scatter(data_3d_dict: dict, charuco_frame:np.ndarray):
     mean_y = np.nanmean(all_data[:, :, 1])
     mean_z = np.nanmean(all_data[:, :, 2])
 
-    ax_range = 2500
+    ax_range = 2000
 
 
     # Create a Plotly figure
@@ -28,12 +28,6 @@ def plot_3d_scatter(data_3d_dict: dict, charuco_frame:np.ndarray):
                 name=label,
                 marker=dict(size=4, opacity=0.8)
             ))
-        frame_data.append(go.Scatter3d(
-            x=charuco_frame[:,0],
-            y=charuco_frame[:,1],
-            z=charuco_frame[:,2],
-            mode="markers"
-        ))
         frames.append(go.Frame(data=frame_data, name=str(frame)))
 
     # Add the first frame's data
@@ -46,12 +40,6 @@ def plot_3d_scatter(data_3d_dict: dict, charuco_frame:np.ndarray):
             name=label,
             marker=dict(size=4, opacity=0.8),
             opacity=.5
-        ))
-        fig.add_trace(go.Scatter3d(
-            x=charuco_frame[:,0],
-            y=charuco_frame[:,1],
-            z=charuco_frame[:,2],
-            mode="markers"
         ))
 
     # Update the layout with sliders and other settings
@@ -90,45 +78,15 @@ def plot_3d_scatter(data_3d_dict: dict, charuco_frame:np.ndarray):
 if __name__ == '__main__':
     from pathlib import Path
 
+    path_to_output_folder = Path(r"D:\ferret_recording\output_data")
 
-    original_session = Path(__file__).parents[0]/'data'/'original_walk'
-    aligned_session = Path(__file__).parents[0]/'data'/'aligned_walk'
-
-    
-    original_session = Path(r"D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-11-05-612Z_atc_test_walk_trial_2")
-    aligned_session = Path(r"D:\2025-04-23_atc_testing\freemocap\test_walk_aligned")
-
-    aligned_charuco_path = Path(__file__).parents[0]/'data'/'aligned_walk'/'aligned_charuco_2_3d.npy'
-    aligned_charuco = np.load(aligned_charuco_path)
-
-    aligned_charuco_frame = aligned_charuco[-10,:,:]
-    path_dict = {'original_calibration': original_session, 'aligned_calibration': aligned_session,}
+    path_dict = {'original': path_to_output_folder/'dlc_body_3d_xyz.npy', 'rigid': path_to_output_folder/'dlc_body_rigid_3d_xyz.npy'}
 
     data_dict = {}
 
-
     for system, path_name in path_dict.items():
-        data = np.load(path_name/'output_data'/'raw_data'/'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy')[:,0:33,:]
+        data = np.load(path_name)
         data_dict[system] = data
 
-
-    # from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
-
-
-    # import numpy as np
-
-    # from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
-    
-
-    # data_aligned = {}
-
-    # for array_name, array in data_dict.items():
-    #     good_frame = 200
-
-    #     aligned_data = align_skeleton_with_origin(skeleton_data=array, skeleton_indices=MediapipeModelInfo.body_landmark_names, good_frame=good_frame)[0]   
-
-    #     data_aligned[array_name] = aligned_data
-
-
-    plot_3d_scatter(data_dict, aligned_charuco_frame)
+    plot_3d_scatter(data_dict)
     f = 2
