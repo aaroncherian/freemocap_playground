@@ -2,14 +2,42 @@ import numpy as np
 import cv2
 import toml
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
+import matplotlib.pyplot as plt
+
+
+
+def create_3d_space_plot(camera_3d_locations: List[np.ndarray], charuco_3d_frame: np.ndarray,
+                         origin: np.ndarray, basis: tuple[np.ndarray, np.ndarray, np.ndarray],
+                         title: str = "") -> None:
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    camera_markers = ['o', 's', '^']
+
+    for cam in camera_3d_locations:
+        ax.scatter(*cam, color='blue', marker='o')
+
+    ax.scatter(charuco_3d_frame[:, 0], charuco_3d_frame[:, 1], charuco_3d_frame[:, 2])
+
+    x_hat, y_hat, z_hat = basis
+    length = 500
+    ax.quiver(*origin, *(x_hat * length), color='red', label='X')
+    ax.quiver(*origin, *(y_hat * length), color='green', label='Y')
+    ax.quiver(*origin, *(z_hat * length), color='blue', label='Z')
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.legend()
+    ax.set_title(title)
+    plt.show()
 
 def get_unit_vector(vector: np.ndarray) -> np.ndarray:
     return vector / np.linalg.norm(vector)
 
 def compute_basis(charuco_frame: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    x_vec = charuco_frame[18] - charuco_frame[0]
-    y_vec = charuco_frame[5] - charuco_frame[0]
+    x_vec = charuco_frame[4] - charuco_frame[0]
+    y_vec = charuco_frame[3] - charuco_frame[0]
 
     x_hat = get_unit_vector(x_vec)
     y_hat_raw = get_unit_vector(y_vec)
@@ -31,7 +59,7 @@ def align_calibration_to_charuco(
         calibration = toml.load(f)
 
     charuco_3d = np.load(path_to_charuco_npy)
-    charuco_frame = charuco_3d[-1, :, :]
+    charuco_frame = charuco_3d[1440, :, :]
 
     # Parse camera extrinsics
     camera_info_dict: Dict[str, Dict[str, np.ndarray]] = {}
@@ -44,6 +72,10 @@ def align_calibration_to_charuco(
             'rmatrix': rmat,
             'tvec': np.array(val['translation'])
         }
+    cs =  [get_camera_loc_in_world_space(info['rmatrix'], info['tvec'])
+        for key, info in sorted(camera_info_dict.items())]
+    
+    create_3d_space_plot(cs, charuco_frame, np.zeros(3), (np.eye(3)[:, 0], np.eye(3)[:, 1], np.eye(3)[:, 2]), title="Original Frame")
 
     # Compute basis and transform
     x_hat, y_hat, z_hat = compute_basis(charuco_frame)
@@ -61,6 +93,15 @@ def align_calibration_to_charuco(
         camera_info_dict[key]['new_tvec'] = new_tvec
         camera_info_dict[key]['new_rmat'] = new_rmat
 
+    new_cs = [
+        get_camera_loc_in_world_space(info['new_rmat'], info['new_tvec'])
+        for key, info in sorted(camera_info_dict.items())]
+    
+
+    charuco_frame_aligned = (rotation_matrix.T @ (charuco_frame - origin).T).T
+    create_3d_space_plot(new_cs, charuco_frame_aligned, np.zeros(3), (np.eye(3)[:, 0], np.eye(3)[:, 1], np.eye(3)[:, 2]), title="Aligned Frame")
+
+
     # Update and save new calibration
     new_calibration = calibration.copy()
     for cam_key, info in camera_info_dict.items():
@@ -68,14 +109,16 @@ def align_calibration_to_charuco(
         new_calibration[cam_key]['rotation'] = rvec_new.flatten().tolist()
         new_calibration[cam_key]['translation'] = info['new_tvec'].flatten().tolist()
 
-    with open(path_to_output_toml, 'w') as f:
-        toml.dump(new_calibration, f)
 
-# Example usage
+
+
+    # with open(path_to_output_toml, 'w') as f:
+    #     toml.dump(new_calibration, f)
+
 if __name__ == "__main__":
-    base_dir = Path(__file__).parent
+    base_dir = Path(r"D:\2025-04-28-calibration")
     align_calibration_to_charuco(
-        path_to_input_toml=base_dir / 'data' / 'original_walk' / "2025-04-23_19-01-55-517Z_atc_test_calibration_camera_calibration.toml",
-        path_to_charuco_npy=base_dir / 'data' / 'original_walk' / "charuco_3d.npy",
-        path_to_output_toml=base_dir / 'data' / 'aligned_walk' / "aligned_camera_calibration_v2.toml"
+        path_to_input_toml=base_dir / "2025-04-28-calibration_camera_calibration_aligned.toml",
+        path_to_charuco_npy=base_dir / "output_data" / "aligned_charuco_3d.npy",
+        path_to_output_toml=base_dir / "2025-04-28-calibration_camera_calibration_aligned.toml"
     )

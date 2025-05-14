@@ -10,8 +10,8 @@ def get_unit_vector(vector: np.ndarray) -> np.ndarray:
     return vector / np.linalg.norm(vector)
 
 def compute_basis(charuco_frame: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    x_vec = charuco_frame[18] - charuco_frame[0]
-    y_vec = charuco_frame[5] - charuco_frame[0]
+    x_vec = charuco_frame[4] - charuco_frame[0]
+    y_vec = charuco_frame[3] - charuco_frame[0]
 
     x_hat = get_unit_vector(x_vec)
     y_hat_raw = get_unit_vector(y_vec)
@@ -50,10 +50,10 @@ def get_camera_loc_in_world_space(rmatrix: np.ndarray, tvec: np.ndarray) -> np.n
 
 # Paths
 base_dir = Path(__file__).parent
-path_to_toml = base_dir / 'data' / 'original_walk' / "2025-04-23_19-01-55-517Z_atc_test_calibration_camera_calibration.toml"
-path_to_3d_charuco_data = base_dir / 'data' / 'original_walk' / "charuco_3d.npy"
-path_to_aligned_toml = base_dir / 'data' / 'aligned_walk' / "aligned_camera_calibration_v2.toml"
-
+base_dir = Path(r"D:\2025-04-28-calibration")
+calibration=base_dir / "2025-04-28-calibration_camera_calibration.toml"
+path_to_3d_charuco_data=base_dir / "output_data" / "charuco_3d_xyz.npy"
+path_to_toml=base_dir / "2025-04-28-calibration_camera_calibration_aligned.toml"
 # Load data
 with open(path_to_toml, 'r') as f:
     calibration = toml.load(f)
@@ -115,8 +115,8 @@ for cam_key, info in camera_info_dict.items():
     new_calibration[cam_key]['rotation'] = rvec_new.flatten().tolist()
     new_calibration[cam_key]['translation'] = info['new_tvec'].flatten().tolist()
 
-with open(path_to_aligned_toml, 'w') as f:
-    toml.dump(new_calibration, f)
+# with open(path_to_aligned_toml, 'w') as f:
+#     toml.dump(new_calibration, f)
 
 # Diagnostics
 d_old = np.linalg.norm(original_cs[0] - original_cs[1])

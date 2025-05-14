@@ -98,10 +98,10 @@ if __name__ == '__main__':
     original_session = Path(r"D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-11-05-612Z_atc_test_walk_trial_2")
     aligned_session = Path(r"D:\2025-04-23_atc_testing\freemocap\test_walk_aligned")
 
-    aligned_charuco_path = Path(__file__).parents[0]/'data'/'aligned_walk'/'aligned_charuco_2_3d.npy'
+    aligned_charuco_path = Path(r"D:\2025-04-28-calibration\output_data\aligned_charuco_3d.npy")
     aligned_charuco = np.load(aligned_charuco_path)
 
-    aligned_charuco_frame = aligned_charuco[-10,:,:]
+    aligned_charuco_frame = aligned_charuco[1440,:,:]
     path_dict = {'original_calibration': original_session, 'aligned_calibration': aligned_session,}
 
     data_dict = {}

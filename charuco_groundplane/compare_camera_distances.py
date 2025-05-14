@@ -2,6 +2,7 @@ import tomllib
 import numpy as np
 from itertools import combinations
 import math
+import cv2
 
 def load_camera_data(file_path):
     """Load camera data from a TOML file."""
@@ -14,7 +15,8 @@ def load_camera_data(file_path):
         if key.startswith("cam_"):
             cameras[key] = {
                 "name": value["name"],
-                "translation": np.array(value["translation"])
+                "translation": np.array(value["translation"]),
+                "rvec": np.array(value["rotation"])
             }
     
     return cameras
@@ -23,7 +25,11 @@ def calculate_distances(cameras):
     """Calculate distances between all pairs of cameras."""
     distances = {}
     for (cam1_id, cam1), (cam2_id, cam2) in combinations(cameras.items(), 2):
-        distance = np.linalg.norm(cam1["translation"] - cam2["translation"])
+
+        cam1_rmatrix, _ = cv2.Rodrigues(np.array(cam1['rvec']))
+        cam2_rmatrix, _ = cv2.Rodrigues(np.array(cam2['rvec']))
+        distance = np.linalg.norm((cam1_rmatrix.T@cam1["translation"]) - (cam2_rmatrix.T@cam2["translation"]))
+        
         distances[(cam1_id, cam2_id)] = {
             "camera_names": (cam1["name"], cam2["name"]),
             "distance": distance
@@ -33,8 +39,8 @@ def calculate_distances(cameras):
 
 def main():
     # Load camera data from both files
-    aligned_calibration_path = r"C:\Users\jonma\Sync\freemocap-stuff\freemocap-clients\ben-scholl\data\2025-04-28\2025-04-28-calibration\2025-04-28-calibration_camera_calibration_aligned.toml"
-    original_calibration_path = r"C:\Users\jonma\Sync\freemocap-stuff\freemocap-clients\ben-scholl\data\2025-04-28\2025-04-28-calibration\2025-04-28-calibration_camera_calibration.toml"
+    aligned_calibration_path = r"D:\2025-04-28-calibration\2025-04-28-calibration_camera_calibration_aligned.toml"
+    original_calibration_path = r"D:\2025-04-28-calibration\2025-04-28-calibration_camera_calibration.toml"
 
 
     original_data = load_camera_data(original_calibration_path)
