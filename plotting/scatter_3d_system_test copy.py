@@ -99,18 +99,18 @@ if __name__ == '__main__':
     # path_dict = {'video_order_123': order_123, 'video_order_231': order_231, 'video_order_321': order_321}
 
     
-    original_calibration = Path(r'C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_123_original')
-    translation_zero_calibration = Path(r'C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_123_zero_proper')
-    translation_rotation_zero_calibration = Path(r'C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data_123_zero_rotation')
-    path_dict = {'original_calibration': original_calibration, 'translation_zero_calibration': translation_zero_calibration, 'translation_rotation_zero_calibration': translation_rotation_zero_calibration}
+    recording_path = Path(r"D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-11-05-612Z_atc_test_walk_trial_2")
+
 
     data_dict = {}
 
-    for system, path_name in path_dict.items():
-        data = np.load(path_name/'output_data'/'mediapipe_skeleton_3d.npy')[:,0:33,:]
-        data_dict[system] = data
+    # for system, path_name in path_dict.items():
+    #     data = np.load(path_name/'output_data'/'mediapipe_skeleton_3d.npy')[:,0:33,:]
+    #     data_dict[system] = data
 
-
+    data_dict['mediapipe'] = np.load(recording_path/'output_data'/'mediapipe_body_3d_xyz.npy')
+    data_dict['openpose'] = np.load(recording_path/'output_data'/'openpose_body_3d_xyz.npy')
+    data_dict['qualisys'] = np.load(recording_path/'validation'/'qualisys'/'qualisys_body_3d_xyz.npy')
 
 
     # windows_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_windows-latest (8)\output_data\mediapipe_skeleton_3d.npy") [:,0:33,:]
@@ -118,27 +118,27 @@ if __name__ == '__main__':
     # linux_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_ubuntu-latest (9)\output_data\mediapipe_skeleton_3d.npy")[:,0:33,:]
 
 
-    from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
+    # from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
 
 
-    import numpy as np
+    # import numpy as np
 
-    from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
+    # from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
     
 
-    data_aligned = {}
+    # data_aligned = {}
 
-    for array_name, array in data_dict.items():
-        good_frame = 103
+    # for array_name, array in data_dict.items():
+    #     good_frame = 103
 
-        aligned_data = align_skeleton_with_origin(skeleton_data=array, skeleton_indices=MediapipeModelInfo.body_landmark_names, good_frame=good_frame)[0]   
+    #     aligned_data = align_skeleton_with_origin(skeleton_data=array, skeleton_indices=MediapipeModelInfo.body_landmark_names, good_frame=good_frame)[0]   
 
-        data_aligned[array_name] = aligned_data
-
-
+    #     data_aligned[array_name] = aligned_data
 
 
 
 
-    plot_3d_scatter(data_aligned)
+
+
+    plot_3d_scatter(data_dict)
     f = 2
