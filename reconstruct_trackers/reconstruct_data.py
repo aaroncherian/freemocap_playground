@@ -113,7 +113,7 @@ def main():
     
     process_recording_session(
         path_to_recording_folder=r'D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-11-05-612Z_atc_test_walk_trial_2',
-        path_to_model_yaml=Path(__file__).parent / 'tracker_info'/'yolo_model_info.yaml',
+        path_to_model_yaml=Path(__file__).parent / 'tracker_info'/'openpose_model_info.yaml',
         use_skellyforge=False,
         filter_order=4,
         cutoff_frequency=6.0,
