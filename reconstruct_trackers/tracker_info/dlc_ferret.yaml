@@ -1,0 +1,41 @@
+name: dlc
+tracker_name: DLC
+
+order:
+  - body
+
+aspects:
+  body:
+    tracked_points:
+      type: list
+      names:
+        - nose
+        - right_eye
+        - right_ear
+        - left_eye
+        - left_ear
+        - toy
+    
+    segment_connections:
+      right_eye_seg:
+        proximal: nose
+        distal: right_eye
+      left_eye_seg:
+        proximal: nose
+        distal: left_eye
+      right_ear_seg:
+        proximal: right_eye
+        distal: right_ear
+      left_ear_seg:
+        proximal: left_eye
+        distal: left_ear
+
+    joint_hierarchy:
+      nose:
+        - right_eye
+        - left_eye
+      right_eye:
+        - right_ear
+      left_eye:
+        - left_ear
+      
