@@ -1,7 +1,7 @@
 # ── user settings ────────────────────────────────────────────────────────────
 BASE_DIR     = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3"
 TRACKER_NAME = "mediapipe"
-JOINT_NAME   = "ankle_angle_l"
+JOINT_NAME   = "knee_angle_l"
 HEADER_ROWS  = 10
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -55,15 +55,17 @@ for idx, sesh in enumerate(session_dirs, 1):
         print(f"[warning] Joint '{JOINT_NAME}' not found in {sesh.name} – skipped.")
         continue
 
+    qual_flipped = qual[JOINT_NAME]*-1
+
     # update global x-axis bounds
     tmin = min(qual.index.min(), fmc.index.min())
     tmax = max(qual.index.max(), fmc.index.max())
     global_tmin = tmin if global_tmin is None else min(global_tmin, tmin)
     global_tmax = tmax if global_tmax is None else max(global_tmax, tmax)
 
-    ymin = min(fmc[JOINT_NAME].min(), (qual[JOINT_NAME]*-1).min())   # *-1 if you keep that sign flip
-    ymax = max(fmc[JOINT_NAME].max(), (qual[JOINT_NAME]*-1).max())
-    global_ymin = ymin if global_ymin is None else min(global_ymin, ymin)
+    ymin = min(fmc[JOINT_NAME].min(), (qual_flipped).min())   # *-1 if you keep that sign flip
+    ymax = max(fmc[JOINT_NAME].max(), (qual_flipped).max())
+    global_ymin = ymin if global_ymin is None else min(global_ymin, ymin) - 10
     global_ymax = ymax if global_ymax is None else max(global_ymax, ymax) + 10
 
     # add traces
@@ -78,7 +80,7 @@ for idx, sesh in enumerate(session_dirs, 1):
     )
     fig.add_trace(
         go.Scatter(
-            x=fmc.index, y=qual[JOINT_NAME],
+            x=fmc.index, y=qual_flipped,
             mode="lines", name="Qualisys" if idx == 1 else None,
             line=dict(color=RED, dash="dash"),
             legendgroup="qual", showlegend=idx == 1,
