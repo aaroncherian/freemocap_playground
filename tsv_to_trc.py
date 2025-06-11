@@ -68,5 +68,5 @@ def tsv_to_trc(tsv_data, output_trc_path, transform='OsimXYZ', sampling_freq=100
 
 # Example usage:
 # Assuming `tsv_data` is your parsed DataFrame from the TSV file
-tsv_data = pd.read_csv(r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2\qualisys_data\synchronized_markers.tsv", sep='\t')
-tsv_to_trc(tsv_data, r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2\qualisys_data\synchronized_markers.trc", transform='OsimXYZ', sampling_freq=300)
+tsv_data = pd.read_csv(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\validation\qualisys\qualisys_synced_markers.csv")
+tsv_to_trc(tsv_data, r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\validation\qualisys\synchronized_markers.trc", transform='OsimXYZ', sampling_freq=30)

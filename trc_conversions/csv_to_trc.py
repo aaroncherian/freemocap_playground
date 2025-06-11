@@ -89,6 +89,9 @@ def csv_to_trc(input_file, output_file=None, frame_rate=None):
     df[time_col] = pd.to_numeric(df[time_col], errors='coerce')
     df[frame_col] = pd.to_numeric(df[frame_col], errors='coerce')
     
+    t0 = df[time_col].iloc[0]
+    df[time_col] = df[time_col] - t0
+
     # Step 3: Extract marker data
     # Find marker columns (X, Y, Z triplets)
     marker_columns = []
@@ -200,9 +203,9 @@ def csv_to_trc(input_file, output_file=None, frame_rate=None):
                 
                 # Apply coordinate transformation (try different mappings)
                 # Variant 1: Direct mapping (X→X, Y→Y, Z→Z)
-                opensim_x = x
+                opensim_x = y
                 opensim_y = z
-                opensim_z = -y
+                opensim_z = x
                 
                 row_data.extend([f"{opensim_x:.6f}", f"{opensim_y:.6f}", f"{opensim_z:.6f}"])
             
@@ -212,9 +215,10 @@ def csv_to_trc(input_file, output_file=None, frame_rate=None):
     
     return output_file
 
+from pathlib import Path
+recording_session = Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1")
 
-
-csv_file_path = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2\output_data\component_qualisys_synced\qualisys_markers_synced.csv"
-output_trc_path = r"D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2\output_data\component_qualisys_synced\qualisys_markers_synced.trc"
+csv_file_path = recording_session/"validation"/"qualisys"/"qualisys_synced_markers.csv"
+output_trc_path = recording_session/"validation"/"qualisys"/"synchronized_markers.trc"
 sampling_freq = 30  # Hz
 csv_to_trc(csv_file_path, output_trc_path, frame_rate = sampling_freq)

@@ -36,8 +36,9 @@ def get_unit_vector(vector: np.ndarray) -> np.ndarray:
     return vector / np.linalg.norm(vector)
 
 def compute_basis(charuco_frame: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    x_vec = charuco_frame[4] - charuco_frame[0]
-    y_vec = charuco_frame[3] - charuco_frame[0]
+    """ Computes basis vectors for the charuco board frame"""
+    x_vec = charuco_frame[18] - charuco_frame[0]
+    y_vec = charuco_frame[5] - charuco_frame[0]
 
     x_hat = get_unit_vector(x_vec)
     y_hat_raw = get_unit_vector(y_vec)
@@ -85,10 +86,12 @@ def align_calibration_to_charuco(
     for key, info in camera_info_dict.items():
         tvec = info['tvec']
         rmat = info['rmatrix']
-
-        t_delta = rmat @ origin
-        new_tvec = tvec + t_delta
-        new_rmat = rmat @ rotation_matrix
+        
+        #Xcam = Rc->w*Xworld + tvec (base formula for this transformation)
+        t_delta = rmat @ origin #Rc->w*Xworld (rmat is Rc->w)
+        new_tvec = t_delta + tvec #Rc->w*Xworld + tvec 
+        #rotation matrix is Rw'-w
+        new_rmat = rmat @ rotation_matrix #composes w' -> w (rotation matrix) with w -> c (rmat) to get w' -> c
 
         camera_info_dict[key]['new_tvec'] = new_tvec
         camera_info_dict[key]['new_rmat'] = new_rmat

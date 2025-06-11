@@ -108,9 +108,9 @@ if __name__ == '__main__':
     #     data = np.load(path_name/'output_data'/'mediapipe_skeleton_3d.npy')[:,0:33,:]
     #     data_dict[system] = data
 
-    data_dict['mediapipe'] = np.load(recording_path/'output_data'/'mediapipe_body_3d_xyz.npy')
-    data_dict['openpose'] = np.load(recording_path/'output_data'/'openpose_body_3d_xyz.npy')
-    data_dict['qualisys'] = np.load(recording_path/'validation'/'qualisys'/'qualisys_body_3d_xyz.npy')
+    data_dict['mediapipe'] = np.load(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1\validation\mediapipe\mediapipe_body_3d_xyz.npy')
+    # data_dict['openpose'] = np.load(recording_path/'output_data'/'openpose_body_3d_xyz.npy')
+    # data_dict['qualisys'] = np.load(recording_path/'validation'/'qualisys'/'qualisys_body_3d_xyz.npy')
 
 
     # windows_data = np.load(r"D:\system_testing\no_pin_to_zero\test_data_artifacts_windows-latest (8)\output_data\mediapipe_skeleton_3d.npy") [:,0:33,:]

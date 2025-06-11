@@ -168,8 +168,6 @@ if __name__ == '__main__':
 
     # data2d_flat = data_2d.reshape(number_of_cameras, -1, 2)
 
-
-
     data_3d = np.load(path_to_3d_data)[:,0:len(MediapipeModelInfo.body_landmark_names),:]
 
     calibration_object = CameraGroup.load(path_to_calibration_toml)

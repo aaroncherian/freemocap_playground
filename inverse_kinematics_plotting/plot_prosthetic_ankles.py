@@ -7,7 +7,7 @@ import plotly.subplots as sp
 paths_to_freemocap_folders = [
     r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1',
     r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_03_15_TF01_flexion_neg_2_8_trial_1',
-    r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1',
+    # r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1',
     r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_09_05_TF01_flexion_pos_2_8_trial_1',
     r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_12_36_TF01_flexion_pos_5_6_trial_1'
 ]
@@ -28,7 +28,7 @@ for i, (path, label) in enumerate(zip(paths_to_freemocap_folders, labels)):
     # Add right ankle angle plot
     fig.add_trace(go.Scatter(
         x=ik_data['time'],
-        y=ik_data['ankle_angle_r'],
+        y=ik_data['ankle_angle_l'],
         mode='lines',
         name=f'Right Ankle Angle ({label})'
     ), row=i+1, col=1)

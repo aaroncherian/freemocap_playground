@@ -79,20 +79,21 @@ if __name__ == '__main__':
     from pathlib import Path
 
 
-    original_session = Path(r"D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-11-05-612Z_atc_test_walk_trial_2")
-    aligned_session = Path(r"D:\2025-04-23_atc_testing\freemocap\test_walk_aligned")
+    anipose = Path(r"C:\Users\aaron\freemocap_data\recording_sessions\skellytracker_charuco_comparisons\freemocap_sample_data")
+    anipose_skellytracker = Path(r"C:\Users\aaron\freemocap_data\recording_sessions\skellytracker_charuco_comparisons\freemocap_sample_data_skellytracker")
+    # aligned_session = Path(r"D:\2025-04-23_atc_testing\freemocap\test_walk_aligned")
 
-    path_dict = {'original_calibration': original_session, 'aligned_calibration': aligned_session}
+    path_dict = { 'anipose': anipose, "anipose_skellytracker": anipose_skellytracker }
 
     data_dict = {}
 
     for system, path_name in path_dict.items():
-        data = np.load(path_name/'output_data'/'raw_data'/'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy')[:,0:33,:]
+        data = np.load(path_name/'output_data'/"mediapipe_body_3d_xyz.npy")
         data_dict[system] = data
 
 
 
-        from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
+    from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
 
 
     import numpy as np
@@ -103,7 +104,7 @@ if __name__ == '__main__':
     data_aligned = {}
 
     for array_name, array in data_dict.items():
-        good_frame = 103
+        good_frame = 480
 
         aligned_data = align_skeleton_with_origin(skeleton_data=array, skeleton_indices=MediapipeModelInfo.body_landmark_names, good_frame=good_frame)[0]   
 
