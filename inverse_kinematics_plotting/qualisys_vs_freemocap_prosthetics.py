@@ -1,7 +1,7 @@
 # ── user settings ────────────────────────────────────────────────────────────
 BASE_DIR     = r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib"
-TRACKER_NAME = "mediapipe"
-JOINT_NAME   = "ankle_angle_l"
+TRACKER_NAME = "mediapipe_dlc"
+JOINT_NAME   = "ankle_angle_r"
 HEADER_ROWS  = 10
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -14,9 +14,9 @@ BLUE = "rgba(31, 119, 180, 0.7)"   # FreeMoCap
 RED  = "rgba(214, 39, 40, 0.7)"    # Qualisys
 
 session_dirs = [
-    Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1"),
+    # Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1"),
     Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1"),
-    Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_12_36_TF01_flexion_pos_5_6_trial_1"),
+    # Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_12_36_TF01_flexion_pos_5_6_trial_1"),
 ]
 
 def load_mot(path: Path, n_header: int) -> pd.DataFrame:

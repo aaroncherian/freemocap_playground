@@ -1,0 +1,170 @@
+import plotly.graph_objects as go
+import numpy as np
+
+def plot_3d_scatter(data_3d_dict: dict):
+    # Determine axis limits based on the data
+    all_data = np.concatenate(list(data_3d_dict.values()), axis=1)
+    
+    mean_x = np.nanmean(all_data[:, :, 0])
+    mean_y = np.nanmean(all_data[:, :, 1])
+    mean_z = np.nanmean(all_data[:, :, 2])
+
+    ax_range = 2000
+
+
+    # Create a Plotly figure
+    fig = go.Figure()
+
+    # Generate a frame for each time step
+    frames = []
+    for frame in range(all_data.shape[0]):
+        frame_data = []
+        for label, data in data_3d_dict.items():
+            frame_data.append(go.Scatter3d(
+                x=data[frame, :, 0],
+                y=data[frame, :, 1],
+                z=data[frame, :, 2],
+                mode='markers',
+                name=label,
+                marker=dict(size=4, opacity=0.8)
+            ))
+        frames.append(go.Frame(data=frame_data, name=str(frame)))
+
+    # Add the first frame's data
+    for label, data in data_3d_dict.items():
+        fig.add_trace(go.Scatter3d(
+            x=data[0, :, 0],
+            y=data[0, :, 1],
+            z=data[0, :, 2],
+            mode='markers',
+            name=label,
+            marker=dict(size=4, opacity=0.8),
+            opacity=.5
+        ))
+
+    # Update the layout with sliders and other settings
+    fig.update_layout(
+        scene=dict(
+            aspectmode='cube',
+            xaxis=dict(range=[mean_x - ax_range, mean_x + ax_range], title='X'),
+            yaxis=dict(range=[mean_y - ax_range, mean_y + ax_range], title='Y'),
+            zaxis=dict(range=[mean_z - ax_range, mean_z + ax_range], title='Z')
+        ),
+        title="3D Scatter Plot",
+        updatemenus=[dict(
+            type="buttons",
+            showactive=False,
+            buttons=[dict(label="Play",
+                          method="animate",
+                          args=[None, {"frame": {"duration": 100, "redraw": True}, "fromcurrent": True}]),
+                     dict(label="Pause",
+                          method="animate",
+                          args=[[None], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate"}])]
+        )],
+        sliders=[{
+            "steps": [{"args": [[str(frame)], {"frame": {"duration": 100, "redraw": True}, "mode": "immediate"}],
+                       "label": str(frame), "method": "animate"} for frame in range(all_data.shape[0])],
+            "currentvalue": {"prefix": "Frame: "}
+        }]
+    )
+
+    # Add the frames to the figure
+    fig.frames = frames
+
+    # Show the plot
+    fig.show()
+
+
+if __name__ == '__main__':
+    from pathlib import Path
+    from skellymodels.managers.human import Human
+    from skellymodels.models.tracking_model_info import MediapipeModelInfo
+    from plotting.skellyforge_data.postprocessing import postprocess_data
+    
+    human_raw_data:Human
+
+    recording = Path(r"D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-11-05-612Z_atc_test_walk_trial_2")
+
+
+    path_to_data = recording/'output_data'/'raw_data'/'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy'
+    data = np.load(path_to_data)
+    data = postprocess_data(data)
+    human_raw_data:Human = Human.from_tracked_points_numpy_array(
+        name = 'human',
+        model_info=MediapipeModelInfo(),
+        tracked_points_numpy_array=data
+    )
+
+    human_raw_data.put_skeleton_on_ground()
+    human_raw_data.fix_hands_to_wrist()
+
+    human_one:Human = Human.from_data(recording/'output_data')
+    
+    path_to_output_folder = recording/'output_data'
+    body_data = np.load(path_to_output_folder/'mediapipe_body_3d_xyz.npy')
+    left_hand_data = np.load(path_to_output_folder/'mediapipe_left_hand_3d_xyz.npy')
+    right_hand_data = np.load(path_to_output_folder/'mediapipe_right_hand_3d_xyz.npy')
+    face_data = np.load(path_to_output_folder/'mediapipe_face_3d_xyz.npy')
+
+    # data_dict = {
+    #     'body': body_data, 
+    #     'left_hand': left_hand_data,
+    #     'right_hand': right_hand_data, 
+    #     'face': face_data
+    # }
+
+    # human_two:Human = Human.from_data(recording/'output_data')
+    # human_two.put_skeleton_on_ground()
+    # human_two.fix_hands_to_wrist()
+    # human_one: Human = Human.from_tracked_points_numpy_array(name = 'test',
+    #                                                          tracked_points_numpy_array=np.load(Path(r"C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data\output_data\raw_data\mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy")),
+    #                                                          model_info=MediapipeModelInfo())
+    # aligned_session = Path(r"D:\2025-04-23_atc_testing\freemocap\test_walk_aligned")
+
+    # human_two = Human.from_data(recording/'output_data')
+    # human_one.put_skeleton_on_ground()
+
+    data_dict = {
+        'body': human_raw_data.body.xyz.as_array,
+        'left_hand': human_raw_data.left_hand.xyz.as_array,
+        'right_hand': human_raw_data.right_hand.xyz.as_array,
+        'face': human_raw_data.face.xyz.as_array,
+    }
+
+    # data_dict = {
+        # 'not_aligned': human_one.body.xyz.as_array,
+        # 'aligned': human_two.body.xyz.as_array
+        # 'body': human_one.body.xyz.as_array,
+        # 'left_hand': human_one.left_hand.xyz.as_array,
+        # 'right_hand': human_one.right_hand.xyz.as_array
+    # }
+    # path_dict = { 'anipose': anipose, "anipose_skellytracker": anipose_skellytracker }
+
+    # data_dict = {}
+
+    # for system, path_name in path_dict.items():
+    #     data = np.load(path_name/'output_data'/"mediapipe_body_3d_xyz.npy")
+    #     data_dict[system] = data
+
+
+
+    # from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
+
+
+    # import numpy as np
+
+    # from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
+    
+
+    # data_aligned = {}
+
+    # for array_name, array in data_dict.items():
+    #     good_frame = 480
+
+    #     aligned_data = align_skeleton_with_origin(skeleton_data=array, skeleton_indices=MediapipeModelInfo.body_landmark_names, good_frame=good_frame)[0]   
+
+    #     data_aligned[array_name] = aligned_data
+
+
+    plot_3d_scatter(data_dict)
+    # f = 2

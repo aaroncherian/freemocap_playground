@@ -1,0 +1,36 @@
+name: prosthetic_leg
+tracker_name: DLC
+
+order:
+  - body
+
+aspects:
+  body:
+    tracked_points:
+      type: list
+      names:
+        - right_knee
+        - right_ankle
+        - right_foot_index
+        - right_heel
+    
+    segment_connections:
+      right_shank:
+        proximal: right_knee
+        distal: right_ankle
+      right_foot:
+        proximal: right_ankle
+        distal: right_foot_index
+      right_heel:
+        proximal: right_ankle
+        distal: right_heel
+      right_foot_bottom:
+        proximal: right_heel
+        distal: right_foot_index
+
+    joint_hierarchy:
+      right_knee:
+        - right_ankle
+      right_ankle:
+        - right_foot_index
+        - right_heel

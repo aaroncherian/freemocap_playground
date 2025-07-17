@@ -81,21 +81,28 @@ def numpy_to_trc(skeleton_3d_data, marker_names, frame_rate, output_file):
 if __name__ == "__main__":
     from pathlib import Path
     import numpy as np
-    from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
+    from skellymodels.models.tracking_model_info import ModelInfo
+    from skellymodels.managers.human import Human
     
     # Your paths
-    tracker_name = 'mediapipe'
-    path_to_recording_folder = Path(r'D:\2023-05-17_MDN_NIH_data\1.0_recordings\calib_3\sesh_2023-05-17_13_48_44_MDN_treadmill_2')
-    path_to_data = path_to_recording_folder / 'validation' / tracker_name / f'{tracker_name}_body_3d_xyz.npy'
-    output_trc_path = path_to_recording_folder / 'validation' / tracker_name / f'{tracker_name}_body_3d_xyz.trc'
+    tracker_name = 'mediapipe_dlc'
+    path_to_recording_folder = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1')
+    path_to_yaml = Path(__file__).parent / 'mediapipe_just_body.yaml'
+    path_to_data = path_to_recording_folder / 'validation' / tracker_name / f'{tracker_name}_body_rigid_3d_xyz.npy'
+    output_trc_path = path_to_recording_folder / 'validation' / tracker_name / f'{tracker_name}_body_rigid_3d_xyz.trc'
     
     # Load data
-    skel3d_data = np.load(path_to_data)
-    
+    # skel3d_data = np.load(path_to_data)
+    human:Human = Human.from_data(path_to_recording_folder/'validation' / tracker_name)
+    # human = Human.from_landmarks_numpy_array(
+    #     name = "human",
+    #     landmarks_numpy_array=skel3d_data,
+    #     model_info=ModelInfo.from_config_path(path_to_yaml),
+    # )
     # Convert to TRC
     numpy_to_trc(
-        skeleton_3d_data=skel3d_data,
-        marker_names=MediapipeModelInfo.landmark_names,
+        skeleton_3d_data=human.body.rigid_xyz.as_array,
+        marker_names=human.body.anatomical_structure.landmark_names,
         frame_rate=30,
         output_file=str(output_trc_path)
     )
