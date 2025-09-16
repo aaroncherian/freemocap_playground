@@ -59,9 +59,9 @@ def process_recording_session(
     if landmark_names is None:
         landmark_names = [
             'right_knee',
-            'right_ankle',
+            'right_heel',  
             'right_foot_index',
-            'right_heel',
+            'right_ankle',
         ]
 
     # Output directory setup
@@ -83,13 +83,23 @@ def process_recording_session(
     
     # Reconstruct 3D data
     logger.info("Reconstructing 3D data")
-    dlc_3d_array = reconstruct_3d(dlc_2d_array, path_to_calibration_toml)
-    
+    dlc_3d_array, reprojection_error, camera_reprojection_error = reconstruct_3d(dlc_2d_array, path_to_calibration_toml)
+
     # Save raw 3D data
     logger.info("Saving raw 3D data")
     np.save(
         path_to_raw_data_folder / 'dlc_3dData_numFrames_numTrackedPoints_spatialXYZ.npy', 
         dlc_3d_array
+    )
+
+    np.save(
+        path_to_raw_data_folder / 'reprojection_error_total.npy',
+        reprojection_error
+    )
+
+    np.save(
+        path_to_raw_data_folder / 'reprojection_error_per_camera.npy',
+        camera_reprojection_error
     )
 
     # Apply filtering if requested
@@ -136,7 +146,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     
     process_recording_session(
-        path_to_recording_folder=r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1',
+        path_to_recording_folder=r'D:\2023-06-07_TF01\1.0_recordings\four_camera\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1',
         path_to_dlc_yaml= Path(r"C:\Users\aaron\Documents\GitHub\freemocap_playground\dlc_reconstruction\model_infos\prosthetic_leg.yaml"),
         use_skellyforge=False,
         filter_order=4,

@@ -31,7 +31,7 @@ def reconstruct_3d(data_2d: np.ndarray, calibration_toml_path: Union[str, Path])
         kill_event=None,
     )
 
-    return data_3d
+    return data_3d, reprojection_error, camera_reprojection_error
 
 
 def triangulate_3d_data(

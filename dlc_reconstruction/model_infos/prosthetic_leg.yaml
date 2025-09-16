@@ -10,9 +10,9 @@ aspects:
       type: list
       names:
         - right_knee
-        - right_ankle
-        - right_foot_index
         - right_heel
+        - right_foot_index
+        - right_ankle
     
     segment_connections:
       right_shank:

@@ -12,7 +12,7 @@ from dlc_reconstruction.reconstruction_to_3d.postprocessing import process_and_f
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
-path_to_recording = Path(r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1')
+path_to_recording = Path(r'D:\2023-06-07_TF01\1.0_recordings\four_camera\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1')
 
 path_to_output_data = path_to_recording/'output_data'
 path_to_dlc_data = path_to_output_data/'dlc'
@@ -20,7 +20,8 @@ path_to_dlc_data = path_to_output_data/'dlc'
 prosthetic_leg:Animal = Animal.from_data(path_to_dlc_data)
 
 human_model_info:ModelInfo = MediapipeModelInfo()
-human_data_raw = np.load(path_to_output_data/'raw_data'/'mediapipe3dData_numFrames_numTrackedPoints_spatialXYZ.npy')
+human_data_raw = np.load(path_to_output_data/'raw_data'/'mediapipe_3dData_numFrames_numTrackedPoints_spatialXYZ.npy') 
+
 human_data_processed = process_and_filter_data(
     data_3d = human_data_raw,
     landmark_names = human_model_info.tracked_point_names,
