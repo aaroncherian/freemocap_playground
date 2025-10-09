@@ -1,6 +1,6 @@
 # ── user settings ────────────────────────────────────────────────────────────
 BASE_DIR     = r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib"
-TRACKER_NAME = "mediapipe_dlc"
+TRACKER_NAME = "mediapipe"
 JOINT_NAME   = "ankle_angle_r"
 HEADER_ROWS  = 10
 # ─────────────────────────────────────────────────────────────────────────────
@@ -14,9 +14,9 @@ BLUE = "rgba(31, 119, 180, 0.7)"   # FreeMoCap
 RED  = "rgba(214, 39, 40, 0.7)"    # Qualisys
 
 session_dirs = [
-    # Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1"),
+    Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1"),
     Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1"),
-    # Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_12_36_TF01_flexion_pos_5_6_trial_1"),
+    Path(r"D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_12_36_TF01_flexion_pos_5_6_trial_1"),
 ]
 
 def load_mot(path: Path, n_header: int) -> pd.DataFrame:
@@ -65,8 +65,10 @@ for idx, sesh in enumerate(session_dirs, 1):
 
     ymin = min(fmc[JOINT_NAME].min(), (qual[JOINT_NAME]*-1).min())   # *-1 if you keep that sign flip
     ymax = max(fmc[JOINT_NAME].max(), (qual[JOINT_NAME]*-1).max())
-    global_ymin = ymin if global_ymin is None else min(global_ymin, ymin)
-    global_ymax = ymax if global_ymax is None else max(global_ymax, ymax) + 10
+    # global_ymin = ymin if global_ymin is None else min(global_ymin, ymin)
+    # global_ymax = ymax if global_ymax is None else max(global_ymax, ymax) + 10
+    global_ymin = -10 if global_ymin is None else min(global_ymin, -10)
+    global_ymax =  5 if global_ymax is None else max(global_ymax,  10)
 
     # add traces
     fig.add_trace(

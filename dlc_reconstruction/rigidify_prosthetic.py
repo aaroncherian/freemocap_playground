@@ -43,8 +43,8 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 # --- paths/inputs ---
-path_to_recording = Path(r'D:\2023-06-07_TF01\1.0_recordings\four_camera\sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1')
-neutral_frames = slice(100, 250)
+path_to_recording = Path(r'D:\2023-06-07_TF01\1.0_recordings\four_camera\sesh_2023-06-07_12_09_05_TF01_flexion_pos_2_8_trial_1')
+neutral_frames = slice(90, 210)
 output_data_folder = path_to_recording/'output_data'/'dlc_rigidified'
 output_data_folder.mkdir(parents=True, exist_ok=True)
 

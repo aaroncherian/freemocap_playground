@@ -223,7 +223,7 @@ def save_gait_events_to_csv(results:GaitResults, fs:float, out_path:Path):
     print(f"Saved gait events to {out_path}")
 
 
-path_to_recording = Path(r'D:\2025_07_31_JSM_pilot\freemocap\2025-07-31_16-35-10_GMT-4_jsm_treadmill_trial_1')
+path_to_recording = Path(r'D:\2025_07_31_JSM_pilot\freemocap\2025-07-31_16-52-16_GMT-4_jsm_treadmill_2')
 
 path_to_data = path_to_recording/'validation'/'qualisys'
 

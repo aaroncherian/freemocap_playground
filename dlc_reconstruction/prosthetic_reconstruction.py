@@ -1,18 +1,30 @@
+import logging
+from dlc_reconstruction.dlc_to_3d import process_recording_session, process_and_filter_data
+from pathlib import Path
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 from skellymodels.models.tracking_model_info import ModelInfo, MediapipeModelInfo
 from skellymodels.managers.human import Human
 from skellymodels.managers.animal import Animal
 from skellymodels.models.trajectory import Trajectory
 from skellymodels.models.aspect import TrajectoryNames
-from pathlib import Path
 import numpy as np
-import logging
-from dlc_reconstruction.reconstruction_to_3d.postprocessing import process_and_filter_data
+
+path_to_recording = Path(r'D:\2023-06-07_TF01\1.0_recordings\four_camera\sesh_2023-06-07_12_09_05_TF01_flexion_pos_2_8_trial_1_bad')
+path_to_dlc_yaml= Path(r"C:\Users\aaron\Documents\GitHub\freemocap_playground\dlc_reconstruction\model_infos\prosthetic_leg.yaml")
+
+process_recording_session(
+    path_to_recording_folder=path_to_recording,
+    path_to_dlc_yaml=path_to_dlc_yaml,
+    use_skellyforge=True,
+    filter_order=4,
+    cutoff_frequency=7.0,
+    sampling_rate=30.0,
+    dlc_confidence_threshold=.5,
+    create_visualization=False,
+    interpolate=False
+)
 
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
-
-path_to_recording = Path(r'D:\2023-06-07_TF01\1.0_recordings\four_camera\sesh_2023-06-07_12_20_59_TF01_toe_angle_neg_6_trial_1')
 
 path_to_output_data = path_to_recording/'output_data'
 path_to_dlc_data = path_to_output_data/'dlc' 
