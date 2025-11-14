@@ -2,8 +2,8 @@ from pathlib import Path
 from skellymodels.managers.human import Human
 import json
 
-path_to_recording = Path(r"D:\2025_07_31_JSM_pilot\freemocap\2025-07-31_16-35-10_GMT-4_jsm_treadmill_trial_1")
-path_to_save_data = Path(r"C:\Users\aaron\Documents\GitHub\nih_balance_analyses\docs\treadmill\skeleton_3d_plot")
+path_to_recording = Path(r"D:\2025_07_31_JSM_pilot\freemocap\2025-07-31_16-52-16_GMT-4_jsm_treadmill_2")
+path_to_save_data = Path(r"C:\Users\aaron\Documents\GitHub\freemocap_validation\docs\skeleton_3d_plot")
 
 
 freemocap_human:Human = Human.from_data(path_to_recording/'validation'/'mediapipe')

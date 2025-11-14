@@ -79,37 +79,43 @@ if __name__ == '__main__':
     from pathlib import Path
 
 
-    anipose = Path(r"C:\Users\aaron\freemocap_data\recording_sessions\skellytracker_charuco_comparisons\freemocap_sample_data")
-    anipose_skellytracker = Path(r"C:\Users\aaron\freemocap_data\recording_sessions\skellytracker_charuco_comparisons\freemocap_sample_data_skellytracker")
+    # anipose = Path(r"C:\Users\aaron\freemocap_data\recording_sessions\skellytracker_charuco_comparisons\freemocap_sample_data")
+    # anipose_skellytracker = Path(r"C:\Users\aaron\freemocap_data\recording_sessions\skellytracker_charuco_comparisons\freemocap_sample_data_skellytracker")
     # aligned_session = Path(r"D:\2025-04-23_atc_testing\freemocap\test_walk_aligned")
 
-    path_dict = { 'anipose': anipose, "anipose_skellytracker": anipose_skellytracker }
+    # path_dict = { 'anipose': anipose, "anipose_skellytracker": anipose_skellytracker }
 
-    data_dict = {}
+    # data_dict = {}
 
-    for system, path_name in path_dict.items():
-        data = np.load(path_name/'output_data'/"mediapipe_body_3d_xyz.npy")
-        data_dict[system] = data
-
-
-
-    from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
+    # for system, path_name in path_dict.items():
+    #     data = np.load(path_name/'output_data'/"mediapipe_body_3d_xyz.npy")
+    #     data_dict[system] = data
 
 
-    import numpy as np
 
-    from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
-    
-
-    data_aligned = {}
-
-    for array_name, array in data_dict.items():
-        good_frame = 480
-
-        aligned_data = align_skeleton_with_origin(skeleton_data=array, skeleton_indices=MediapipeModelInfo.body_landmark_names, good_frame=good_frame)[0]   
-
-        data_aligned[array_name] = aligned_data
+    # from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
 
 
-    plot_3d_scatter(data_aligned)
+    # import numpy as np
+
+    # from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
+    session = Path(r"C:\Users\aaron\Downloads\__freemocap_test_data\__freemocap_test_data")
+    data_path = session / 'output_data' / 'mediapipe_body_3d_xyz.npy'
+    all_data = np.load(data_path)*58
+
+    v1_session = Path(r"C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data")
+    v1_data_path = v1_session / 'output_data' / 'mediapipe_body_3d_xyz.npy'
+    v1_data = np.load(v1_data_path)
+    data_dict = {'v2': all_data, 'v1': v1_data}
+    # data_aligned = {}
+
+    # for array_name, array in data_dict.items():
+    #     good_frame = 480
+
+    #     aligned_data = align_skeleton_with_origin(skeleton_data=array, skeleton_indices=MediapipeModelInfo.body_landmark_names, good_frame=good_frame)[0]   
+
+    #     data_aligned[array_name] = aligned_data
+
+
+    plot_3d_scatter(data_dict)
     f = 2

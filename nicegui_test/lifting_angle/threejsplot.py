@@ -1,9 +1,9 @@
 from nicegui import ui
-from skellymodels.experimental.model_redo.managers.human import Human
+from skellymodels.managers.human import Human
 
 class ThreeJSPlot:
     def __init__(self, human:Human):
-        self.marker_data_unscaled = human.body.trajectories['3d_xyz'].as_numpy
+        self.marker_data_unscaled = human.body.xyz.as_array()
         self.spheres = {}
         self.scene = None
 

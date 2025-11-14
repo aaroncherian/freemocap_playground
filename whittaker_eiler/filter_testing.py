@@ -31,8 +31,6 @@ whittaker_smoother = WhittakerSmoother(
     weights = w.tolist()
 )
 
-
-
 whittaker_x = whittaker_smoother.smooth(x.tolist())
 whittaker_y = whittaker_smoother.smooth(y.tolist())
 
