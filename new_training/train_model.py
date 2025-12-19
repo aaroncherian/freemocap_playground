@@ -36,7 +36,7 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     criterion = nn.MSELoss()
 
-    NUM_EPOCHS = 10
+    NUM_EPOCHS = 20
     CHECKPOINT_PATH = Path("new_training/heel_model.pth")
     CHECKPOINT_PATH.parent.mkdir(parents=True, exist_ok=True)
 

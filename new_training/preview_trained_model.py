@@ -22,7 +22,7 @@ model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
 model.eval()
 
 # Choose a few frames to visualize
-sample_indices = sorted(list(labels.keys()))[::10]  # every 50th labeled frame
+sample_indices = sorted(list(labels.keys()))[::10]  # every 10th labeled frame
 
 for frame_idx in sample_indices:
     # Load original image
