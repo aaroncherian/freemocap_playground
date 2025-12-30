@@ -77,16 +77,17 @@ def plot_3d_scatter(data_3d_dict: dict):
 
 if __name__ == '__main__':
     from pathlib import Path
+    from skellymodels.managers.animal import Animal
 
-    path_to_output_folder = Path(r"D:\ferret_recording\output_data")
-
+    path_to_output_folder = Path(r"C:\Users\Aaron\Documents\ferret_dlc_test\output_data")
+    ferret:Animal = Animal.from_data(path_to_output_folder)
     path_dict = {'original': path_to_output_folder/'dlc_body_3d_xyz.npy', 'rigid': path_to_output_folder/'dlc_body_rigid_3d_xyz.npy'}
 
-    data_dict = {}
+    data_dict = {'ferret':ferret.body.xyz.as_array}
 
-    for system, path_name in path_dict.items():
-        data = np.load(path_name)
-        data_dict[system] = data
+    # for system, path_name in path_dict.items():
+    #     data = np.load(path_name)
+    #     data_dict[system] = data
 
     plot_3d_scatter(data_dict)
     f = 2

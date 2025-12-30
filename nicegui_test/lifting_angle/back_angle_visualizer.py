@@ -1,5 +1,5 @@
-from skellymodels.experimental.model_redo.managers.human import Human
-from skellymodels.experimental.model_redo.tracker_info.model_info import ModelInfo
+from skellymodels.managers.human import Human
+from skellymodels.models.tracking_model_info import ModelInfo
 
 from back_angle_plot import BackAnglePlot
 from threejsplot import ThreeJSPlot
@@ -12,7 +12,7 @@ from nicegui import ui
 
 def calculate_spherical_angles(human: Human):
     body_3d_xyz = human.body.trajectories['3d_xyz']
-    spine_vector = body_3d_xyz.segment_data['spine']['proximal'] - body_3d_xyz.segment_data['spine']['distal']
+    spine_vector = body_3d_xyz.segment_data(human.body.anatomical_structure.segment_connections)['spine']['proximal'] - body_3d_xyz.segment_data(human.body.anatomical_structure.segment_connections)['spine']['distal']
     spine_vector_magnitude = np.linalg.norm(spine_vector, axis=1)
     spine_vector_azimuthal = np.arctan2(spine_vector[:, 1], spine_vector[:, 0])
     spine_vector_polar = np.arccos(spine_vector[:,2]/(spine_vector_magnitude + 1e-9))
@@ -20,16 +20,16 @@ def calculate_spherical_angles(human: Human):
     return spine_vector_azimuthal, spine_vector_polar, spine_vector_magnitude
 
 
-path_to_recording = Path(r'D:\recording_15_26_59_gmt-4__kk_bad_form')
+path_to_recording = Path(r'C:\Users\Aaron\Documents\recording_15_26_59_gmt-4__kk_bad_form')
 path_to_output_data = path_to_recording / 'output_data'/ 'mediapipe_body_3d_xyz.npy'
 
-model_info = ModelInfo(config_path = Path(__file__).parent/'mediapipe_just_body.yaml')
-human = Human.from_numpy_array(
+model_info = ModelInfo.from_config_path(Path(__file__).parent/'mediapipe_just_body.yaml')
+human:Human = Human.from_tracked_points_numpy_array(
     name = 'human', 
     model_info=model_info,
     tracked_points_numpy_array=np.load(path_to_output_data)
 )
-num_frames = human.body.trajectories['3d_xyz'].num_frames
+num_frames = human.body.xyz.num_frames
 
 spine_vector_azimuthal, spine_vector_polar, spine_vector_magnitude = calculate_spherical_angles(
     human=human

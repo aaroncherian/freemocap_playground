@@ -1,0 +1,44 @@
+- Alyssa Wiles
+- Anahit Houhanaisyan
+- Greymatters journal
+    - undergrad search journal? community building free education about technology? neuroscience community building, excited because we're open-source. 
+- Qin Li - on every mailing list
+- Josh Kaplan - WWU 
+- Erica Marks - tamu@edu - mouse 3d gaze/eye tracking
+- Niloufar Faridani - wants to do a PhD internship related to vision/motion tracking
+- Emma Gibbers - real-time saccade detection 
+- Samuel Tukua @MIT
+- Agustin Solano 
+- Pedro Martinez 
+- Bianca Marlin* - needs eye tracking + free movement - was running very fast by the booth, but was very excited and said we should definitely talk. Cool scarf. 
+- Sebastian Tremblay - single camera tracking tasks on an iPad front facing camera
+- Ruiying Cheng - looking for work 
+- Aniket Jangam - northwell.edu (volunteer/hire for lab)
+- Tanmai Dhanireddy - rochester, maybe vision
+- Chris Shang? - USCD - first year grad student, might do real time tracking
+- Ken Wang - princeton
+- *Sarah Jessen, Malte Wostmann - neuroinfant/neurological conditions, very interested, wanted to ask about putting on us on their grants
+- Burgundy Waiters - mouse eye tracking 
+- Jake Joseph - umichigan real-time NHP hand tracking
+- Sabrina Pires - former ferrets, gaze tracking in mice 
+- Ed Moraud* - Swedish, does gait in parkinsons, very very interested
+- Valeriya Gritsenko* - baby remote monitoring
+- Netholabs* - private industry, has $
+- Pierre Pouget - video-eyetracker calibration poster recommendation from Andrew
+- SpikeGadgets* - Mattias Karlsson - wanted to give us $
+- James Dong - SpikeGadgets adjacent 
+- Virginia Chu, VCU - baby/infant monitoring
+- Seyed Shirazi - LSL, let's write a grant together 
+- Fatima Haidar - curious about triyng to get mice tracking in her lab (would be trying stuff herself, probably a lot free labor on our part)
+- Yukio Nishimara - studying humans and macaques ephys, super interested in setting something up. Seemed interested in our help in building
+- Greg Gage - Backyard Brains - perhaps somewhat interested in selling a mocap package, send some information about that
+- Hyunjeong Lee - real-time implementation, had already looked the github wanted to know where RT implementation was 
+- Tyler Johnson - Cleveland FES, does hand tracking in rehab. Didn't leave an email, but might reach out 
+- Donald Woodward - old guy, should follow up, unfortunately his email may questionably have numbers in it so need some decrypting of his handwriting
+- Barbara Marebwa - Michael J Fox, focus on PD, wants to see a validation paper - they do subtle mmovements in tremors. They've tried mocap in the past and have moved on a bit from that solution, but interesting results may convince them
+- Matthias Krenn - one of two from Jackson MS - using, or planning to use FreeMoCap for therapy/rehab work - curious about multiperson for having a therapist in the video.
+- Jonathan Shulgac - hand decoder, talking about trying to get 3d hand tracking - couldn't figure out how to calibrate
+- Katelyn Miyasaki - writer/blogger
+- Andre Bastos - impact tracking
+- Enrico Opri - U mich, rapid accent guy, but we did not remember what he does
+- Veronica Alonso - 3D top down rat tracking 

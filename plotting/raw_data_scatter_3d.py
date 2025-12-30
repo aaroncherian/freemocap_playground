@@ -79,12 +79,11 @@ if __name__ == '__main__':
     from pathlib import Path
 
 
-    anipose = Path(r"C:\Users\aaron\freemocap_data\recording_sessions\skellytracker_charuco_comparisons\freemocap_sample_data")
-    anipose_skellytracker = Path(r"C:\Users\aaron\freemocap_data\recording_sessions\skellytracker_charuco_comparisons\freemocap_sample_data_skellytracker")
+    anipose = Path(r"C:\Users\Aaron\FreeMocap_Data\recording_sessions\session_2025-11-16_11_27_57\recording_11_30_52_gmt-5")
+    # anipose_skellytracker = Path(r"C:\Users\aaron\freemocap_data\recording_sessions\skellytracker_charuco_comparisons\freemocap_sample_data_skellytracker")
     # aligned_session = Path(r"D:\2025-04-23_atc_testing\freemocap\test_walk_aligned")
 
-    path_dict = { 'anipose': anipose, "anipose_skellytracker": anipose_skellytracker }
-
+    path_dict = { 'anipose': anipose}
     data_dict = {}
 
     for system, path_name in path_dict.items():
@@ -93,23 +92,24 @@ if __name__ == '__main__':
 
 
 
-    from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
+    # from skellyforge.freemocap_utils.postprocessing_widgets.postprocessing_functions.rotate_skeleton import align_skeleton_with_origin
 
 
-    import numpy as np
+    # import numpy as np
 
-    from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
+    # from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
+    
     
 
-    data_aligned = {}
+    # data_aligned = {}
 
-    for array_name, array in data_dict.items():
-        good_frame = 480
+    # for array_name, array in data_dict.items():
+    #     good_frame = 480
 
-        aligned_data = align_skeleton_with_origin(skeleton_data=array, skeleton_indices=MediapipeModelInfo.body_landmark_names, good_frame=good_frame)[0]   
+    #     aligned_data = align_skeleton_with_origin(skeleton_data=array, skeleton_indices=MediapipeModelInfo.body_landmark_names, good_frame=good_frame)[0]   
 
-        data_aligned[array_name] = aligned_data
+    #     data_aligned[array_name] = aligned_data
 
 
-    plot_3d_scatter(data_aligned)
+    plot_3d_scatter(data_dict)
     f = 2
