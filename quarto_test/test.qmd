@@ -1,0 +1,36 @@
+---
+title: "Test Quarto Paper"
+author: "Your Name"
+date: "2025-01-01"
+format:
+  html: default
+  pdf: default
+  docx: default
+---
+
+# Introduction
+
+This is a test Quarto document.  
+You can write normally in Markdown.
+
+Here is some example text with a fake citation placeholder.
+
+# Methods
+
+This section demonstrates inserting a figure.
+
+## Example Figure
+
+![An example image inserted into a Quarto paper.](figures/test_plot.png){#fig-test width=70%}
+
+You can reference it like this:  
+See Figure @fig-test.
+
+# Discussion
+
+Quarto will render this file using:
+
+- `quarto render test.qmd`  
+- or **Quarto: Render Document** in VS Code
+
+Try modifying text or replacing the figure to experiment.

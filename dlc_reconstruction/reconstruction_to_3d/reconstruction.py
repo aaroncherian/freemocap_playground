@@ -6,6 +6,7 @@ import multiprocessing
 from typing import Union, Tuple, Optional, Any
 
 from dlc_reconstruction.anipose_utils.anipose_object_loader import load_anipose_calibration_toml_from_path
+from dlc_reconstruction.anipose_utils.freemocap_anipose import CameraGroup
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -31,11 +32,11 @@ def reconstruct_3d(data_2d: np.ndarray, calibration_toml_path: Union[str, Path])
         kill_event=None,
     )
 
-    return data_3d
+    return data_3d, reprojection_error, camera_reprojection_error
 
 
 def triangulate_3d_data(
-    anipose_calibration_object: Any,
+    anipose_calibration_object: CameraGroup,
     data_2d: np.ndarray,
     use_triangulate_ransac: bool = False,
     kill_event: Optional[multiprocessing.Event] = None,
@@ -79,7 +80,7 @@ def triangulate_3d_data(
         data3d_flat = anipose_calibration_object.triangulate_ransac(data2d_flat, progress=True, kill_event=kill_event)
     else:
         logger.info("Using standard triangulation method")
-        data3d_flat = anipose_calibration_object.triangulate(data2d_flat, progress=True, kill_event=kill_event)
+        data3d_flat = anipose_calibration_object.triangulate(data2d_flat, progress=True, kill_event=kill_event, number_of_tracked_points=number_of_tracked_points)
 
     # Reshape to frames × points × xyz
     data3d = data3d_flat.reshape(number_of_frames, number_of_tracked_points, 3)

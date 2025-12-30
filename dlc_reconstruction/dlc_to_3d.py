@@ -28,6 +28,7 @@ def process_recording_session(
     dlc_confidence_threshold: float = 0.6,
     landmark_names: Optional[List[str]] = None,
     create_visualization: bool = True,
+    interpolate: bool = False,
 ) -> np.ndarray:
     """
     Process a recording session from 2D DLC data to 3D reconstruction with optional filtering.
@@ -43,6 +44,7 @@ def process_recording_session(
         confidence_threshold: Confidence threshold for DLC data
         landmark_names: Names of the landmarks (if None, will use default landmarks)
         create_visualization: Whether to create a 3D visualization
+        interpolate: Whether to linearly interpolate missing 2D data before 3D reconstruction
         
     Returns:
         Processed 3D data array
@@ -57,11 +59,18 @@ def process_recording_session(
     
     # Set default landmark names if not provided
     if landmark_names is None:
+        # landmark_names = [
+        #     'right_knee',
+        #     'right_foot_index',  
+        #     'right_ankle',
+        #     'right_heel',
+        # ]
+
         landmark_names = [
             'right_knee',
-            'right_ankle',
+            'right_heel',  
             'right_foot_index',
-            'right_heel',
+            'right_ankle',
         ]
 
     # Output directory setup
@@ -78,18 +87,29 @@ def process_recording_session(
     logger.info("Compiling DLC CSV files")
     dlc_2d_array = compile_dlc_csvs(
         path_to_folder_of_dlc_csvs,
-        confidence_threshold=dlc_confidence_threshold
+        confidence_threshold=dlc_confidence_threshold,
+        interpolate=interpolate
     )
     
     # Reconstruct 3D data
     logger.info("Reconstructing 3D data")
-    dlc_3d_array = reconstruct_3d(dlc_2d_array, path_to_calibration_toml)
-    
+    dlc_3d_array, reprojection_error, camera_reprojection_error = reconstruct_3d(dlc_2d_array, path_to_calibration_toml)
+
     # Save raw 3D data
     logger.info("Saving raw 3D data")
     np.save(
         path_to_raw_data_folder / 'dlc_3dData_numFrames_numTrackedPoints_spatialXYZ.npy', 
         dlc_3d_array
+    )
+
+    np.save(
+        path_to_raw_data_folder / 'reprojection_error_total.npy',
+        reprojection_error
+    )
+
+    np.save(
+        path_to_raw_data_folder / 'reprojection_error_per_camera.npy',
+        camera_reprojection_error
     )
 
     # Apply filtering if requested
@@ -136,14 +156,15 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     
     process_recording_session(
-        path_to_recording_folder=r'D:\2023-06-07_TF01\1.0_recordings\treadmill_calib\sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1',
+        path_to_recording_folder=r'D:\2023-06-07_TF01\1.0_recordings\four_camera\sesh_2023-06-07_12_38_16_TF01_leg_length_neg_5_trial_1_ajc',
         path_to_dlc_yaml= Path(r"C:\Users\aaron\Documents\GitHub\freemocap_playground\dlc_reconstruction\model_infos\prosthetic_leg.yaml"),
-        use_skellyforge=False,
+        use_skellyforge=True,
         filter_order=4,
         cutoff_frequency=7.0,
         sampling_rate=30.0,
         dlc_confidence_threshold=.5,
-        create_visualization=True
+        create_visualization=True,
+        interpolate=False
     )
 
 
