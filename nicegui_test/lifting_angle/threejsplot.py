@@ -3,7 +3,7 @@ from skellymodels.managers.human import Human
 
 class ThreeJSPlot:
     def __init__(self, human:Human):
-        self.marker_data_unscaled = human.body.xyz.as_array()
+        self.marker_data_unscaled = human.body.xyz.as_array
         self.spheres = {}
         self.scene = None
 

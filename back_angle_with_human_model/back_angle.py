@@ -1,24 +1,24 @@
-from skellymodels.experimental.model_redo.managers.human import Human
-from skellymodels.experimental.model_redo.tracker_info.model_info import ModelInfo
+from skellymodels.managers.human import Human
+from skellymodels.models.tracking_model_info import MediapipeModelInfo
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-path_to_recording = Path(r'D:\recording_15_26_59_gmt-4__kk_bad_form')
-path_to_output_data = path_to_recording / 'output_data'/ 'mediapipe_body_3d_xyz.npy'
+path_to_recording = Path(r'C:\Users\Matthis Lab\skellycam_data\recordings\2025-09-30_16-06-46_GMT-4_OKK_back_cams_good_lift_trial1')
+path_to_output_data = path_to_recording / 'output_data'/ 'mediapipe_skeleton_3d.npy'
 
 
-model_info = ModelInfo(config_path = Path(__file__).parent/'mediapipe_just_body.yaml')
-human = Human.from_numpy_array(
+# model_info = ModelInfo(config_path = Path(__file__).parent/'mediapipe_just_body.yaml')
+human:Human = Human.from_tracked_points_numpy_array(
     name = 'human', 
-    model_info=model_info,
+    model_info=MediapipeModelInfo(),
     tracked_points_numpy_array=np.load(path_to_output_data)
 )
 
 body_3d_xyz = human.body.trajectories['3d_xyz']
 
-spine_vector = body_3d_xyz.segment_data['spine']['proximal'] - body_3d_xyz.segment_data['spine']['distal']
+spine_vector = body_3d_xyz.segment_data(human.body.anatomical_structure.segment_connections)['spine']['proximal'] - body_3d_xyz.segment_data(human.body.anatomical_structure.segment_connections)['spine']['distal']
 
 spine_vector_magnitude = np.linalg.norm(spine_vector, axis=1)
 

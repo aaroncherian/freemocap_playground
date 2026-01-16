@@ -15,7 +15,7 @@ from skellymodels.experimental.model_redo.tracker_info.model_info import ModelIn
 logger = logging.getLogger(__name__)
 
 
-def process_recording_session(
+def lifti(
     path_to_recording_folder: Union[str, Path],
     path_to_model_yaml: Path,
     path_to_calibration_toml: Optional[Path] = None,
@@ -111,7 +111,7 @@ def main():
 
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     
-    process_recording_session(
+    lifti(
         path_to_recording_folder=r'D:\2025-04-23_atc_testing\freemocap\2025-04-23_19-11-05-612Z_atc_test_walk_trial_2',
         path_to_model_yaml=Path(__file__).parent / 'tracker_info'/'rtmpose_model_info.yaml',
         use_skellyforge=False,
