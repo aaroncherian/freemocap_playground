@@ -33,7 +33,7 @@ spine_vector_azimuthal, spine_vector_polar, spine_vector_magnitude = calculate_s
 
 spine_vector_polar = np.degrees(spine_vector_polar)
 
-peaks,_ = find_peaks(spine_vector_polar)
+peaks,_ = find_peaks(spine_vector_polar, height = 20)
 
 x = list(range(num_frames))
 
@@ -62,6 +62,10 @@ stoop_angles = calculate_trunk_inclination(path_to_recording = Path(r'C:\Users\M
 
 squat_angles = calculate_trunk_inclination(path_to_recording=Path(r"C:\Users\Matthis Lab\skellycam_data\recordings\2025-12-06_12-54-48_GMT-5_OK_squat"))
 
+
+stoop_peaks,_ = find_peaks(stoop_angles, height = 20, distance=20)
+squat_peaks, _ = find_peaks(squat_angles, height=20, distance = 20)
+
 fig = plt.figure()
 fig, (ax1, ax2) = plt.subplots(1,2)
 
@@ -72,6 +76,9 @@ ylim = 100
 ax1.set_ylim([0,ylim])
 ax2.set_ylim([0,ylim])
 
+ax1.scatter(stoop_peaks, stoop_angles[stoop_peaks], color = 'red')
+ax2.scatter(squat_peaks, squat_angles[squat_peaks], color = 'red')
+
 ax1.set_title("Stoop Form")
 ax2.set_title("Squat Form")
 
@@ -80,5 +87,5 @@ ax2.set_xlabel("Time (frames)")
 
 ax1.set_ylabel("Trunk inclination (degrees)")
 
-fig.show()
+plt.show()
 f = 2
