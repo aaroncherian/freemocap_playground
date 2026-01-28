@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>3D Markers Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html,body { margin:0; height:100% }
+    #wrap { display:flex; flex-direction:column; height:100% }
+    #scene { flex: 1 1 auto; border-top:1px solid #eee; min-height: 50vh; position: relative; }
+    #hud  { position:absolute; top:8px; left:8px; background:#fff; padding:6px 10px;
+            border-radius:6px; font-family:system-ui; font-size:14px;
+            box-shadow:0 0 4px rgba(0,0,0,0.1); display:flex; gap:8px; align-items:center; }
+    #controls { flex: 0 0 auto; padding: 8px 12px; display:flex; align-items:center; gap:12px; }
+    #marker-select-wrap { font-family: system-ui, sans-serif; }
+    #plots { flex: 0 0 auto; padding: 12px; display: grid; gap: 12px; grid-template-columns: repeat(3, 1fr); }
+    .plot { height: 260px; min-width: 0; }
+  </style>
+
+  <!-- Three.js import map -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/"
+    }
+  }
+  </script>
+
+  <!-- Plotly -->
+  <script src="https://cdn.plot.ly/plotly-2.33.0.min.js"></script>
+</head>
+<body>
+  <div id="wrap">
+    <div id="scene"></div>
+    <div id="hud"></div>
+
+    <div id="controls">
+      <div id="marker-select-wrap"></div>
+    </div>
+
+    <div id="plots">
+      <div id="plot_x" class="plot"></div>
+      <div id="plot_y" class="plot"></div>
+      <div id="plot_z" class="plot"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { MarkerViewer } from './viewer.js';
+    import { initWindowedXYZSelectable, updateXYZWindow } from './plots.js';
+
+    // Wait until the viewer has loaded datasets and filled positions
+    function waitForViewerData(v) {
+      return new Promise((resolve) => {
+        const tick = () => {
+          const ok = Array.isArray(v.datasets)
+            && v.datasets.length >= 1
+            && v.datasets.every(ds => Array.isArray(ds.positions));
+          if (ok) resolve(v.datasets);
+          else requestAnimationFrame(tick);
+        };
+        tick();
+      });
+    }
+
+    // Fetch JSON to read landmarks (and positions if you prefer); safe if one dataset only
+    async function fetchJsonSafe(url) {
+      try { const r = await fetch(url); if (!r.ok) throw 0; return await r.json(); }
+      catch { return null; }
+    }
+
+    // Hex int (0xRRGGBB) -> CSS string "#rrggbb"
+    const cssHex = (v, fallback) =>
+      typeof v === 'number' ? ('#' + v.toString(16).padStart(6, '0')) : (fallback || '#999');
+
+    // Load datasets dynamically
+    const manifest = await fetch('./manifest.json').then(r => r.json());
+
+    // Create the viewer
+    const viewer = new MarkerViewer({
+      sceneEl: '#scene',
+      hudEl: '#hud',
+      datasets: manifest.datasets,
+      pointRadiusWorld: 20,
+      fps: 30,
+      onFrameChange: (k) => updateXYZWindow(k),
+    });
+
+    // ---- When data is ready, build the plots ----
+    waitForViewerData(viewer).then(async (dsets) => {
+      // load JSONs to get landmark names (and positions if you prefer to use those)
+      const jsons = await Promise.all(
+        dsets.map(ds => ds.dataUrl ? fetchJsonSafe(ds.dataUrl) : Promise.resolve(null))
+      );
+
+      // Build plot dataset list; include only those that actually exist
+      const plotSets = dsets.map((ds, i) => {
+        const j = jsons[i];
+        return {
+          label: ds.label ?? `Dataset ${i+1}`,
+          positions: (j && j.positions) ? j.positions : ds.positions, // fallback to viewer arrays
+          color: cssHex(ds.color, i === 0 ? '#2f6efc' : '#e33d3d'),
+          landmarks: (j && Array.isArray(j.landmarks)) ? j.landmarks : undefined,
+        };
+      }).filter(ps => Array.isArray(ps.positions));
+
+      // If only one dataset present (e.g., only FreeMoCap), that’s fine—plots will just show that one
+      initWindowedXYZSelectable(plotSets, {
+        windowHalf: 150,
+        // defaultMarkerName: 'right_ankle',  // optional: start on a specific landmark
+      });
+    });
+
+    // Expose for console debugging (optional)
+    window.viewer = viewer;
+  </script>
+</body>
+</html>

@@ -16,26 +16,26 @@ def calculate_spherical_angles(human: Human):
     return spine_vector_azimuthal, spine_vector_polar, spine_vector_magnitude
 
 
-path_to_recording = Path(r'C:\Users\Matthis Lab\skellycam_data\recordings\2025-12-06_12-58-43_GMT-5_OK_stoop')
-path_to_output_data = path_to_recording / 'output_data'/     'mediapipe_skeleton_3d.npy'
+# path_to_recording = Path(r'C:\Users\Matthis Lab\skellycam_data\recordings\2025-12-06_12-58-43_GMT-5_OK_stoop')
+# path_to_output_data = path_to_recording / 'output_data'/     'mediapipe_skeleton_3d.npy'
 
-# model_info = ModelInfo(config_path = Path(__file__).parent/'mediapipe_just_body.yaml')
-human = Human.from_tracked_points_numpy_array(
-    name = 'human', 
-    model_info=MediapipeModelInfo(),
-    tracked_points_numpy_array=np.load(path_to_output_data)
-)
-num_frames = human.body.xyz.num_frames
+# # model_info = ModelInfo(config_path = Path(__file__).parent/'mediapipe_just_body.yaml')
+# human = Human.from_tracked_points_numpy_array(
+#     name = 'human', 
+#     model_info=MediapipeModelInfo(),
+#     tracked_points_numpy_array=np.load(path_to_output_data)
+# )
+# num_frames = human.body.xyz.num_frames
 
-spine_vector_azimuthal, spine_vector_polar, spine_vector_magnitude = calculate_spherical_angles(
-    human=human
-)
+# spine_vector_azimuthal, spine_vector_polar, spine_vector_magnitude = calculate_spherical_angles(
+#     human=human
+# )
 
-spine_vector_polar = np.degrees(spine_vector_polar)
+# spine_vector_polar = np.degrees(spine_vector_polar)
 
-peaks,_ = find_peaks(spine_vector_polar, height = 20)
+# peaks,_ = find_peaks(spine_vector_polar, height = 20)
 
-x = list(range(num_frames))
+# x = list(range(num_frames))
 
 
 

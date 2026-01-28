@@ -8,14 +8,14 @@ from reconstruct_trackers.reconstruction_to_3d.reconstruction import reconstruct
 from reconstruct_trackers.reconstruction_to_3d.visualization import plot_3d_scatter
 from reconstruct_trackers.reconstruction_to_3d.postprocessing import process_and_filter_data
 from skellymodels.managers.human import Human
-from skellymodels.models.tracking_model_info import ModelInfo, RTMPoseModelInfo 
+from skellymodels.models.tracking_model_info import ModelInfo, RTMPoseModelInfo, ViTPoseWholeBodyModelInfo, ViTPose25ModelInfo
 # Configure logger
 logger = logging.getLogger(__name__)
 
 
 def process_recording_session(
     path_to_recording_folder: Union[str, Path],
-    path_to_model_yaml: Path,
+    model_info: ModelInfo,
     path_to_calibration_toml: Optional[Path] = None,
     use_skellyforge: bool = True,
     filter_order: int = 4,
@@ -50,8 +50,6 @@ def process_recording_session(
     if path_to_calibration_toml is None:
         path_to_calibration_toml = list(path_to_recording_folder.glob('*calibration.toml'))[0]
     
-    model_info = RTMPoseModelInfo()
-
     # Set default landmark names if not provided
     landmark_names = model_info.tracked_point_names
     tracker_name = model_info.name
@@ -110,11 +108,11 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     
     process_recording_session(
-        path_to_recording_folder=r'D:\2025_07_31_JSM_pilot\freemocap\2025-07-31_16-35-10_GMT-4_jsm_treadmill_trial_1',
-        path_to_model_yaml=RTMPoseModelInfo(),
-        use_skellyforge=False,
+        path_to_recording_folder=r'D:\2023-06-07_TF01\1.0_recordings\four_camera\sesh_2023-06-07_12_28_46_TF01_toe_angle_neutral_trial_1',
+        model_info=ViTPoseWholeBodyModelInfo(),
+        use_skellyforge=True,
         filter_order=4,
-        cutoff_frequency=6.0,
+        cutoff_frequency=7.0,
         sampling_rate=30.0,
         create_visualization=True
     )

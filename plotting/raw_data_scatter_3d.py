@@ -98,14 +98,13 @@ if __name__ == '__main__':
     # import numpy as np
 
     # from skellymodels.model_info.mediapipe_model_info import MediapipeModelInfo
-    session = Path(r"C:\Users\aaron\Downloads\__freemocap_test_data\__freemocap_test_data")
+    session = Path(r"D:\2025_07_31_JSM_pilot\freemocap\2025-07-31_16-35-10_GMT-4_jsm_treadmill_trial_1")
     data_path = session / 'output_data' / 'mediapipe_body_3d_xyz.npy'
-    all_data = np.load(data_path)*58
+    mediapipe_data = np.load(data_path)[1000:2000,:,:]
 
-    v1_session = Path(r"C:\Users\aaron\freemocap_data\recording_sessions\freemocap_test_data")
-    v1_data_path = v1_session / 'output_data' / 'mediapipe_body_3d_xyz.npy'
-    v1_data = np.load(v1_data_path)
-    data_dict = {'v2': all_data, 'v1': v1_data}
+    v1_data_path = session / 'output_data' / 'vitpose_25' / 'vitpose_25_body_3d_xyz.npy'
+    v1_data = np.load(v1_data_path)[1000:2000,:,:]
+    data_dict = {'mediapipe': mediapipe_data, 'vitpose_25': v1_data}
     # data_aligned = {}
 
     # for array_name, array in data_dict.items():
