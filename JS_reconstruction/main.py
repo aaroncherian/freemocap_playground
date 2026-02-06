@@ -15,7 +15,7 @@ from skellymodels.managers.human import Human
 # ------------------------
 
 path_to_recording = Path(
-    r"D:\2025_07_31_JSM_pilot\freemocap\2025-07-31_16-35-10_GMT-4_jsm_treadmill_trial_1"
+    r"D:\2026-01-30-JTM\2026-01-30_11-21-06_GMT-5_JTM_treadmill_1"
 )
 
 # Folder that already contains:
@@ -26,7 +26,9 @@ path_to_viewer_folder = Path(
     r"C:\Users\aaron\Documents\GitHub\freemocap_playground\JS_reconstruction"
 )
 
-candidate_trackers = ["qualisys", "mediapipe", "vitpose_wholebody", "vitpose_25", "rtmpose"]
+# candidate_trackers = ["qualisys", "mediapipe", "vitpose_wholebody", "vitpose_25", "rtmpose"]
+
+candidate_trackers = ["qualisys"]
 
 
 # Reference-first palette (ints are 0xRRGGBB)
