@@ -4,24 +4,27 @@
 import itertools
 import logging
 import multiprocessing
+import queue
 import time
-from collections import defaultdict
+from collections import defaultdict, Counter
 from copy import copy
+from pathlib import Path
+from typing import List
 
 import cv2
 import numpy as np
 import toml
-from aniposelib.boards import (
-    extract_points,
-    extract_rtvecs,
-    get_video_params,
-    merge_rows,
-)
-from aniposelib.utils import get_connections, get_initial_extrinsics, get_rtvec, make_M
+from aniposelib.boards import extract_points, extract_rtvecs, get_video_params, merge_rows, CharucoBoard
+from aniposelib.utils import get_rtvec, make_M
 from numba import jit
 from scipy import optimize
 from scipy import signal
+from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.cluster.vq import whiten
+from scipy.linalg import inv as inverse
 from scipy.sparse import dok_matrix
+# from skellytracker.process_folder_of_videos import process_list_of_videos
+# from skellytracker.trackers.charuco_tracker.charuco_model_info import CharucoModelInfo, CharucoTrackingParams
 from tqdm import trange
 
 numba_logger = logging.getLogger("numba")
@@ -29,21 +32,251 @@ numba_logger.setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
+ARUCO_DICTS = {
+    (4, 50): cv2.aruco.DICT_4X4_50,
+    (5, 50): cv2.aruco.DICT_5X5_50,
+    (6, 50): cv2.aruco.DICT_6X6_50,
+    (7, 50): cv2.aruco.DICT_7X7_50,
+    (4, 100): cv2.aruco.DICT_4X4_100,
+    (5, 100): cv2.aruco.DICT_5X5_100,
+    (6, 100): cv2.aruco.DICT_6X6_100,
+    (7, 100): cv2.aruco.DICT_7X7_100,
+    (4, 250): cv2.aruco.DICT_4X4_250,
+    (5, 250): cv2.aruco.DICT_5X5_250,
+    (6, 250): cv2.aruco.DICT_6X6_250,
+    (7, 250): cv2.aruco.DICT_7X7_250,
+    (4, 1000): cv2.aruco.DICT_4X4_1000,
+    (5, 1000): cv2.aruco.DICT_5X5_1000,
+    (6, 1000): cv2.aruco.DICT_6X6_1000,
+    (7, 1000): cv2.aruco.DICT_7X7_1000,
+}
 
-@jit(nopython=True, parallel=True)
+
+@jit(nopython=True, parallel=False)
 def triangulate_simple(points, camera_mats):
     num_cams = len(camera_mats)
     A = np.zeros((num_cams * 2, 4))
     for i in range(num_cams):
         x, y = points[i]
         mat = camera_mats[i]
-        A[(i * 2) : (i * 2 + 1)] = x * mat[2] - mat[0]
-        A[(i * 2 + 1) : (i * 2 + 2)] = y * mat[2] - mat[1]
+        A[(i * 2): (i * 2 + 1)] = x * mat[2] - mat[0]
+        A[(i * 2 + 1): (i * 2 + 2)] = y * mat[2] - mat[1]
     u, s, vh = np.linalg.svd(A, full_matrices=True)
     p3d = vh[-1]
     p3d = p3d[:3] / p3d[3]
     return p3d
 
+
+def project_point_to_cam(p3d, P):
+    """
+    Project 3D world point to 2D image coordinates.
+    
+    Args:
+        p3d: (3,) array, 3D point [X, Y, Z]
+        P: (3,4) array, camera projection matrix
+        
+    Returns:
+        (2,) array, normalized image coordinates [u, v]
+        
+    Note: Performs homogeneous projection: [u, v] = (P @ [X, Y, Z, 1])[:2] / (P @ [X, Y, Z, 1])[2]
+    """
+    hom = np.array([p3d[0], p3d[1], p3d[2], 1.0])
+    x = P @ hom
+    return x[:2] / x[2]
+
+
+def triangulate_with_outlier_rejection(
+    subp: np.ndarray,
+    cam_mats: np.ndarray,
+    min_cams: int = 2,
+    mean_error_threshold: float = 0.01,
+    error_improvement_threshold: float = 2.0,
+    marker_index = None,
+    number_of_tracked_points = None,
+    enable_debug: bool = True,
+    smooth_transition: bool = True,
+):
+    """
+    Triangulates 3D points with progressive outlier rejection.
+    
+    Performs triangulation using all valid cameras, and if reprojection error
+    exceeds threshold, iteratively tests camera combinations to find optimal subset.
+    
+    Args:
+        subp: (N,2) array of 2D detections from N valid cameras
+        cam_mats: (N,3,4) array of camera matrices for valid cameras
+        min_cams: Minimum number of cameras required for triangulation
+        mean_error_threshold: Maximum acceptable mean reprojection error (normalized coordinates, range ~[-1,1])
+        error_improvement_threshold: Minimum improvement ratio to accept refined solution
+        marker_index: Flattened index for tracking specific markers
+        number_of_tracked_points: Total points per frame for index calculation
+        enable_debug: Enable debug logging for specific markers/frames
+        smooth_transition: If True, uses weighted average for ratios near threshold to avoid oscillation
+    
+    Returns:
+        np.ndarray: 3D point coordinates
+    """
+    # --- DEBUG LOGIC ---
+    # Compute true frame + marker from flattened index
+    if marker_index is not None and number_of_tracked_points is not None:
+        real_marker_index = marker_index % number_of_tracked_points
+        real_frame_index  = marker_index // number_of_tracked_points
+    else:
+        real_marker_index = None
+        real_frame_index = None
+
+    # Enable debug only for specific markers and frames
+    if enable_debug and real_marker_index is not None:
+        enable_debug = (((real_marker_index == 26) 
+            and (real_frame_index in range(1010, 1039)))
+            # or ((real_marker_index == 28) 
+            # and (real_frame_index in range(24, 50))) or
+            # ((real_marker_index == 28) 
+            # and (real_frame_index in range(92, 100))) or
+            # ((real_marker_index == 28) 
+            # and (real_frame_index in range(157, 179))) or
+            # ((real_marker_index == 7) 
+            # and (real_frame_index in range(183, 195)))
+            )
+    # ---
+
+    # Get the total of valid cameras
+    total_valid_cams = len(cam_mats)
+    # Create local indices (0, 1, 2, ... for the valid cameras)
+    local_indices = list(range(total_valid_cams))
+
+    if enable_debug:
+        print(
+            "----- DEBUG TRIANGULATION -----\n"
+            f"Frame: {real_frame_index} "
+            f"Marker: {real_marker_index}\n"
+        )
+
+    # Calculate default triangulation with all the valid cameras
+    default_p3d = triangulate_simple(subp, cam_mats)
+
+    # Reproject to compute error
+    default_proj = np.array([
+        project_point_to_cam(default_p3d, M) for M in cam_mats
+    ])
+    # Calculate the mean error
+    default_errors = np.linalg.norm(default_proj - subp, axis=1)
+    default_mean_error = np.mean(default_errors)
+
+    if enable_debug:
+        print(
+            f"Kept cameras: {local_indices} "
+            f"Default Mean error: {default_mean_error:.4f} (norm units) "
+            f"Default p3d:  {default_p3d}\n"
+        )
+
+    # If the error is lower than the threshold return the default
+    # triangulation, if not then start the N-X camera combination loop
+    if default_mean_error < mean_error_threshold:
+        return default_p3d
+    else:
+        if enable_debug:
+            print("Default triangulation error above threshold."
+                  " Starting N-X camera combination loop...")
+
+        # Set the final_p3d and best_error from the total camera triangulation 
+        best_p3d = default_p3d
+        best_error = default_mean_error
+        error_improvement_ratio = 1.0
+
+        # For now only do N-1 combinations as the correct combination criteria
+        # is not solid yet. Getting the lowest mean error does not always
+        # mean getting the correct cameras. This happens mostly when there are
+        # more than one camera with incorrect detection. When the lowest error
+        # is multiple times lower than the second lowest error then there is high
+        # certainty that the only bad camera was removed. If not, then N-2
+        # combinations don't provide a clear decision based only on mean error.
+        # Probably to analyze a window of past triangulations would provide
+        # good info to decide (at the expense of more processing time).
+        for camera_drop_count in range(1, 2):
+            selected_camera_count = total_valid_cams - camera_drop_count
+
+            if selected_camera_count < min_cams:
+                return default_p3d
+
+            # Generate all combinations using LOCAL indices
+            combinations = list(itertools.combinations(local_indices, selected_camera_count))        
+
+            if enable_debug:
+                print(f"N-{camera_drop_count}: Keeping {selected_camera_count} cameras")
+
+            for combo in combinations:
+
+                # combo contains LOCAL indices (0, 1, 2, ...)
+                kept_local_indices = list(combo)
+                kept_cameras = [local_indices[i] for i in kept_local_indices]
+            
+                candidate_pts = subp[kept_local_indices]
+                candidate_cams = cam_mats[kept_local_indices]
+
+                candidate_p3d = triangulate_simple(candidate_pts, candidate_cams)
+
+                candidate_proj = np.array([
+                    project_point_to_cam(candidate_p3d, M) for M in candidate_cams
+                ])
+
+                candidate_errors = np.linalg.norm(candidate_proj - candidate_pts, axis=1)
+                candidate_mean_error = np.mean(candidate_errors)
+                
+                if enable_debug:
+                    print(
+                        f"Camera combination: {kept_cameras} "
+                        f"Candidate Mean error: {candidate_mean_error:.4f} (norm units) "
+                        f"Candidate p3d: {candidate_p3d}"
+                    )
+
+                # Update best solution if current candidate has lower reprojection error
+                if candidate_mean_error < best_error:
+                    best_error = candidate_mean_error
+                    best_p3d = candidate_p3d
+                    best_camera_combo = kept_cameras
+                    error_improvement_ratio = default_mean_error / best_error
+
+        if enable_debug:
+            print(
+                f"Best camera combo: {best_camera_combo} "
+                f"Best Mean error: {best_error:.4f} (norm units) "
+                f"Error improvement ratio: {error_improvement_ratio:.4f} "
+                f"Refined p3d: {best_p3d}\n"
+            )
+
+        # Return the best_p3d if the error improvement ratio is higher
+        # than the threshold
+        if error_improvement_ratio > error_improvement_threshold:
+            return best_p3d
+        elif smooth_transition and 1.0 < error_improvement_ratio <= error_improvement_threshold:
+            # Use exponential weighting for smoother transition
+            # Create a normalized parameter between 0 and 1
+            t = (error_improvement_ratio - 1.0) / (error_improvement_threshold - 1.0)
+            
+            # Exponential weighting gives more weight to default when near 1,
+            # and transitions smoothly to best as ratio approaches threshold
+            # Using exp(5*t) gives a good smooth curve
+            weight = 1.0 - np.exp(-5.0 * t)
+            
+            # Ensure weight is between 0 and 1
+            weight = np.clip(weight, 0.0, 1.0)
+            
+            # Blend the two solutions
+            blended_p3d = (1.0 - weight) * default_p3d + weight * best_p3d
+            
+            if enable_debug:
+                print(
+                    f"Using exponential blend with weight {weight:.3f} (t={t:.3f}):\n"
+                    f"  Default p3d: {default_p3d}\n"
+                    f"  Best p3d:    {best_p3d}\n"
+                    f"  Blended p3d: {blended_p3d}"
+                )
+            
+            return blended_p3d
+        else:
+            return default_p3d
+            
 
 def get_error_dict(errors_full, min_points=10):
     n_cams = errors_full.shape[0]
@@ -189,23 +422,206 @@ def transform_points(points, rvecs, tvecs):
     return rotated + tvecs
 
 
+def get_connections(xs, cam_names=None, both=True):
+    n_cams = xs.shape[0]
+    n_points = xs.shape[1]
+
+    if cam_names is None:
+        cam_names = np.arange(n_cams)
+
+    connections = defaultdict(int)
+
+    for rnum in range(n_points):
+        ixs = np.where(~np.isnan(xs[:, rnum, 0]))[0]
+        keys = [cam_names[ix] for ix in ixs]
+        for i in range(len(keys)):
+            for j in range(i + 1, len(keys)):
+                a = keys[i]
+                b = keys[j]
+                connections[(a, b)] += 1
+                if both:
+                    connections[(b, a)] += 1
+
+    return connections
+
+
+def get_calibration_graph(rtvecs, cam_names=None):
+    n_cams = rtvecs.shape[0]
+    n_points = rtvecs.shape[1]
+
+    if cam_names is None:
+        cam_names = np.arange(n_cams)
+
+    connections = get_connections(rtvecs, np.arange(n_cams))
+
+    components = dict(zip(np.arange(n_cams), range(n_cams)))
+    edges = set(connections.items())
+
+    graph = defaultdict(list)
+
+    for edgenum in range(n_cams - 1):
+        if len(edges) == 0:
+            component_names = dict()
+            for k, v in list(components.items()):
+                component_names[cam_names[k]] = v
+            raise ValueError(
+                """
+Could not build calibration graph.
+Some group of cameras could not be paired by simultaneous calibration board detections.
+Check which cameras have different group numbers below to see the missing edges.
+{}""".format(
+                    component_names
+                )
+            )
+
+        (a, b), weight = max(edges, key=lambda x: x[1])
+        graph[a].append(b)
+        graph[b].append(a)
+
+        match = components[a]
+        replace = components[b]
+        for k, v in components.items():
+            if match == v:
+                components[k] = replace
+
+        for e in edges.copy():
+            (a, b), w = e
+            if components[a] == components[b]:
+                edges.remove(e)
+
+    return graph
+
+
+def find_calibration_pairs(graph, source=None):
+    pairs = []
+    explored = set()
+
+    if source is None:
+        source = sorted(graph.keys())[0]
+
+    q = queue.deque()
+    q.append(source)
+
+    while len(q) > 0:
+        item = q.pop()
+        explored.add(item)
+
+        for new in graph[item]:
+            if new not in explored:
+                q.append(new)
+                pairs.append((item, new))
+    return pairs
+
+
+def compute_camera_matrices(rtvecs, pairs):
+    extrinsics = dict()
+    source = pairs[0][0]
+    extrinsics[source] = np.identity(4)
+    for a, b in pairs:
+        ext = get_transform(rtvecs, b, a)
+        extrinsics[b] = np.matmul(ext, extrinsics[a])
+    return extrinsics
+
+
+def get_transform(rtvecs, left, right):
+    L = []
+    for dix in range(rtvecs.shape[1]):
+        d = rtvecs[:, dix]
+        good = ~np.isnan(d[:, 0])
+
+        if good[left] and good[right]:
+            M_left = make_M(d[left, 0:3], d[left, 3:6])
+            M_right = make_M(d[right, 0:3], d[right, 3:6])
+            M = np.matmul(M_left, inverse(M_right))
+            L.append(M)
+    L_best = select_matrices(L)
+    M_mean = mean_transform(L_best)
+    # M_mean = mean_transform_robust(L, M_mean, error=0.5)
+    # M_mean = mean_transform_robust(L, M_mean, error=0.2)
+    M_mean = mean_transform_robust(L, M_mean, error=0.1)
+    return M_mean
+
+
+def get_most_common(vals):
+    Z = linkage(whiten(vals), "ward")
+    n_clust = max(len(vals) / 10, 3)
+    clusts = fcluster(Z, t=n_clust, criterion="maxclust")
+    cc = Counter(clusts[clusts >= 0])
+    most = cc.most_common(n=1)
+    top = most[0][0]
+    good = clusts == top
+    return good
+
+
+def select_matrices(Ms):
+    Ms = np.array(Ms)
+    rvecs = [cv2.Rodrigues(M[:3, :3])[0][:, 0] for M in Ms]
+    tvecs = np.array([M[:3, 3] for M in Ms])
+    best = get_most_common(np.hstack([rvecs, tvecs]))
+    Ms_best = Ms[best]
+    return Ms_best
+
+
+def mean_transform(M_list):
+    rvecs = [cv2.Rodrigues(M[:3, :3])[0][:, 0] for M in M_list]
+    tvecs = [M[:3, 3] for M in M_list]
+
+    rvec = np.mean(rvecs, axis=0)
+    tvec = np.mean(tvecs, axis=0)
+
+    return make_M(rvec, tvec)
+
+
+def mean_transform_robust(M_list, approx=None, error=0.3):
+    if approx is None:
+        M_list_robust = M_list
+    else:
+        M_list_robust = []
+        for M in M_list:
+            rot_error = (M - approx)[:3, :3]
+            m = np.max(np.abs(rot_error))
+            if m < error:
+                M_list_robust.append(M)
+    return mean_transform(M_list_robust)
+
+
+def get_initial_extrinsics(rtvecs, cam_names=None):
+    graph = get_calibration_graph(rtvecs, cam_names)
+    pairs = find_calibration_pairs(graph, source=0)
+    extrinsics = compute_camera_matrices(rtvecs, pairs)
+
+    n_cams = rtvecs.shape[0]
+    rvecs = []
+    tvecs = []
+    for cnum in range(n_cams):
+        rvec, tvec = get_rtvec(extrinsics[cnum])
+        rvecs.append(rvec)
+        tvecs.append(tvec)
+    rvecs = np.array(rvecs)
+    tvecs = np.array(tvecs)
+    return rvecs, tvecs
+
+
 class Camera:
     def __init__(
-        self,
-        matrix=np.eye(3),
-        dist=np.zeros(5),
-        size=None,
-        rvec=np.zeros(3),
-        tvec=np.zeros(3),
-        name=None,
-        extra_dist=False,
+            self,
+            matrix=np.eye(3),
+            dist=np.zeros(5),
+            size=None,
+            rvec=np.zeros(3),
+            tvec=np.zeros(3),
+            world_orientation=np.eye(3),
+            world_position=np.zeros(3),
+            name=None,
+            extra_dist=False,
     ):
-
         self.set_camera_matrix(matrix)
         self.set_distortions(dist)
         self.set_size(size)
         self.set_rotation(rvec)
         self.set_translation(tvec)
+        self.set_world_orientation(world_orientation)
+        self.set_world_position(world_position)
         self.set_name(name)
         self.extra_dist = extra_dist
 
@@ -217,6 +633,8 @@ class Camera:
             "distortions": self.get_distortions().tolist(),
             "rotation": self.get_rotation().tolist(),
             "translation": self.get_translation().tolist(),
+            "world_orientation": self.get_world_orientation().tolist(),
+            "world_position": self.get_world_position().tolist()
         }
 
     def load_dict(self, d):
@@ -226,6 +644,9 @@ class Camera:
         self.set_distortions(d["distortions"])
         self.set_name(d["name"])
         self.set_size(d["size"])
+
+        self.set_world_orientation(d.get("world_orientation", np.eye(3)))
+        self.set_world_position(d.get("world_position", np.zeros(3)))
 
     def from_dict(d):
         cam = Camera()
@@ -269,6 +690,18 @@ class Camera:
 
     def get_translation(self):
         return self.tvec
+
+    def set_world_orientation(self, world_orientation):
+        self.world_orientation = np.asarray(world_orientation, dtype="float64").reshape(3, 3)
+
+    def get_world_orientation(self):
+        return self.world_orientation
+
+    def set_world_position(self, world_position):
+        self.world_position = np.array(world_position, dtype="float64").ravel()
+
+    def get_world_position(self):
+        return self.world_position
 
     def get_extrinsics_mat(self):
         return make_M(self.rvec, self.tvec)
@@ -363,19 +796,21 @@ class Camera:
             tvec=self.get_translation().copy(),
             name=self.get_name(),
             extra_dist=self.extra_dist,
+            world_orientation=self.get_world_orientation().copy(),
+            world_position=self.get_world_position().copy()
         )
 
 
 class FisheyeCamera(Camera):
     def __init__(
-        self,
-        matrix=np.eye(3),
-        dist=np.zeros(4),
-        size=None,
-        rvec=np.zeros(3),
-        tvec=np.zeros(3),
-        name=None,
-        extra_dist=False,
+            self,
+            matrix=np.eye(3),
+            dist=np.zeros(4),
+            size=None,
+            rvec=np.zeros(3),
+            tvec=np.zeros(3),
+            name=None,
+            extra_dist=False,
     ):
         self.set_camera_matrix(matrix)
         self.set_distortions(dist)
@@ -471,6 +906,7 @@ class CameraGroup:
     def __init__(self, cameras, metadata={}):
         self.cameras = cameras
         self.metadata = metadata
+        self.charuco_2d_data = None
 
     def subset_cameras(self, indices):
         cams = [self.cameras[ix].copy() for ix in indices]
@@ -499,7 +935,7 @@ class CameraGroup:
 
         return out
 
-    def triangulate(self, points, undistort=True, progress=False, kill_event:multiprocessing.Event=None):
+    def triangulate(self, points, undistort=True, progress=False, kill_event: multiprocessing.Event = None, number_of_tracked_points=None):
         """Given an CxNx2 array, this returns an Nx3 array of points,
         where N is the number of points and C is the number of cameras"""
 
@@ -538,7 +974,8 @@ class CameraGroup:
             subp = points[:, ip, :]
             good = ~np.isnan(subp[:, 0])
             if np.sum(good) >= 2:
-                out[ip] = triangulate_simple(subp[good], cam_mats[good])
+                # out[ip] = triangulate_simple(subp[good], cam_mats[good])
+                out[ip] = triangulate_with_outlier_rejection(subp[good], cam_mats[good], marker_index=ip, number_of_tracked_points=number_of_tracked_points)
 
             if kill_event is not None and kill_event.is_set():
                 return None
@@ -548,7 +985,15 @@ class CameraGroup:
 
         return out
 
-    def triangulate_possible(self, points, undistort=True, min_cams=2, progress=False, threshold=0.5, kill_event:multiprocessing.Event=None):
+    def triangulate_possible(
+            self,
+            points,
+            undistort=True,
+            min_cams=2,
+            progress=False,
+            threshold=0.5,
+            kill_event: multiprocessing.Event = None,
+    ):
         """Given an CxNxPx2 array, this returns an Nx3 array of points
         by triangulating all possible points and picking the ones with
         best reprojection error
@@ -636,7 +1081,9 @@ class CameraGroup:
         # return out, picked_vals, points_2d, errors #original code from OG anipose
         return out  # simplify output so that `triangulate_ransac` can be used exactly the same way as `triangulate`
 
-    def triangulate_ransac(self, points, undistort=True, min_cams=2, progress=False, kill_event:multiprocessing.Event=None):
+    def triangulate_ransac(
+            self, points, undistort=True, min_cams=2, progress=False, kill_event: multiprocessing.Event = None
+    ):
         """Given an CxNx2 array, this returns an Nx3 array of points,
         where N is the number of points and C is the number of cameras"""
 
@@ -650,31 +1097,33 @@ class CameraGroup:
 
         points_ransac = points.reshape(n_cams, n_points, 1, 2)
 
-        return self.triangulate_possible(points_ransac, undistort=undistort, min_cams=min_cams, progress=progress, kill_event=kill_event)
+        return self.triangulate_possible(
+            points_ransac, undistort=undistort, min_cams=min_cams, progress=progress, kill_event=kill_event
+        )
 
     @jit(parallel=True, forceobj=True)
-    def reprojection_error(self, p3ds, p2ds, mean=False):
+    def reprojection_error(self, points_3d, points_2d, mean=False):
         """Given an Nx3 array of 3D points and an CxNx2 array of 2D points,
         where N is the number of points and C is the number of cameras,
         this returns an CxNx2 array of errors.
         Optionally mean=True, this averages the errors and returns array of length N of errors"""
 
         one_point = False
-        if len(p3ds.shape) == 1 and len(p2ds.shape) == 2:
-            p3ds = p3ds.reshape(1, 3)
-            p2ds = p2ds.reshape(-1, 1, 2)
+        if len(points_3d.shape) == 1 and len(points_2d.shape) == 2:
+            points_3d = points_3d.reshape(1, 3)
+            points_2d = points_2d.reshape(-1, 1, 2)
             one_point = True
 
-        n_cams, n_points, _ = p2ds.shape
-        assert p3ds.shape == (
+        n_cams, n_points, _ = points_2d.shape
+        assert points_3d.shape == (
             n_points,
             3,
-        ), "shapes of 2D and 3D points are not consistent: " "2D={}, 3D={}".format(p2ds.shape, p3ds.shape)
+        ), "shapes of 2D and 3D points are not consistent: " "2D={}, 3D={}".format(points_2d.shape, points_3d.shape)
 
         errors = np.empty((n_cams, n_points, 2))
 
-        for cnum, cam in enumerate(self.cameras):
-            errors[cnum] = cam.single_camera_reprojection_error(p3ds, p2ds[cnum])
+        for camera_number, cam in enumerate(self.cameras):
+            errors[camera_number] = cam.single_camera_reprojection_error(points_3d, points_2d[camera_number])
 
         if mean:
             errors_norm = np.linalg.norm(errors, axis=2)
@@ -693,18 +1142,18 @@ class CameraGroup:
         return errors
 
     def bundle_adjust_iter(
-        self,
-        p2ds,
-        extra=None,
-        n_iters=10,
-        start_mu=15,
-        end_mu=1,
-        max_nfev=200,
-        ftol=1e-4,
-        n_samp_iter=100,
-        n_samp_full=1000,
-        error_threshold=0.3,
-        verbose=False,
+            self,
+            p2ds,
+            extra=None,
+            n_iters=10,
+            start_mu=15,
+            end_mu=1,
+            max_nfev=200,
+            ftol=1e-4,
+            n_samp_iter=100,
+            n_samp_full=1000,
+            error_threshold=0.3,
+            verbose=False,
     ):
         """Given an CxNx2 array of 2D points,
         where N is the number of points and C is the number of cameras,
@@ -815,16 +1264,16 @@ class CameraGroup:
         return error
 
     def bundle_adjust(
-        self,
-        p2ds,
-        extra=None,
-        loss="linear",
-        threshold=50,
-        ftol=1e-4,
-        max_nfev=1000,
-        weights=None,
-        start_params=None,
-        verbose=True,
+            self,
+            p2ds,
+            extra=None,
+            loss="linear",
+            threshold=50,
+            ftol=1e-4,
+            max_nfev=1000,
+            weights=None,
+            start_params=None,
+            verbose=True,
     ):
         """Given an CxNx2 array of 2D points,
         where N is the number of points and C is the number of cameras,
@@ -889,7 +1338,7 @@ class CameraGroup:
         n_cams = len(self.cameras)
         sub = n_cam_params * n_cams
         n3d = p2ds.shape[1] * 3
-        p3ds_test = params[sub : sub + n3d].reshape(-1, 3)
+        p3ds_test = params[sub: sub + n3d].reshape(-1, 3)
         errors = self.reprojection_error(p3ds_test, p2ds)
         errors_reproj = errors[good]
 
@@ -899,8 +1348,8 @@ class CameraGroup:
             min_scale = np.min(objp[objp > 0])
             n_boards = int(np.max(ids)) + 1
             a = sub + n3d
-            rvecs = params[a : a + n_boards * 3].reshape(-1, 3)
-            tvecs = params[a + n_boards * 3 : a + n_boards * 6].reshape(-1, 3)
+            rvecs = params[a: a + n_boards * 3].reshape(-1, 3)
+            tvecs = params[a + n_boards * 3: a + n_boards * 6].reshape(-1, 3)
             expected = transform_points(objp, rvecs[ids], tvecs[ids])
             errors_obj = 2 * (p3ds_test - expected).ravel() / min_scale
         else:
@@ -1023,7 +1472,7 @@ class CameraGroup:
                     cam_id = np.random.choice(cam_ids_possible)
                     M_cam = self.cameras[cam_id].get_extrinsics_mat()
                     M_board_cam = make_M(rvecs_all[cam_id, point_id], tvecs_all[cam_id, point_id])
-                    M_board = np.matmul(np.linalg.inv(M_cam), M_board_cam)
+                    M_board = np.matmul(inverse(M_cam), M_board_cam)
                     rvec, tvec = get_rtvec(M_board)
                     rvecs[board_num] = rvec
                     tvecs[board_num] = tvec
@@ -1033,29 +1482,29 @@ class CameraGroup:
 
         x0 = np.zeros(total_cam_params + p3ds.size + total_board_params)
         x0[:total_cam_params] = cam_params
-        x0[total_cam_params : total_cam_params + p3ds.size] = p3ds.ravel()
+        x0[total_cam_params: total_cam_params + p3ds.size] = p3ds.ravel()
 
         if extra is not None:
             start_board = total_cam_params + p3ds.size
-            x0[start_board : start_board + n_boards * 3] = rvecs.ravel()
-            x0[start_board + n_boards * 3 : start_board + n_boards * 6] = tvecs.ravel()
+            x0[start_board: start_board + n_boards * 3] = rvecs.ravel()
+            x0[start_board + n_boards * 3: start_board + n_boards * 6] = tvecs.ravel()
 
         return x0, n_cam_params
 
     def optim_points(
-        self,
-        points,
-        p3ds,
-        constraints=[],
-        constraints_weak=[],
-        scale_smooth=4,
-        scale_length=2,
-        scale_length_weak=0.5,
-        reproj_error_threshold=15,
-        reproj_loss="soft_l1",
-        n_deriv_smooth=1,
-        scores=None,
-        verbose=False,
+            self,
+            points,
+            p3ds,
+            constraints=[],
+            constraints_weak=[],
+            scale_smooth=4,
+            scale_length=2,
+            scale_length_weak=0.5,
+            reproj_error_threshold=15,
+            reproj_loss="soft_l1",
+            n_deriv_smooth=1,
+            scores=None,
+            verbose=False,
     ):
         """
         Take in an array of 2D points of shape CxNxJx2,
@@ -1129,19 +1578,19 @@ class CameraGroup:
         return p3ds_new2
 
     def optim_points_possible(
-        self,
-        points,
-        p3ds,
-        constraints=[],
-        constraints_weak=[],
-        scale_smooth=4,
-        scale_length=2,
-        scale_length_weak=0.5,
-        reproj_error_threshold=15,
-        reproj_loss="soft_l1",
-        n_deriv_smooth=1,
-        scores=None,
-        verbose=False,
+            self,
+            points,
+            p3ds,
+            constraints=[],
+            constraints_weak=[],
+            scale_smooth=4,
+            scale_length=2,
+            scale_length_weak=0.5,
+            reproj_error_threshold=15,
+            reproj_loss="soft_l1",
+            n_deriv_smooth=1,
+            scores=None,
+            verbose=False,
     ):
         """
         Take in an array of 2D points of shape CxNxJxPx2,
@@ -1287,18 +1736,18 @@ class CameraGroup:
 
     @jit(forceobj=True, parallel=True)
     def _error_fun_triangulation(
-        self,
-        params,
-        p2ds,
-        constraints=[],
-        constraints_weak=[],
-        scores=None,
-        scale_smooth=10000,
-        scale_length=1,
-        scale_length_weak=0.2,
-        reproj_error_threshold=100,
-        reproj_loss="soft_l1",
-        n_deriv_smooth=1,
+            self,
+            params,
+            p2ds,
+            constraints=[],
+            constraints_weak=[],
+            scores=None,
+            scale_smooth=10000,
+            scale_length=1,
+            scale_length_weak=0.2,
+            reproj_error_threshold=100,
+            reproj_loss="soft_l1",
+            n_deriv_smooth=1,
     ):
         n_cams, n_frames, n_joints, _ = p2ds.shape
 
@@ -1308,8 +1757,8 @@ class CameraGroup:
 
         # load params
         p3ds = params[:n_3d].reshape((n_frames, n_joints, 3))
-        joint_lengths = np.array(params[n_3d : n_3d + n_constraints])
-        joint_lengths_weak = np.array(params[n_3d + n_constraints :])
+        joint_lengths = np.array(params[n_3d: n_3d + n_constraints])
+        joint_lengths_weak = np.array(params[n_3d + n_constraints:])
 
         # reprojection errors
         p3ds_flat = p3ds.reshape(-1, 3)
@@ -1574,6 +2023,20 @@ class CameraGroup:
         for cam, tvec in zip(self.cameras, tvecs):
             cam.set_translation(tvec)
 
+    def set_world_positions(self, positions):
+        for cam, position, in zip(self.cameras, positions):
+            cam.set_world_position(position)
+
+    def set_world_orientations(self, orientations):
+        for cam, orientation in zip(self.cameras, orientations):
+            cam.set_world_orientation(orientation)
+
+    def get_world_positions(self):
+        return np.stack([cam.get_world_position() for cam in self.cameras])
+
+    def get_world_orientations(self):
+        return np.stack([cam.get_world_orientation() for cam in self.cameras])
+
     def get_rotations(self):
         rvecs = []
         for cam in self.cameras:
@@ -1604,13 +2067,13 @@ class CameraGroup:
             return np.mean(errors)
 
     def calibrate_rows(
-        self,
-        all_rows,
-        board,
-        init_intrinsics=True,
-        init_extrinsics=True,
-        verbose=True,
-        **kwargs,
+            self,
+            all_rows,
+            board,
+            init_intrinsics=True,
+            init_extrinsics=True,
+            verbose=True,
+            **kwargs,
     ):
         assert len(all_rows) == len(self.cameras), "Number of camera detections does not match number of cameras"
 
@@ -1646,21 +2109,62 @@ class CameraGroup:
 
         return error, merged, charuco_frames
 
-    def get_rows_videos(self, videos, board, verbose=True):
+    def get_rows_videos(self, videos: List[List[str]], board: "AniposeCharucoBoard", verbose: bool = True):
+        num_corners = board.total_size
+        self._get_charuco_2d_data(videos=videos, board=board)
+
+        if self.charuco_2d_data is None:
+            raise ValueError(
+                "Charuco 2D data has not been initialized. Call _get_charuco_2d_data() first, or check for errors in the video processing.")
+
         all_rows = []
 
-        for cix, (cam, cam_videos) in enumerate(zip(self.cameras, videos)):
-            rows_cam = []
-            for vnum, vidname in enumerate(cam_videos):
-                if verbose:
-                    print(vidname)
-                rows = board.detect_video(vidname, prefix=vnum, progress=verbose)
-                if verbose:
-                    print("{} boards detected".format(len(rows)))
-                rows_cam.extend(rows)
-            all_rows.append(rows_cam)
+        num_cameras, num_frames, _, _ = self.charuco_2d_data.shape
+        for camera_number in range(num_cameras):
+            camera_rows = []
+            for frame in range(num_frames):
+                filled = self.charuco_2d_data[camera_number, frame, :, :]
+                filled = filled.astype(np.float32)
+                filled = np.reshape(filled, (num_corners, 1, 2))  # Add empty column anipose expects
+                mask = (~np.isnan(filled[:, :, 0])) & (~np.isnan(filled[:, :, 1]))
+                non_empty_ids = np.where(mask)[0]
+                corners = filled[non_empty_ids, :, :]
+                non_empty_ids = non_empty_ids.reshape(-1, 1)  # Add empty column anipose expects
+                if corners.shape[0] != 0:
+                    row = {
+                        "framenum": (0, frame),
+                        "corners": corners,
+                        "ids": non_empty_ids,
+                        "filled": filled,
+                    }
+                    camera_rows.append(row)
+            all_rows.append(camera_rows)
+        if verbose:
+            print(f"Charuco detection results:")
+            for i, rows in enumerate(all_rows):
+                print(f"\tCamera {i} has {len(rows)} frames with detected corners.")
 
         return all_rows
+
+    def _get_charuco_2d_data(self, videos: List[List[str]], board: "AniposeCharucoBoard"):
+        """
+        Processes a list of a list of videos to extract Charuco 2D data.
+        
+        Should be called once during the initial calibration, and then referenced with self.charuco_2d_data
+        """
+        video_paths = [Path(video[0]) for video in videos]
+        charuco_2d_data = process_list_of_videos(
+            model_info=CharucoModelInfo(),
+            tracking_params=CharucoTrackingParams(
+                charuco_squares_x_in=board.squaresX,
+                charuco_squares_y_in=board.squaresY,
+                charuco_dict_id=ARUCO_DICTS[(board.marker_bits, board.dict_size)]
+            ),
+            video_paths=video_paths,
+            num_processes=min(len(videos), multiprocessing.cpu_count() - 1),
+        )
+
+        self.charuco_2d_data = charuco_2d_data
 
     def set_camera_sizes_videos(self, videos):
         for cix, (cam, cam_videos) in enumerate(zip(self.cameras, videos)):
@@ -1671,13 +2175,13 @@ class CameraGroup:
                 cam.set_size(size)
 
     def calibrate_videos(
-        self,
-        videos,
-        board,
-        init_intrinsics=True,
-        init_extrinsics=True,
-        verbose=True,
-        **kwargs,
+            self,
+            videos,
+            board: "AniposeCharucoBoard",
+            init_intrinsics=True,
+            init_extrinsics=True,
+            verbose=True,
+            **kwargs,
     ):
         """Takes as input a list of list of video filenames, one list of each camera.
         Also takes a board which specifies what should be detected in the videos"""
@@ -1748,3 +2252,162 @@ class CameraGroup:
     def resize_cameras(self, scale):
         for cam in self.cameras:
             cam.resize_camera(scale)
+
+
+class AniposeCharucoBoard(CharucoBoard):
+    def __init__(
+            self,
+            squaresX,
+            squaresY,
+            square_length,
+            marker_length,
+            marker_bits=4,
+            dict_size=50,
+            aruco_dict=None,
+            manually_verify=False,
+    ):
+        self.squaresX = squaresX
+        self.squaresY = squaresY
+        self.square_length = square_length
+        self.marker_length = marker_length
+        self.manually_verify = manually_verify
+        self.marker_bits = marker_bits
+        self.dict_size = dict_size
+
+        dkey = (marker_bits, dict_size)
+        self.dictionary = cv2.aruco.getPredefinedDictionary(ARUCO_DICTS[dkey])
+
+        self.board = cv2.aruco.CharucoBoard(
+            size=[squaresX, squaresY],
+            squareLength=square_length,
+            markerLength=marker_length,
+            dictionary=self.dictionary,
+        )
+
+        total_size = (squaresX - 1) * (squaresY - 1)
+
+        objp = np.zeros((total_size, 3), np.float64)
+        objp[:, :2] = np.mgrid[0: (squaresX - 1), 0: (squaresY - 1)].T.reshape(-1, 2)
+        objp *= square_length
+        self.objPoints = objp
+
+        self.empty_detection = np.zeros((total_size, 1, 2)) * np.nan
+        self.total_size = total_size
+
+    def detect_markers(self, image, camera=None, refine=True):
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image
+
+        params = cv2.aruco.DetectorParameters()
+        params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_CONTOUR
+        params.adaptiveThreshWinSizeMin = 100
+        params.adaptiveThreshWinSizeMax = 700
+        params.adaptiveThreshWinSizeStep = 50
+        params.adaptiveThreshConstant = 0
+
+        try:
+            corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(gray, self.dictionary, parameters=params)
+        except Exception:
+            ids = None
+
+        if ids is None:
+            return [], []
+
+        if camera is None:
+            K = D = None
+        else:
+            K = camera.get_camera_matrix()
+            D = camera.get_distortions()
+
+        if refine:
+            detectedCorners, detectedIds, rejectedCorners, recoveredIdxs = cv2.aruco.refineDetectedMarkers(
+                gray, self.board, corners, ids, rejectedImgPoints, K, D, parameters=params
+            )
+        else:
+            detectedCorners, detectedIds = corners, ids
+
+        return detectedCorners, detectedIds
+
+    def detect_image(self, image, camera=None):
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image
+
+        corners, ids = self.detect_markers(image, camera, refine=True)
+        if len(corners) > 0:
+            ret, detectedCorners, detectedIds = cv2.aruco.interpolateCornersCharuco(corners, ids, gray, self.board)
+            if detectedIds is None:
+                detectedCorners = detectedIds = np.float64([])
+        else:
+            detectedCorners = detectedIds = np.float64([])
+
+        if (
+                len(detectedCorners) > 0
+                and self.manually_verify
+                and not self.manually_verify_board_detection(gray, detectedCorners, detectedIds)
+        ):
+            detectedCorners = detectedIds = np.float64([])
+
+        return detectedCorners, detectedIds
+
+    def manually_verify_board_detection(self, image, corners, ids=None):
+        height, width = image.shape[:2]
+        image = cv2.aruco.drawDetectedCornersCharuco(image, corners, ids)
+        cv2.putText(
+            image,
+            "(a) Accept (d) Reject",
+            (int(width / 1.35), int(height / 16)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            255,
+            1,
+            cv2.LINE_AA,
+        )
+        cv2.imshow("verify_detection", image)
+        while 1:
+            key = cv2.waitKey(0) & 0xFF
+            if key == ord("a"):
+                cv2.putText(
+                    image,
+                    "Accepted!",
+                    (int(width / 2.5), int(height / 1.05)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    255,
+                    2,
+                    cv2.LINE_AA,
+                )
+                cv2.imshow("verify_detection", image)
+                cv2.waitKey(100)
+                return True
+            elif key == ord("d"):
+                cv2.putText(
+                    image,
+                    "Rejected!",
+                    (int(width / 2.5), int(height / 1.05)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    255,
+                    2,
+                    cv2.LINE_AA,
+                )
+                cv2.imshow("verify_detection", image)
+                cv2.waitKey(100)
+                return False
+
+    def estimate_pose_points(self, camera, corners, ids):
+        if corners is None or ids is None or len(corners) < 5:
+            return None, None
+
+        n_corners = corners.size // 2
+        corners = np.reshape(corners, (n_corners, 1, 2))
+
+        K = camera.get_camera_matrix()
+        D = camera.get_distortions()
+
+        ret, rvec, tvec = cv2.aruco.estimatePoseCharucoBoard(corners, ids, self.board, K, D, None, None)
+
+        return rvec, tvec
