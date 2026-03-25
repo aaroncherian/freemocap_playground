@@ -15,7 +15,7 @@ from skellymodels.managers.human import Human
 # ------------------------
 
 path_to_recording = Path(
-    r"D:\2026-01-30-JTM\2026-01-30_11-21-06_GMT-5_JTM_treadmill_1"
+    r"D:\validation\data\2025-11-04_ATC\2025-11-04_15-33-01_GMT-5_atc_treadmill_1"
 )
 
 # Folder that already contains:
@@ -28,7 +28,7 @@ path_to_viewer_folder = Path(
 
 # candidate_trackers = ["qualisys", "mediapipe", "vitpose_wholebody", "vitpose_25", "rtmpose"]
 
-candidate_trackers = ["qualisys"]
+candidate_trackers = ["qualisys", "mediapipe", "vitpose", "rtmpose"]
 
 
 # Reference-first palette (ints are 0xRRGGBB)
@@ -36,8 +36,7 @@ COLOR_BY_ID = {
     "qualisys": 0x000000,          # black reference
     "mediapipe": 0x2f6efc,         # blue
     "rtmpose": 0xff7f0e,           # orange
-    "vitpose_wholebody": 0x2ca02c, # green
-    "vitpose_25": 0x9467bd,        # purple
+    "vitpose": 0x2ca02c, # green
 }
 
 
@@ -46,14 +45,33 @@ def pick_free_port() -> int:
         s.bind(("127.0.0.1", 0))
         return int(s.getsockname()[1])
 
+def convert_connections(segment_connections: dict, landmark_names: list[str]):
+    valid = set(landmark_names)
+
+    converted = []
+    for seg in segment_connections.values():
+        a = seg.get("proximal")
+        b = seg.get("distal")
+
+        # only keep if both endpoints are real tracked landmarks
+        if a in valid and b in valid:
+            converted.append([a, b])
+
+    return converted
+
 
 def make_payload(h: Human) -> dict:
+    landmarks = h.body.anatomical_structure.landmark_names
+    segment_connections = h.body.anatomical_structure.segment_connections
+
+    connections = convert_connections(segment_connections, landmarks)
+
     return {
-        "tracker": getattr(h, "tracker", None),  # optional, if Human provides it
+        "tracker": getattr(h, "tracker", None),
         "positions": h.body.xyz.as_array.tolist(),
-        "connections": h.body.anatomical_structure.segment_connections,
-        "landmarks": h.body.anatomical_structure.landmark_names,
-    }
+        "connections": connections,
+        "landmarks": landmarks,
+}
 
 
 def build_datasets(recording: Path, tracker_ids: list[str]) -> tuple[bytes, dict[str, bytes]]:

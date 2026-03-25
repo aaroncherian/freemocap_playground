@@ -9,7 +9,7 @@ from reconstruct_trackers.reconstruction_to_3d.reconstruction import reconstruct
 from reconstruct_trackers.reconstruction_to_3d.visualization import plot_3d_scatter
 from reconstruct_trackers.reconstruction_to_3d.postprocessing import process_and_filter_data
 from skellymodels.managers.human import Human
-from skellymodels.models.tracking_model_info import ModelInfo, RTMPoseModelInfo, ViTPoseWholeBodyModelInfo, ViTPose25ModelInfo
+from skellymodels.models.tracking_model_info import ModelInfo, RTMPoseModelInfo, ViTPoseWholeBodyModelInfo, ViTPose25ModelInfo, MediapipeModelInfo
 # Configure logger
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ def process_recording_session(
     path_to_output_folder = path_to_recording_folder / 'output_data' / tracker_name
     path_to_output_folder.mkdir(parents=True, exist_ok=True)
 
-    path_to_raw_data_folder = path_to_output_folder / 'raw_data'
+    path_to_raw_data_folder = path_to_output_folder/ 'raw_data'
     path_to_raw_data_folder.mkdir(parents=True, exist_ok=True)  
     path_to_2d_data = path_to_raw_data_folder/f'{tracker_name}_2dData_numCams_numFrames_numTrackedPoints_pixelXY.npy'
     data_2d = np.load(path_to_2d_data)[:,:,:,:2]  # Load 2D data and keep only x and y coordinates
@@ -188,7 +188,7 @@ def _process_one(recording: str) -> tuple[str, bool, str | None]:
 
         process_recording_session(
             path_to_recording_folder=recording,
-            model_info=RTMPoseModelInfo(),
+            model_info=MediapipeModelInfo(),
             use_skellyforge=True,
             filter_order=4,
             cutoff_frequency=6.0,
@@ -233,22 +233,29 @@ def main():
     #     r"D:\validation\data\2026-01-30-JTM\2026-01-30_10-40-03_GMT-5_JTM_nih_1",
     #     r"D:\validation\data\2026-01-30-JTM\2026-01-30_10-57-13_GMT-5_JTM_nih_2"
 
-    # ]
-    recording_root = Path(r"D:\2023-06-07_TF01\1.0_recordings\four_camera")
+    # # ]
+    # recording_root = Path(r"D:\2023-06-07_TF01\1.0_recordings\four_camera")
+    # # recordings_list = [recording_root/"sesh_2023-06-07_12_46_54_TF01_leg_length_neutral_trial_1"]
+    # recordings_list = [recording_root/"sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1",
+    #                    recording_root/"sesh_2023-06-07_12_03_15_TF01_flexion_neg_2_8_trial_1",
+    #                    recording_root/"sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1",
+    #                    recording_root/"sesh_2023-06-07_12_09_05_TF01_flexion_pos_2_8_trial_1",
+    #                    recording_root/"sesh_2023-06-07_12_12_36_TF01_flexion_pos_5_6_trial_1",
+    #                    recording_root/"sesh_2023-06-07_12_20_59_TF01_toe_angle_neg_6_trial_1",
+    #                    recording_root/"sesh_2023-06-07_12_25_38_TF01_toe_angle_neg_3_trial_1",
+    #                    recording_root/"sesh_2023-06-07_12_28_46_TF01_toe_angle_neutral_trial_1",
+    #                    recording_root/"sesh_2023-06-07_12_31_49_TF01_toe_angle_pos_3_trial_1",
+    #                    recording_root/"sesh_2023-06-07_12_34_37_TF01_toe_angle_pos_6_trial_1"
+    #                    ]
 
-    recordings_list = [recording_root/"sesh_2023-06-07_11_55_05_TF01_flexion_neg_5_6_trial_1",
-                       recording_root/"sesh_2023-06-07_12_03_15_TF01_flexion_neg_2_8_trial_1",
-                       recording_root/"sesh_2023-06-07_12_06_15_TF01_flexion_neutral_trial_1",
-                       recording_root/"sesh_2023-06-07_12_09_05_TF01_flexion_pos_2_8_trial_1",
-                       recording_root/"sesh_2023-06-07_12_12_36_TF01_flexion_pos_5_6_trial_1",
-                       recording_root/"sesh_2023-06-07_12_20_59_TF01_toe_angle_neg_6_trial_1",
-                       recording_root/"sesh_2023-06-07_12_25_38_TF01_toe_angle_neg_3_trial_1",
-                       recording_root/"sesh_2023-06-07_12_28_46_TF01_toe_angle_neutral_trial_1",
-                       recording_root/"sesh_2023-06-07_12_31_49_TF01_toe_angle_pos_3_trial_1",
-                       recording_root/"sesh_2023-06-07_12_34_37_TF01_toe_angle_pos_6_trial_1"
-                       ]
-
+    recording_root = Path(r"D:\validation\data\2026_03_04_ML")
     
+    recordings_list = [
+                    recording_root / "2026-03-04_19-12-07_GMT-5_ml_nih_trial_1",
+                    #    recording_root / "2026-03-04_19-27-37_GMT-5_ml_nih_trial_2",
+                    #    recording_root / "2026-03-04_19-40-22_GMT-5_ml_treadmill_trial_1",
+                    #    recording_root / "2026-03-04_19-49-19_GMT-5_ml_treadmill_trial_2"
+                       ]
 
     # For Windows + GPU-heavy workloads, you often want fewer workers than CPU cores.
     max_workers = min(5, os.cpu_count() or 4)

@@ -974,8 +974,8 @@ class CameraGroup:
             subp = points[:, ip, :]
             good = ~np.isnan(subp[:, 0])
             if np.sum(good) >= 2:
-                # out[ip] = triangulate_simple(subp[good], cam_mats[good])
-                out[ip] = triangulate_with_outlier_rejection(subp[good], cam_mats[good], marker_index=ip, number_of_tracked_points=number_of_tracked_points)
+                out[ip] = triangulate_simple(subp[good], cam_mats[good])
+                # out[ip] = triangulate_with_outlier_rejection(subp[good], cam_mats[good], marker_index=ip, number_of_tracked_points=number_of_tracked_points)
 
             if kill_event is not None and kill_event.is_set():
                 return None

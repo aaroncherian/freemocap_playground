@@ -1,10 +1,9 @@
-// viewer_multi_synced.js
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /**
  * Multi-dataset 3D marker viewer for synced datasets.
- * Each JSON: { positions: [F][M][3] }
+ * Each JSON: { positions: [F][M][3], connections?: [[i,j], ...] | [{segment: [a,b]}...] }
  */
 export class MarkerViewer {
   constructor(opts) {
@@ -16,11 +15,12 @@ export class MarkerViewer {
       fps: 30,
       loop: true,
       pointRadiusWorld: 20,
+      lineWidth: 2,
+      showConnections: true,
       onFrameChange: null,
     };
     this.opts = Object.assign({}, defaults, opts || {});
 
-    // fallback single-dataset mode
     if (!this.opts.datasets) {
       this.opts.datasets = [{
         label: 'Dataset',
@@ -31,17 +31,14 @@ export class MarkerViewer {
       }];
     }
 
-    // DOM
     this.container = this._elt(this.opts.sceneEl);
     this.hud = this._elt(this.opts.hudEl);
 
-    // state
     this.k = 0;
     this.playing = false;
     this.lastT = 0;
     this.F = 0;
 
-    // datasets array
     this.datasets = this.opts.datasets.map(ds => ({
       label: ds.label ?? 'Dataset',
       color: ds.color ?? 0x888888,
@@ -49,9 +46,11 @@ export class MarkerViewer {
       visible: ds.visible ?? true,
       dataUrl: ds.dataUrl,
       positions: null,
+      connections: [],
       F: 0,
       M: 0,
       mesh: null,
+      lines: null,
     }));
 
     this._initThree();
@@ -61,11 +60,65 @@ export class MarkerViewer {
     requestAnimationFrame(this._animate);
   }
 
-  // helpers
   _elt(sel) {
     const el = typeof sel === 'string' ? document.querySelector(sel) : sel;
     if (!el) throw new Error(`Element not found: ${sel}`);
     return el;
+  }
+
+  _normalizeConnections(rawConnections, landmarkNames = []) {
+    if (!Array.isArray(rawConnections) || rawConnections.length === 0) return [];
+
+    const nameToIndex = new Map();
+    if (Array.isArray(landmarkNames)) {
+      landmarkNames.forEach((name, idx) => nameToIndex.set(String(name), idx));
+    }
+
+    const toIndex = (value) => {
+      if (typeof value === 'number' && Number.isInteger(value)) return value;
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (/^-?\d+$/.test(trimmed)) return Number(trimmed);
+        if (nameToIndex.has(trimmed)) return nameToIndex.get(trimmed);
+      }
+      return null;
+    };
+
+    const normalized = [];
+
+    rawConnections.forEach(conn => {
+      let a = null;
+      let b = null;
+
+      if (Array.isArray(conn) && conn.length >= 2) {
+        [a, b] = conn;
+      } else if (conn && typeof conn === 'object') {
+        if (Array.isArray(conn.segment) && conn.segment.length >= 2) {
+          [a, b] = conn.segment;
+        } else if (Array.isArray(conn.connection) && conn.connection.length >= 2) {
+          [a, b] = conn.connection;
+        } else if ('proximal' in conn && 'distal' in conn) {
+          a = conn.proximal;
+          b = conn.distal;
+        } else if ('start' in conn && 'end' in conn) {
+          a = conn.start;
+          b = conn.end;
+        } else if ('parent' in conn && 'child' in conn) {
+          a = conn.parent;
+          b = conn.child;
+        } else if ('from' in conn && 'to' in conn) {
+          a = conn.from;
+          b = conn.to;
+        }
+      }
+
+      const ia = toIndex(a);
+      const ib = toIndex(b);
+      if (ia == null || ib == null || ia === ib) return;
+      normalized.push([ia, ib]);
+    });
+
+    return normalized;
   }
 
   _initThree() {
@@ -84,7 +137,7 @@ export class MarkerViewer {
 
     this.scene.add(new THREE.AmbientLight(0xffffff, 1));
 
-    this.grid = new THREE.GridHelper(4000, 40)
+    this.grid = new THREE.GridHelper(4000, 40);
     this.grid.rotation.x = Math.PI / 2;
     this.grid.material.opacity = 0.50;
     this.grid.material.transparent = true;
@@ -135,11 +188,11 @@ export class MarkerViewer {
     fpsWrap.style.gap = '4px';
     const fpsInput = document.createElement('input');
     fpsInput.type = 'number';
-    fpsInput.value = String(this.opts.fps);
     fpsInput.min = '1';
     fpsInput.max = '120';
     fpsInput.step = '1';
-    fpsInput.style.width = '60px';
+    fpsInput.value = String(this.opts.fps);
+    fpsInput.style.width = '64px';
     fpsWrap.appendChild(fpsInput);
 
     const loopWrap = document.createElement('label');
@@ -151,6 +204,16 @@ export class MarkerViewer {
     loopCb.type = 'checkbox';
     loopCb.checked = !!this.opts.loop;
     loopWrap.appendChild(loopCb);
+
+    const connWrap = document.createElement('label');
+    connWrap.textContent = 'Connections ';
+    connWrap.style.display = 'flex';
+    connWrap.style.alignItems = 'center';
+    connWrap.style.gap = '4px';
+    const connCb = document.createElement('input');
+    connCb.type = 'checkbox';
+    connCb.checked = !!this.opts.showConnections;
+    connWrap.appendChild(connCb);
 
     const legend = document.createElement('div');
     legend.style.display = 'flex';
@@ -171,30 +234,38 @@ export class MarkerViewer {
       swatch.style.border = '1px solid #0002';
       swatch.style.background = `#${ds.color.toString(16).padStart(6, '0')}`;
 
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = ds.visible;
-    cb.addEventListener('change', () => {
-      ds.visible = cb.checked;
-      if (ds.mesh) ds.mesh.visible = ds.visible;
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = ds.visible;
+      cb.addEventListener('change', () => {
+        ds.visible = cb.checked;
+        if (ds.mesh) ds.mesh.visible = ds.visible;
+        if (ds.lines) ds.lines.visible = ds.visible && !!this.opts.showConnections;
+      });
+
+      const name = document.createElement('span');
+      name.textContent = ds.label;
+      row.append(cb, swatch, name);
+      legend.appendChild(row);
     });
 
-    const name = document.createElement('span');
-    name.textContent = ds.label;
-    row.append(cb, swatch, name);
-    legend.appendChild(row);
-    });
-
-    this.hud.append(slider, label, playBtn, fpsWrap, loopWrap, legend);
+    this.hud.append(slider, label, playBtn, fpsWrap, loopWrap, connWrap, legend);
 
     slider.addEventListener('input', e => this.setFrame(Number(e.target.value)));
     playBtn.addEventListener('click', () => this.toggle());
-    loopCb.addEventListener('change', () => (this.opts.loop = loopCb.checked));
+    loopCb.addEventListener('change', () => { this.opts.loop = loopCb.checked; });
+    connCb.addEventListener('change', () => {
+      this.opts.showConnections = connCb.checked;
+      this.datasets.forEach(ds => {
+        if (ds.lines) ds.lines.visible = ds.visible && this.opts.showConnections;
+      });
+    });
 
     this.slider = slider;
     this.label = label;
     this.playBtn = playBtn;
     this.fpsInput = fpsInput;
+    this.connCb = connCb;
   }
 
   async _loadAllData() {
@@ -203,6 +274,7 @@ export class MarkerViewer {
         const res = await fetch(ds.dataUrl);
         const json = await res.json();
         ds.positions = json.positions;
+        ds.connections = this._normalizeConnections(json.connections, json.landmarks);
         ds.F = ds.positions.length;
         ds.M = ds.positions[0]?.length ?? 0;
         return ds;
@@ -211,20 +283,30 @@ export class MarkerViewer {
 
     const F0 = results[0].F;
     const mismatch = results.find(d => d.F !== F0);
-    if (mismatch)
-      throw new Error('Datasets must have equal frame counts for synced playback.');
+    if (mismatch) throw new Error('Datasets must have equal frame counts for synced playback.');
     this.F = F0;
     this.slider.max = String(this.F - 1);
 
-
     results.forEach(ds => {
       const geom = new THREE.SphereGeometry(this.opts.pointRadiusWorld * ds.scale);
-      const mat = new THREE.MeshStandardMaterial({ color: ds.color, emissive: ds.color});
+      const mat = new THREE.MeshStandardMaterial({ color: ds.color, emissive: ds.color });
       const mesh = new THREE.InstancedMesh(geom, mat, ds.M);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       mesh.visible = ds.visible;
       this.scene.add(mesh);
       ds.mesh = mesh;
+
+      if (ds.connections.length > 0) {
+        const linePositions = new Float32Array(ds.connections.length * 2 * 3);
+        const lineGeom = new THREE.BufferGeometry();
+        lineGeom.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+        const lineMat = new THREE.LineBasicMaterial({ color: ds.color });
+        const lines = new THREE.LineSegments(lineGeom, lineMat);
+        lines.frustumCulled = false;
+        lines.visible = ds.visible && !!this.opts.showConnections;
+        this.scene.add(lines);
+        ds.lines = lines;
+      }
     });
 
     this.setFrame(0);
@@ -247,12 +329,32 @@ export class MarkerViewer {
         ds.mesh.setMatrixAt(i, tmp);
       }
       ds.mesh.instanceMatrix.needsUpdate = true;
+
+      if (ds.lines) {
+        const arr = ds.lines.geometry.attributes.position.array;
+        let offset = 0;
+        ds.connections.forEach(([i, j]) => {
+          const p0 = pts[i];
+          const p1 = pts[j];
+          if (p0 && p1) {
+            arr[offset++] = p0[0] * ds.scale;
+            arr[offset++] = p0[1] * ds.scale;
+            arr[offset++] = p0[2] * ds.scale;
+            arr[offset++] = p1[0] * ds.scale;
+            arr[offset++] = p1[1] * ds.scale;
+            arr[offset++] = p1[2] * ds.scale;
+          } else {
+            for (let n = 0; n < 6; n++) arr[offset++] = NaN;
+          }
+        });
+        ds.lines.geometry.attributes.position.needsUpdate = true;
+        ds.lines.visible = ds.visible && !!this.opts.showConnections;
+      }
     });
 
     this.slider.value = String(this.k);
     this.label.textContent = String(this.k);
-    if (typeof this.opts.onFrameChange === 'function')
-      this.opts.onFrameChange(this.k);
+    if (typeof this.opts.onFrameChange === 'function') this.opts.onFrameChange(this.k);
   }
 
   play() {
@@ -261,9 +363,11 @@ export class MarkerViewer {
       this.lastT = 0;
     }
   }
+
   pause() {
     this.playing = false;
   }
+
   toggle() {
     this.playing = !this.playing;
     this.playBtn.textContent = this.playing ? 'Pause' : 'Play';
@@ -300,6 +404,11 @@ export class MarkerViewer {
         this.scene.remove(ds.mesh);
         ds.mesh.geometry.dispose();
         ds.mesh.material.dispose();
+      }
+      if (ds.lines) {
+        this.scene.remove(ds.lines);
+        ds.lines.geometry.dispose();
+        ds.lines.material.dispose();
       }
     });
     this.renderer.dispose();
