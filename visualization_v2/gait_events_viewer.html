@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Gait Events — 3D Viewer</title>
+<title>Gait Visualization</title>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<script src="https://cdn.plot.ly/plotly-2.33.0.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
-
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
   :root {
@@ -16,7 +16,6 @@
     --border: #d4cbbf;
     --text: #3a3028;
     --text-dim: #8a7e70;
-    --text-light: #b0a594;
     --accent-hs: #c0623a;
     --accent-hs-soft: rgba(192, 98, 58, 0.12);
     --accent-to: #01575a;
@@ -28,145 +27,156 @@
   html, body {
     height: 100%; overflow: hidden;
     background: var(--bg); color: var(--text);
-    font-family: 'Crimson Pro', Georgia, 'Times New Roman', serif;
+    font-family: 'Crimson Pro', Georgia, serif;
   }
 
-  #app { display: grid; grid-template-rows: auto 1fr auto; height: 100%; }
+  #app { display: grid; grid-template-rows: auto auto 1fr auto; height: 100%; }
 
+  /* ── Loading ── */
   #loading {
     position: fixed; inset: 0; z-index: 100;
     display: flex; align-items: center; justify-content: center;
     flex-direction: column; gap: 14px;
-    background: var(--bg);
-    font-size: 15px; color: var(--text-dim);
+    background: var(--bg); font-size: 15px; color: var(--text-dim);
   }
-  #loading .spinner {
-    width: 28px; height: 28px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent-hs);
-    border-radius: 50%;
-    animation: spin 0.9s linear infinite;
-  }
+  #loading .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent-hs); border-radius: 50%; animation: spin 0.9s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   #loading.hidden { display: none; }
 
+  /* ── Header ── */
   header {
-    padding: 14px 28px 10px;
+    padding: 12px 28px 8px;
     display: flex; align-items: baseline; gap: 16px;
     border-bottom: 1px solid var(--border);
     background: var(--surface);
   }
-  header h1 {
-    font-family: 'Crimson Pro', Georgia, serif;
-    font-size: 18px; font-weight: 500;
-    letter-spacing: 0.02em; color: var(--text);
-  }
-  header .subtitle {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px; color: var(--text-dim); font-weight: 400;
-  }
+  header h1 { font-size: 18px; font-weight: 500; letter-spacing: 0.02em; }
+  header .subtitle { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
 
-  #canvas-wrap { position: relative; overflow: hidden; }
+  /* ── Layer Toggle Bar ── */
+  #layer-bar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  }
+  #layer-bar .bar-label { color: var(--text-dim); margin-right: 8px; letter-spacing: 0.04em; text-transform: uppercase; font-size: 10px; }
+
+  .layer-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 3px;
+    border: 1px solid var(--border);
+    background: none; color: var(--text-dim);
+    cursor: pointer; font-family: inherit; font-size: 11px;
+    transition: all 0.15s ease;
+  }
+  .layer-btn:hover { border-color: var(--text-dim); background: var(--surface-hover); }
+  .layer-btn.active { border-color: var(--bone); color: var(--text); background: rgba(92, 74, 58, 0.08); }
+  .layer-btn .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); transition: background 0.15s; }
+  .layer-btn.active .dot { background: var(--accent-hs); }
+
+  /* ── Canvas ── */
+  #canvas-wrap { position: relative; overflow: hidden; min-height: 0; }
   canvas { display: block; width: 100%; height: 100%; }
 
-  .event-toast {
-    position: absolute; top: 20px; right: 20px;
-    padding: 8px 18px; border-radius: 4px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px; font-weight: 500;
-    letter-spacing: 0.04em; text-transform: uppercase;
-    pointer-events: none; opacity: 0;
-    transform: translateY(-6px);
-    transition: opacity 0.15s ease, transform 0.15s ease;
-  }
+  /* ── Toasts, phase bar, legend, cycle info — same as before ── */
+  .event-toast { position: absolute; top: 20px; right: 20px; padding: 8px 18px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; pointer-events: none; opacity: 0; transform: translateY(-6px); transition: opacity 0.15s ease, transform 0.15s ease; }
   .event-toast.show { opacity: 1; transform: translateY(0); }
-  .event-toast.hs {
-    background: var(--accent-hs-soft);
-    border: 1px solid rgba(192, 98, 58, 0.35);
-    color: var(--accent-hs);
-  }
-  .event-toast.to {
-    background: var(--accent-to-soft);
-    border: 1px solid rgba(45, 107, 79, 0.35);
-    color: var(--accent-to);
-  }
-
-  .phase-bar {
-    position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
-    transition: background 0.3s ease;
-  }
-  .phase-bar.stance { background: linear-gradient(90deg, var(--accent-hs), rgba(192, 98, 58, 0.15)); }
-  .phase-bar.swing  { background: linear-gradient(90deg, var(--accent-to), rgba(45, 107, 79, 0.15)); }
-
-  .legend {
-    position: absolute; bottom: 16px; left: 18px;
-    display: flex; flex-direction: column; gap: 5px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px; letter-spacing: 0.03em;
-  }
+  .event-toast.hs { background: var(--accent-hs-soft); border: 1px solid rgba(192,98,58,0.35); color: var(--accent-hs); }
+  .event-toast.to { background: var(--accent-to-soft); border: 1px solid rgba(1,87,90,0.35); color: var(--accent-to); }
+  .phase-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; transition: background 0.3s ease; }
+  .phase-bar.stance { background: linear-gradient(90deg, var(--accent-hs), rgba(192,98,58,0.15)); }
+  .phase-bar.swing { background: linear-gradient(90deg, var(--accent-to), rgba(1,87,90,0.15)); }
+  .legend { position: absolute; bottom: 16px; left: 18px; display: flex; flex-direction: column; gap: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
   .legend-item { display: flex; align-items: center; gap: 7px; }
   .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
   .legend-dot.hs { background: var(--accent-hs); }
   .legend-dot.to { background: var(--accent-to); }
-
-  .cycle-info {
-    position: absolute; top: 20px; left: 20px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px; color: var(--text-dim); line-height: 1.7;
-  }
+  .cycle-info { position: absolute; top: 20px; left: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); line-height: 1.7; }
   .cycle-info .val { color: var(--text); font-weight: 500; }
 
+  /* ── Joint Angle Panel ── */
+  #angle-panel {
+    display: none; /* shown when layer active */
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    overflow: hidden;
+  }
+  #angle-panel.visible { display: block; }
+  #angle-controls {
+    display: flex; align-items: center; gap: 12px;
+    padding: 6px 28px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  #angle-controls select {
+    font-family: inherit; font-size: 11px;
+    padding: 2px 6px; border: 1px solid var(--border);
+    border-radius: 3px; background: var(--bg); color: var(--text);
+  }
+  #angle-plots {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px; padding: 4px 12px 8px;
+    height: 200px;
+  }
+  #angle-plots .plot { min-width: 0; height: 100%; }
+
+  /* ── Footer ── */
   footer {
     padding: 10px 28px;
     display: flex; align-items: center; gap: 16px;
     border-top: 1px solid var(--border);
     background: var(--surface); flex-wrap: wrap;
   }
-  footer button {
-    background: none; border: 1px solid var(--border); color: var(--text);
-    padding: 5px 14px; border-radius: 3px; cursor: pointer;
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-    transition: border-color 0.2s, background 0.2s;
-  }
+  footer button { background: none; border: 1px solid var(--border); color: var(--text); padding: 5px 14px; border-radius: 3px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 11px; transition: border-color 0.2s, background 0.2s; }
   footer button:hover { border-color: var(--text-dim); background: var(--surface-hover); }
-
-  .speed-control {
-    display: flex; align-items: center; gap: 8px;
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim);
-  }
+  .speed-control { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
   .speed-control input[type=range] { width: 90px; accent-color: var(--accent-hs); }
-
   .scrubber { flex: 1; min-width: 180px; display: flex; align-items: center; gap: 8px; }
   .scrubber input[type=range] { flex: 1; accent-color: var(--bone); }
-
-  .frame-display {
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim);
-  }
+  .frame-display { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
   .frame-display .val { color: var(--text); font-weight: 500; }
 </style>
 </head>
 <body>
-<div id="loading">
-  <div class="spinner"></div>
-  <div>Loading skeleton data & detecting gait events …</div>
-</div>
+<div id="loading"><div class="spinner"></div><div>Loading …</div></div>
 
 <div id="app">
   <header>
-    <h1>Gait Events</h1>
+    <h1>Gait Visualization</h1>
     <span class="subtitle" id="subtitle">Loading …</span>
   </header>
+
+  <div id="layer-bar">
+    <span class="bar-label">Layers</span>
+    <!-- populated dynamically -->
+  </div>
 
   <div id="canvas-wrap">
     <canvas id="c"></canvas>
     <div class="event-toast hs" id="toast-hs">Heel Strike</div>
     <div class="event-toast to" id="toast-to">Toe Off</div>
     <div class="phase-bar" id="phase-bar"></div>
-    <div class="legend">
+    <div class="legend" id="gait-legend" style="display:none">
       <div class="legend-item"><div class="legend-dot hs"></div><span style="color:var(--accent-hs)">Heel Strike</span></div>
       <div class="legend-item"><div class="legend-dot to"></div><span style="color:var(--accent-to)">Toe Off</span></div>
     </div>
     <div class="cycle-info" id="cycle-info"></div>
+  </div>
+
+  <div id="angle-panel">
+    <div id="angle-controls">
+      <label>Joint: <select id="angle-joint"></select></label>
+      <label>Side: <select id="angle-side"><option value="both">Both</option><option value="left">Left</option><option value="right">Right</option></select></label>
+    </div>
+    <div id="angle-plots">
+      <div id="aplot0" class="plot"></div>
+      <div id="aplot1" class="plot"></div>
+      <div id="aplot2" class="plot"></div>
+    </div>
   </div>
 
   <footer>
@@ -187,12 +197,10 @@
 </div>
 
 <script type="importmap">
-{
-  "imports": {
+{ "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js",
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/"
-  }
-}
+} }
 </script>
 
 <script type="module">
@@ -200,66 +208,224 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const PAL = {
-  bg:        0xf4efe8,
-  ground:    0xe8e2d8,
-  grid:      0xd6cfc4,
-  bone:      0x5c4a3a,
-  joint:     0x6b5847,
-  jointEmit: 0x4a3a2c,
-  hs:        0xc0623a,
-  to:        0x01575a,
-  fog:       0xf4efe8,
+  bg: 0xf4efe8, ground: 0xe8e2d8, grid: 0xd6cfc4,
+  bone: 0x5c4a3a, joint: 0x6b5847, jointEmit: 0x4a3a2c,
+  hs: 0xc0623a, to: 0x01575a, fog: 0xf4efe8, ink: 0x2a2218,
 };
+const INK_SCALE = 1.08;
 
-// ─── Load Data ───────────────────────────────────────────────────
+// ─── Load main data ──────────────────────────────────────────────
 const loadingEl = document.getElementById('loading');
 let data;
 try {
-  const resp = await fetch('/gait_data.json');
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-  data = await resp.json();
+  const r = await fetch('/gait_data.json');
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  data = await r.json();
 } catch (err) {
-  loadingEl.innerHTML = `
-    <div style="color:var(--accent-hs);font-size:16px;">Failed to load data</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;">${err.message}</div>
-    <div style="margin-top:12px;font-size:12px;color:var(--text-dim);">Make sure gait_events_server.py is running.</div>`;
+  loadingEl.innerHTML = `<div style="color:var(--accent-hs)">${err.message}</div><div style="margin-top:8px;font-size:12px;color:var(--text-dim)">Make sure gait_events_server.py is running.</div>`;
   throw err;
 }
 
 const { positions, connections: rawConns, landmarks, gait_events: gaitEvents,
-        landmark_indices: landmarkIndices, fps, tracker } = data;
+        landmark_indices: landmarkIndices, fps, tracker, available_layers } = data;
 const totalFrames = positions.length;
 const numMarkers = positions[0].length;
 const heelStrikes = gaitEvents.heel_strikes || [];
 const toeOffs = gaitEvents.toe_offs || [];
 
 const nameToIdx = new Map();
-landmarks.forEach((n, i) => nameToIdx.set(n, i));
+landmarks.forEach((n,i) => nameToIdx.set(n,i));
 
 const connections = [];
 if (Array.isArray(rawConns)) {
   rawConns.forEach(conn => {
-    let a, b;
-    if (Array.isArray(conn)) { [a,b] = conn; }
-    else if (conn?.proximal && conn?.distal) { a = conn.proximal; b = conn.distal; }
-    else return;
-    const ia = typeof a === 'number' ? a : nameToIdx.get(a);
-    const ib = typeof b === 'number' ? b : nameToIdx.get(b);
-    if (ia != null && ib != null) connections.push([ia, ib]);
+    let a,b;
+    if (Array.isArray(conn)){[a,b]=conn;} else if(conn?.proximal&&conn?.distal){a=conn.proximal;b=conn.distal;} else return;
+    const ia=typeof a==='number'?a:nameToIdx.get(a), ib=typeof b==='number'?b:nameToIdx.get(b);
+    if(ia!=null&&ib!=null) connections.push([ia,ib]);
   });
 }
 
-document.getElementById('subtitle').textContent =
-  `${tracker}  ·  ${totalFrames} frames @ ${fps} Hz  ·  ${heelStrikes.length} HS · ${toeOffs.length} TO`;
+document.getElementById('subtitle').textContent = `${tracker}  ·  ${totalFrames} frames @ ${fps} Hz`;
 document.getElementById('frame-total').textContent = totalFrames - 1;
 const scrubber = document.getElementById('scrubber');
 scrubber.max = String(totalFrames - 1);
 loadingEl.classList.add('hidden');
 
-// ─── Scene ───────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// LAYER SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+const layerState = {};
+const layerBar = document.getElementById('layer-bar');
+
+function createLayerButton(layer) {
+  const btn = document.createElement('button');
+  btn.className = 'layer-btn';
+  btn.innerHTML = `<span class="dot"></span>${layer.label}`;
+  btn.dataset.layerId = layer.id;
+
+  layerState[layer.id] = { active: false, data: null, btn };
+
+  btn.addEventListener('click', async () => {
+    const state = layerState[layer.id];
+    state.active = !state.active;
+    btn.classList.toggle('active', state.active);
+
+    // Lazy-load layer data on first activation
+    if (state.active && !state.data && layer.dataUrl) {
+      try {
+        const r = await fetch(layer.dataUrl);
+        state.data = await r.json();
+      } catch (e) { console.error(`Failed to load layer ${layer.id}:`, e); }
+    }
+
+    onLayerToggle(layer.id, state.active);
+  });
+
+  layerBar.appendChild(btn);
+}
+
+// Register available layers
+(available_layers || []).forEach(l => createLayerButton(l));
+
+// Auto-activate gait events if available
+if (layerState.gait_events) {
+  layerState.gait_events.active = true;
+  layerState.gait_events.btn.classList.add('active');
+  onLayerToggle('gait_events', true);
+}
+
+function onLayerToggle(id, active) {
+  if (id === 'gait_events') {
+    document.getElementById('gait-legend').style.display = active ? '' : 'none';
+    document.getElementById('phase-bar').style.display = active ? '' : 'none';
+  }
+  if (id === 'joint_angles') {
+    const panel = document.getElementById('angle-panel');
+    panel.classList.toggle('visible', active);
+    if (active && layerState.joint_angles.data) {
+      initAnglePlots(layerState.joint_angles.data);
+    }
+    // Trigger resize so 3D view adjusts
+    setTimeout(() => resize(), 50);
+  }
+}
+
+function isLayerActive(id) { return layerState[id]?.active ?? false; }
+
+// ═══════════════════════════════════════════════════════════════════
+// JOINT ANGLE PLOTS
+// ═══════════════════════════════════════════════════════════════════
+const ANGLE_COLORS = {
+  left: '#c0623a',   // burnt sienna
+  right: '#01575a',  // teal
+};
+
+// Friendly display names for components
+const COMP_LABELS = {
+  flex_ext: 'Flexion / Extension',
+  abd_add: 'Abduction / Adduction',
+  int_ext: 'Internal / External Rot.',
+  dorsi_plantar: 'Dorsiflexion / Plantarflexion',
+  inv_ev: 'Inversion / Eversion',
+};
+
+let angleData = null;
+let activeJoint = null;
+let activeSide = 'both';
+let anglePlotsReady = false;
+let angleWindowHalf = 150;
+
+function initAnglePlots(data) {
+  angleData = data;
+  const jointSelect = document.getElementById('angle-joint');
+  jointSelect.innerHTML = '';
+  data.joints.forEach(j => {
+    const opt = document.createElement('option');
+    opt.value = j; opt.textContent = j.charAt(0).toUpperCase() + j.slice(1);
+    jointSelect.appendChild(opt);
+  });
+  activeJoint = data.joints[0];
+  jointSelect.value = activeJoint;
+
+  jointSelect.addEventListener('change', () => { activeJoint = jointSelect.value; drawAnglePlots(); });
+  document.getElementById('angle-side').addEventListener('change', e => { activeSide = e.target.value; drawAnglePlots(); });
+
+  drawAnglePlots();
+  anglePlotsReady = true;
+}
+
+function getComponentsForJoint(joint) {
+  if (!angleData) return [];
+  // Find which components exist for this joint
+  return angleData.components.filter(comp =>
+    angleData.data[`left_${joint}_${comp}`] || angleData.data[`right_${joint}_${comp}`]
+  );
+}
+
+function drawAnglePlots() {
+  if (!angleData || !activeJoint) return;
+  const comps = getComponentsForJoint(activeJoint);
+
+  // Show up to 3 plots
+  const plotDivs = [document.getElementById('aplot0'), document.getElementById('aplot1'), document.getElementById('aplot2')];
+  const plotGrid = document.getElementById('angle-plots');
+  plotGrid.style.gridTemplateColumns = `repeat(${Math.min(comps.length, 3)}, 1fr)`;
+
+  comps.slice(0, 3).forEach((comp, i) => {
+    const div = plotDivs[i];
+    div.style.display = '';
+    const traces = [];
+    const x = Array.from({length: totalFrames}, (_,k) => k);
+
+    ['left', 'right'].forEach(side => {
+      if (activeSide !== 'both' && activeSide !== side) return;
+      const key = `${side}_${activeJoint}_${comp}`;
+      const arr = angleData.data[key];
+      if (!arr) return;
+      traces.push({
+        x, y: arr.slice(0, totalFrames),
+        name: side.charAt(0).toUpperCase() + side.slice(1),
+        mode: 'lines',
+        line: { width: 1.5, color: ANGLE_COLORS[side] },
+        hovertemplate: `%{y:.1f}°<br>frame %{x}<extra>${side}</extra>`,
+      });
+    });
+
+    const layout = {
+      margin: { l: 40, r: 8, t: 24, b: 24 },
+      title: { text: COMP_LABELS[comp] || comp, font: { family: 'IBM Plex Mono', size: 11, color: '#8a7e70' } },
+      xaxis: { title: '', showgrid: false, range: [0, angleWindowHalf * 2] },
+      yaxis: { title: '°', automargin: true, showgrid: true, gridcolor: '#e2dbd0', zeroline: true, zerolinecolor: '#d4cbbf' },
+      showlegend: i === 0,
+      legend: { orientation: 'h', x: 1, y: 1.15, xanchor: 'right', font: { family: 'IBM Plex Mono', size: 10 } },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+      shapes: [{ type: 'line', xref: 'paper', x0: 0.5, x1: 0.5, y0: 0, y1: 1, line: { color: '#5c4a3a', width: 1.5 } }],
+    };
+
+    Plotly.newPlot(div, traces, layout, { responsive: true, displaylogo: false, modeBarButtonsToRemove: ['select2d', 'lasso2d'] });
+  });
+
+  // Hide unused divs
+  for (let i = comps.length; i < 3; i++) plotDivs[i].style.display = 'none';
+}
+
+function updateAngleWindow(frame) {
+  if (!anglePlotsReady || !isLayerActive('joint_angles')) return;
+  const range = [frame - angleWindowHalf, frame + angleWindowHalf];
+  ['aplot0', 'aplot1', 'aplot2'].forEach(id => {
+    const div = document.getElementById(id);
+    if (div.style.display !== 'none') {
+      Plotly.relayout(div, { 'xaxis.range': range });
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// THREE.JS SCENE
+// ═══════════════════════════════════════════════════════════════════
 const canvas = document.getElementById('c');
 const wrap = document.getElementById('canvas-wrap');
-
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
@@ -274,275 +440,169 @@ scene.fog = new THREE.FogExp2(PAL.fog, 0.00008);
 const camera = new THREE.PerspectiveCamera(40, 1, 1, 50000);
 camera.up.set(0, 0, 1);
 const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.minDistance = 500;
-controls.maxDistance = 8000;
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.minDistance = 500; controls.maxDistance = 8000;
 
-// ─── Lighting — warm, soft ───────────────────────────────────────
 scene.add(new THREE.AmbientLight(0xfff8f0, 0.7));
 const keyLight = new THREE.DirectionalLight(0xfff0e0, 1.2);
 keyLight.position.set(1000, -2000, 3000);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(1024, 1024);
-keyLight.shadow.camera.near = 100;
-keyLight.shadow.camera.far = 8000;
-keyLight.shadow.camera.left = -2000;
-keyLight.shadow.camera.right = 2000;
-keyLight.shadow.camera.top = 2000;
-keyLight.shadow.camera.bottom = -2000;
+keyLight.shadow.camera.near = 100; keyLight.shadow.camera.far = 8000;
+keyLight.shadow.camera.left = -2000; keyLight.shadow.camera.right = 2000;
+keyLight.shadow.camera.top = 2000; keyLight.shadow.camera.bottom = -2000;
 keyLight.shadow.bias = -0.001;
 scene.add(keyLight);
 scene.add(new THREE.DirectionalLight(0xe8ddd0, 0.35).translateX(-1500).translateY(1000).translateZ(800));
 scene.add(new THREE.DirectionalLight(0xffe8d0, 0.25).translateY(2000).translateZ(500));
 
-// ─── Ground ──────────────────────────────────────────────────────
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(12000, 12000),
-  new THREE.MeshStandardMaterial({ color: PAL.ground, roughness: 0.92, metalness: 0.0 })
-);
-ground.receiveShadow = true;
-scene.add(ground);
-
+scene.add(new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), new THREE.MeshStandardMaterial({ color: PAL.ground, roughness: 0.92 })));
 const grid = new THREE.GridHelper(6000, 30, PAL.grid, PAL.grid);
-grid.rotation.x = Math.PI / 2;
-grid.position.z = 0.5;
-grid.material.opacity = 0.4;
-grid.material.transparent = true;
+grid.rotation.x = Math.PI / 2; grid.position.z = 0.5;
+grid.material.opacity = 0.4; grid.material.transparent = true;
 scene.add(grid);
 
-// ─── Body metrics ────────────────────────────────────────────────
 const frame0 = positions[0];
-let minZ = Infinity, maxZ = -Infinity, sumX = 0, sumY = 0, sumZ = 0;
-frame0.forEach(([x,y,z]) => { minZ = Math.min(minZ,z); maxZ = Math.max(maxZ,z); sumX+=x; sumY+=y; sumZ+=z; });
-const centroid = [sumX/numMarkers, sumY/numMarkers, sumZ/numMarkers];
-const bodyHeight = maxZ - minZ;
+let minZ=Infinity,maxZ=-Infinity,sumX=0,sumY=0,sumZ=0;
+frame0.forEach(([x,y,z])=>{minZ=Math.min(minZ,z);maxZ=Math.max(maxZ,z);sumX+=x;sumY+=y;sumZ+=z;});
+const centroid=[sumX/numMarkers,sumY/numMarkers,sumZ/numMarkers];
+const bodyHeight=maxZ-minZ;
 
-// ─── Skeleton ────────────────────────────────────────────────────
+// Skeleton
 const jointRadius = Math.max(8, bodyHeight * 0.009);
-const jointGeo = new THREE.SphereGeometry(jointRadius, 14, 10);
-const jointMat = new THREE.MeshStandardMaterial({
-  color: PAL.joint, emissive: PAL.jointEmit, emissiveIntensity: 0.15,
-  roughness: 0.6, metalness: 0.1,
-});
-const jointMesh = new THREE.InstancedMesh(jointGeo, jointMat, numMarkers);
-jointMesh.castShadow = true;
-jointMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-scene.add(jointMesh);
+const outlineGeo = new THREE.SphereGeometry(jointRadius * INK_SCALE, 14, 10);
+const outlineMesh = new THREE.InstancedMesh(outlineGeo, new THREE.MeshBasicMaterial({ color: PAL.ink, side: THREE.BackSide }), numMarkers);
+outlineMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(outlineMesh);
+const jointMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(jointRadius, 14, 10), new THREE.MeshStandardMaterial({ color: PAL.joint, emissive: PAL.jointEmit, emissiveIntensity: 0.15, roughness: 0.6, metalness: 0.1 }), numMarkers);
+jointMesh.castShadow = true; jointMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(jointMesh);
 
 let lineSegments = null;
 if (connections.length > 0) {
-  const lp = new Float32Array(connections.length * 2 * 3);
   const lg = new THREE.BufferGeometry();
-  lg.setAttribute('position', new THREE.BufferAttribute(lp, 3));
-  lineSegments = new THREE.LineSegments(lg,
-    new THREE.LineBasicMaterial({ color: PAL.bone, transparent: true, opacity: 0.85 }));
+  lg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(connections.length*2*3), 3));
+  lineSegments = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: PAL.bone, transparent: true, opacity: 0.85 }));
   scene.add(lineSegments);
 }
 
-// ─── Gait Event Indicators ──────────────────────────────────────
+// Gait event rings
 class GaitEventRing {
   constructor(hexColor, maxRadius) {
-    this.maxRadius = maxRadius;
-    this.life = 0;
-    this.maxLife = 10;
-
-    const geo = new THREE.RingGeometry(0.85, 1.0, 48);
-    this.mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
-      color: hexColor, transparent: true, opacity: 0, side: THREE.DoubleSide,
-    }));
-    this.mesh.visible = false;
-    scene.add(this.mesh);
-
-    const gg = new THREE.CylinderGeometry(jointRadius * .3, jointRadius * 1, 100, 32).rotateX(Math.PI / 2);
-    this.glow = new THREE.Mesh(gg, new THREE.MeshBasicMaterial({
-      color: hexColor, transparent: true, opacity: 0,
-    }));
-    this.glow.visible = false;
-    scene.add(this.glow);
+    this.maxRadius = maxRadius; this.life = 0; this.maxLife = 10;
+    const rg = new THREE.RingGeometry(0.85, 1.0, 48);
+    this.ringOutline = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color: PAL.ink, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+    this.ringOutline.visible = false; this.ringOutline.renderOrder = 0; scene.add(this.ringOutline);
+    this.mesh = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color: hexColor, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+    this.mesh.visible = false; this.mesh.renderOrder = 1; scene.add(this.mesh);
+    const sg = new THREE.CylinderGeometry(jointRadius*.3, jointRadius*1, 100, 32).rotateX(Math.PI/2);
+    this.spikeOutline = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: PAL.ink, transparent: true, opacity: 0, side: THREE.BackSide }));
+    this.spikeOutline.visible = false; scene.add(this.spikeOutline);
+    this.glow = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: hexColor, transparent: true, opacity: 0 }));
+    this.glow.visible = false; scene.add(this.glow);
   }
-
-  trigger(x, y, z) {
-    this.mesh.position.set(x, y, 1);
-    this.mesh.visible = true;
-    this.mesh.scale.set(0.01, 0.01, 1);
-    this.life = this.maxLife;
-    this.glow.position.set(x, y, z);
-    this.glow.visible = true;
+  trigger(x,y,z) {
+    this.mesh.position.set(x,y,1); this.mesh.visible=true; this.mesh.scale.set(0.01,0.01,1);
+    this.ringOutline.position.set(x,y,0.5); this.ringOutline.visible=true; this.ringOutline.scale.set(0.01,0.01,1);
+    this.life=this.maxLife;
+    this.glow.position.set(x,y,z); this.glow.visible=true; this.glow.scale.set(1,1,1);
+    this.spikeOutline.position.set(x,y,z); this.spikeOutline.visible=true; this.spikeOutline.scale.set(INK_SCALE,INK_SCALE,INK_SCALE);
   }
-
   update() {
-    if (this.life <= 0) { this.mesh.visible = false; this.glow.visible = false; return; }
-    this.life--;
-    const t = 1 - (this.life / this.maxLife);
-    const ease = 1 - Math.pow(1 - t, 2.5);
-    this.mesh.scale.set(this.maxRadius * ease, this.maxRadius * ease, 1);
-    const fadeIn = Math.min(t / 0.1, 1);
-    const fadeOut = Math.pow(1 - t, 1.5);
-    this.mesh.material.opacity = fadeIn * fadeOut * 0.7;
-    this.glow.material.opacity = fadeOut * 0.6;
-    const gs = 1 + t * 0.3;
-    this.glow.scale.set(gs, gs, gs);
+    if(this.life<=0){this.mesh.visible=false;this.ringOutline.visible=false;this.glow.visible=false;this.spikeOutline.visible=false;return;}
+    this.life--;const t=1-(this.life/this.maxLife);const ease=1-Math.pow(1-t,2.5);
+    const s=this.maxRadius*ease;this.mesh.scale.set(s,s,1);this.ringOutline.scale.set(s*INK_SCALE,s*INK_SCALE,1);
+    const fi=Math.min(t/0.1,1),fo=Math.pow(1-t,1.5);
+    this.mesh.material.opacity=fi*fo*0.7;this.ringOutline.material.opacity=fi*fo*0.9;
+    this.glow.material.opacity=fo*0.6;this.spikeOutline.material.opacity=fo*0.75;
+    const gs=1+t*0.3;this.glow.scale.set(gs,gs,gs);this.spikeOutline.scale.set(gs*INK_SCALE,gs*INK_SCALE,gs*INK_SCALE);
   }
 }
 
-const hsRings = Array.from({length:6}, () => new GaitEventRing(PAL.hs, bodyHeight * 0.09));
-const toRings = Array.from({length:6}, () => new GaitEventRing(PAL.to, bodyHeight * 0.07));
-let hsRi = 0, toRi = 0;
+const hsRings=Array.from({length:6},()=>new GaitEventRing(PAL.hs,bodyHeight*0.09));
+const toRings=Array.from({length:6},()=>new GaitEventRing(PAL.to,bodyHeight*0.07));
+let hsRi=0,toRi=0;
 
-// ─── Event Lookup ────────────────────────────────────────────────
-const hsMap = new Map(); heelStrikes.forEach(e => hsMap.set(e.frame, e));
-const toMap = new Map(); toeOffs.forEach(e => toMap.set(e.frame, e));
-const lHeelIdx = landmarkIndices.left_heel, rHeelIdx = landmarkIndices.right_heel;
-const lToeIdx = landmarkIndices.left_toe,   rToeIdx = landmarkIndices.right_toe;
+const hsMap=new Map();heelStrikes.forEach(e=>hsMap.set(e.frame,e));
+const toMap=new Map();toeOffs.forEach(e=>toMap.set(e.frame,e));
+const lHeelIdx=landmarkIndices.left_heel,rHeelIdx=landmarkIndices.right_heel;
+const lToeIdx=landmarkIndices.left_toe,rToeIdx=landmarkIndices.right_toe;
 
-function findPelvisIdx() {
-  for (const n of ['pelvis_center','mid_hip','hips_center','sacrum','pelvis'])
-    if (nameToIdx.has(n)) return nameToIdx.get(n);
-  let best = 0, bd = Infinity;
-  frame0.forEach(([x,y,z],i) => {
-    const d = Math.hypot(x-centroid[0],y-centroid[1],z-centroid[2]);
-    if (d < bd) { bd = d; best = i; }
-  });
-  return best;
+function findPelvisIdx(){
+  for(const n of['pelvis_center','mid_hip','hips_center','sacrum','pelvis'])if(nameToIdx.has(n))return nameToIdx.get(n);
+  let best=0,bd=Infinity;frame0.forEach(([x,y,z],i)=>{const d=Math.hypot(x-centroid[0],y-centroid[1],z-centroid[2]);if(d<bd){bd=d;best=i;}});return best;
 }
-const pelvisIdx = findPelvisIdx();
+const pelvisIdx=findPelvisIdx();
 
-// ─── State ───────────────────────────────────────────────────────
-let currentFrame = 0, playing = true, speed = 0.6, lastTime = 0, accumulator = 0;
-const frameInterval = 1000 / fps;
-const toastHS = document.getElementById('toast-hs');
-const toastTO = document.getElementById('toast-to');
-const phaseBar = document.getElementById('phase-bar');
-const cycleInfo = document.getElementById('cycle-info');
-let toastHST = 0, toastTOT = 0;
+let currentFrame=0,playing=true,speed=0.6,lastTime=0,accumulator=0;
+const frameInterval=1000/fps;
+const toastHS=document.getElementById('toast-hs'),toastTO=document.getElementById('toast-to');
+const phaseBar=document.getElementById('phase-bar'),cycleInfo=document.getElementById('cycle-info');
+let toastHST=0,toastTOT=0;
 
-// ─── Camera ──────────────────────────────────────────────────────
-const camDist = bodyHeight * 2.5;
-const camOff = new THREE.Vector3(camDist*0.8, -camDist*0.6, bodyHeight*0.6);
-const trackTgt = new THREE.Vector3(centroid[0], centroid[1], centroid[2]*0.5);
-camera.position.set(centroid[0]+camOff.x, centroid[1]+camOff.y, centroid[2]*0.5+camOff.z);
+const camDist=bodyHeight*2.5;
+const camOff=new THREE.Vector3(camDist*0.8,-camDist*0.6,bodyHeight*0.6);
+const trackTgt=new THREE.Vector3(centroid[0],centroid[1],centroid[2]*0.5);
+camera.position.set(centroid[0]+camOff.x,centroid[1]+camOff.y,centroid[2]*0.5+camOff.z);
 controls.target.copy(trackTgt);
+function updateCam(p){trackTgt.lerp(new THREE.Vector3(p[0],p[1],p[2]*0.5),0.03);controls.target.copy(trackTgt);camera.position.lerp(trackTgt.clone().add(camOff),0.02);}
 
-function updateCam(p) {
-  trackTgt.lerp(new THREE.Vector3(p[0], p[1], p[2]*0.5), 0.03);
-  controls.target.copy(trackTgt);
-  camera.position.lerp(trackTgt.clone().add(camOff), 0.02);
-}
-
-// ─── Frame Update ────────────────────────────────────────────────
-const tmp = new THREE.Matrix4();
+const tmp=new THREE.Matrix4();
 
 function setFrame(k) {
-  currentFrame = Math.max(0, Math.min(totalFrames-1, k));
-  const pts = positions[currentFrame];
+  currentFrame=Math.max(0,Math.min(totalFrames-1,k));
+  const pts=positions[currentFrame];
 
-  for (let i = 0; i < numMarkers; i++) {
-    const [x,y,z] = pts[i];
-    if (isNaN(x)||isNaN(y)||isNaN(z)) tmp.makeScale(0,0,0);
-    else tmp.makeTranslation(x,y,z);
-    jointMesh.setMatrixAt(i, tmp);
-  }
-  jointMesh.instanceMatrix.needsUpdate = true;
+  for(let i=0;i<numMarkers;i++){const[x,y,z]=pts[i];if(isNaN(x)||isNaN(y)||isNaN(z))tmp.makeScale(0,0,0);else tmp.makeTranslation(x,y,z);jointMesh.setMatrixAt(i,tmp);outlineMesh.setMatrixAt(i,tmp);}
+  jointMesh.instanceMatrix.needsUpdate=true;outlineMesh.instanceMatrix.needsUpdate=true;
 
-  if (lineSegments) {
-    const a = lineSegments.geometry.attributes.position.array;
-    let o = 0;
-    connections.forEach(([ai,bi]) => {
-      const pa = pts[ai], pb = pts[bi];
-      if (pa && pb && !isNaN(pa[0]) && !isNaN(pb[0])) {
-        a[o++]=pa[0]; a[o++]=pa[1]; a[o++]=pa[2];
-        a[o++]=pb[0]; a[o++]=pb[1]; a[o++]=pb[2];
-      } else { for(let n=0;n<6;n++) a[o++]=NaN; }
-    });
-    lineSegments.geometry.attributes.position.needsUpdate = true;
-  }
+  if(lineSegments){const a=lineSegments.geometry.attributes.position.array;let o=0;connections.forEach(([ai,bi])=>{const pa=pts[ai],pb=pts[bi];if(pa&&pb&&!isNaN(pa[0])&&!isNaN(pb[0])){a[o++]=pa[0];a[o++]=pa[1];a[o++]=pa[2];a[o++]=pb[0];a[o++]=pb[1];a[o++]=pb[2];}else{for(let n=0;n<6;n++)a[o++]=NaN;}});lineSegments.geometry.attributes.position.needsUpdate=true;}
 
   updateCam(pts[pelvisIdx]);
-  keyLight.position.set(pts[pelvisIdx][0]+1000, pts[pelvisIdx][1]-2000, 3000);
+  keyLight.position.set(pts[pelvisIdx][0]+1000,pts[pelvisIdx][1]-2000,3000);
 
-  // Gait events
-  const hs = hsMap.get(currentFrame);
-  if (hs) {
-    const idx = hs.side==='left' ? lHeelIdx : rHeelIdx;
-    if (idx!=null) { const p=pts[idx]; hsRings[hsRi%6].trigger(p[0],p[1],p[2]); hsRi++; }
-    toastHS.textContent = `Heel Strike · ${hs.side}`;
-    toastHS.classList.add('show');
-    clearTimeout(toastHST); toastHST = setTimeout(()=>toastHS.classList.remove('show'), 500);
+  // Gait events (only if layer active)
+  if (isLayerActive('gait_events')) {
+    const hs=hsMap.get(currentFrame);
+    if(hs){const idx=hs.side==='left'?lHeelIdx:rHeelIdx;if(idx!=null){const p=pts[idx];hsRings[hsRi%6].trigger(p[0],p[1],p[2]);hsRi++;}toastHS.textContent=`Heel Strike · ${hs.side}`;toastHS.classList.add('show');clearTimeout(toastHST);toastHST=setTimeout(()=>toastHS.classList.remove('show'),500);}
+    const to=toMap.get(currentFrame);
+    if(to){const idx=to.side==='left'?lToeIdx:rToeIdx;if(idx!=null){const p=pts[idx];toRings[toRi%6].trigger(p[0],p[1],p[2]);toRi++;}toastTO.textContent=`Toe Off · ${to.side}`;toastTO.classList.add('show');clearTimeout(toastTOT);toastTOT=setTimeout(()=>toastTO.classList.remove('show'),500);}
+
+    let lrhs=-1,lrto=-1;
+    for(const e of heelStrikes)if(e.side==='right'&&e.frame<=currentFrame)lrhs=e.frame;
+    for(const e of toeOffs)if(e.side==='right'&&e.frame<=currentFrame)lrto=e.frame;
+    const stance=lrhs>=0&&lrhs>=lrto;
+    phaseBar.className=`phase-bar ${stance?'stance':'swing'}`;
+    cycleInfo.innerHTML=`<div>Phase: <span class="val">${stance?'Stance':'Swing'}</span> (R)</div><div>Events: <span class="val">${heelStrikes.length}</span> HS · <span class="val">${toeOffs.length}</span> TO</div><div>Tracker: <span class="val">${tracker}</span></div>`;
+  } else {
+    cycleInfo.innerHTML = `<div>Tracker: <span class="val">${tracker}</span></div>`;
+    phaseBar.className = 'phase-bar';
   }
-  const to = toMap.get(currentFrame);
-  if (to) {
-    const idx = to.side==='left' ? lToeIdx : rToeIdx;
-    if (idx!=null) { const p=pts[idx]; toRings[toRi%6].trigger(p[0],p[1],p[2]); toRi++; }
-    toastTO.textContent = `Toe Off · ${to.side}`;
-    toastTO.classList.add('show');
-    clearTimeout(toastTOT); toastTOT = setTimeout(()=>toastTO.classList.remove('show'), 500);
-  }
 
-  // Phase
-  let lrhs=-1, lrto=-1;
-  for (const e of heelStrikes) if(e.side==='right'&&e.frame<=currentFrame) lrhs=e.frame;
-  for (const e of toeOffs) if(e.side==='right'&&e.frame<=currentFrame) lrto=e.frame;
-  const stance = lrhs>=0 && lrhs>=lrto;
-  phaseBar.className = `phase-bar ${stance?'stance':'swing'}`;
-  cycleInfo.innerHTML = `
-    <div>Phase: <span class="val">${stance?'Stance':'Swing'}</span> (R)</div>
-    <div>Events: <span class="val">${heelStrikes.length}</span> HS · <span class="val">${toeOffs.length}</span> TO</div>
-    <div>Tracker: <span class="val">${tracker}</span></div>`;
+  document.getElementById('frame-num').textContent=currentFrame;
+  scrubber.value=String(currentFrame);
+  hsRings.forEach(r=>r.update());toRings.forEach(r=>r.update());
 
-  document.getElementById('frame-num').textContent = currentFrame;
-  scrubber.value = String(currentFrame);
-
-  hsRings.forEach(r=>r.update());
-  toRings.forEach(r=>r.update());
+  // Update angle plots window
+  updateAngleWindow(currentFrame);
 }
 
-// ─── Resize ──────────────────────────────────────────────────────
-function resize() {
-  const w=wrap.clientWidth, h=wrap.clientHeight;
-  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
-}
-new ResizeObserver(resize).observe(wrap); resize();
+function resize(){const w=wrap.clientWidth,h=wrap.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+new ResizeObserver(resize).observe(wrap);resize();
 
-// ─── Loop ────────────────────────────────────────────────────────
-function animate(t) {
+function animate(t){
   requestAnimationFrame(animate);
-  if (playing) {
-    if (!lastTime) lastTime=t;
-    accumulator += (t-lastTime)*speed; lastTime=t;
-    while (accumulator>=frameInterval) {
-      accumulator-=frameInterval;
-      let n=currentFrame+1; if(n>=totalFrames) n=0;
-      setFrame(n);
-    }
-  } else { lastTime=0; }
-  controls.update();
-  renderer.render(scene, camera);
+  if(playing){if(!lastTime)lastTime=t;accumulator+=(t-lastTime)*speed;lastTime=t;while(accumulator>=frameInterval){accumulator-=frameInterval;let n=currentFrame+1;if(n>=totalFrames)n=0;setFrame(n);}}else{lastTime=0;}
+  controls.update();renderer.render(scene,camera);
 }
-setFrame(0); requestAnimationFrame(animate);
+setFrame(0);requestAnimationFrame(animate);
 
-// ─── Controls ────────────────────────────────────────────────────
-document.getElementById('btn-play').addEventListener('click', () => {
-  playing=!playing;
-  document.getElementById('btn-play').textContent = playing?'Pause':'Play';
-  lastTime=0;
-});
-document.getElementById('btn-reset').addEventListener('click', () => {
-  setFrame(0);
-  trackTgt.set(centroid[0],centroid[1],centroid[2]*0.5);
-  camera.position.set(centroid[0]+camOff.x,centroid[1]+camOff.y,centroid[2]*0.5+camOff.z);
-  controls.target.copy(trackTgt);
-});
-document.getElementById('speed').addEventListener('input', e => {
-  speed=parseFloat(e.target.value);
-  document.getElementById('speed-val').textContent=speed.toFixed(1)+'×';
-});
-scrubber.addEventListener('input', () => setFrame(Number(scrubber.value)));
-
-window.addEventListener('keydown', e => {
-  if (e.code==='Space') { e.preventDefault(); playing=!playing; document.getElementById('btn-play').textContent=playing?'Pause':'Play'; lastTime=0; }
-  else if (e.code==='ArrowRight') { e.preventDefault(); playing=false; document.getElementById('btn-play').textContent='Play'; setFrame(currentFrame+1); }
-  else if (e.code==='ArrowLeft') { e.preventDefault(); playing=false; document.getElementById('btn-play').textContent='Play'; setFrame(currentFrame-1); }
+document.getElementById('btn-play').addEventListener('click',()=>{playing=!playing;document.getElementById('btn-play').textContent=playing?'Pause':'Play';lastTime=0;});
+document.getElementById('btn-reset').addEventListener('click',()=>{setFrame(0);trackTgt.set(centroid[0],centroid[1],centroid[2]*0.5);camera.position.set(centroid[0]+camOff.x,centroid[1]+camOff.y,centroid[2]*0.5+camOff.z);controls.target.copy(trackTgt);});
+document.getElementById('speed').addEventListener('input',e=>{speed=parseFloat(e.target.value);document.getElementById('speed-val').textContent=speed.toFixed(1)+'×';});
+scrubber.addEventListener('input',()=>setFrame(Number(scrubber.value)));
+window.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();playing=!playing;document.getElementById('btn-play').textContent=playing?'Pause':'Play';lastTime=0;}
+  else if(e.code==='ArrowRight'){e.preventDefault();playing=false;document.getElementById('btn-play').textContent='Play';setFrame(currentFrame+1);}
+  else if(e.code==='ArrowLeft'){e.preventDefault();playing=false;document.getElementById('btn-play').textContent='Play';setFrame(currentFrame-1);}
 });
 </script>
 </body>
