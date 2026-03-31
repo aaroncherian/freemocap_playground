@@ -15,7 +15,7 @@ from skellymodels.managers.human import Human
 # ------------------------
 
 path_to_recording = Path(
-    r"D:\validation\data\2025-11-04_ATC\2025-11-04_15-33-01_GMT-5_atc_treadmill_1"
+    r"D:\validation\data\2026_01_26_KK\2026-01-16_14-15-39_GMT-5_kk_treadmill_1"
 )
 
 # Folder that already contains:

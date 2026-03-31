@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Gait Events — 3D Viewer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #14141f;
+    --border: #1e1e30;
+    --text: #e0e0ec;
+    --text-dim: #6a6a8a;
+    --accent-hs: #ff6b4a;    /* heel strike — warm orange-red */
+    --accent-to: #4adfff;    /* toe off — cool cyan */
+    --accent-bone: #c8c8e0;
+    --accent-joint: #9090b8;
+    --ground: #1a1a2a;
+  }
+
+  html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; }
+
+  #app {
+    display:grid;
+    grid-template-rows: auto 1fr auto;
+    height:100%;
+  }
+
+  header {
+    padding: 16px 24px 12px;
+    display:flex; align-items:baseline; gap:16px;
+    border-bottom:1px solid var(--border);
+    background: var(--surface);
+  }
+  header h1 {
+    font-family:'JetBrains Mono',monospace;
+    font-size:15px; font-weight:500; letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--text);
+  }
+  header .subtitle {
+    font-size:12px; color:var(--text-dim); font-weight:400;
+  }
+
+  #canvas-wrap { position:relative; overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; }
+
+  /* Event flash overlays */
+  .event-toast {
+    position:absolute; top:20px; right:20px;
+    padding: 10px 20px;
+    border-radius:6px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px; font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    pointer-events:none;
+    opacity:0;
+    transform:translateY(-8px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  .event-toast.show {
+    opacity:1; transform:translateY(0);
+  }
+  .event-toast.hs {
+    background: rgba(255,107,74,0.15);
+    border:1px solid rgba(255,107,74,0.5);
+    color:var(--accent-hs);
+  }
+  .event-toast.to {
+    background: rgba(74,223,255,0.15);
+    border:1px solid rgba(74,223,255,0.5);
+    color:var(--accent-to);
+  }
+
+  /* Phase indicator */
+  .phase-bar {
+    position:absolute; bottom:0; left:0; right:0; height:4px;
+    transition: background 0.2s ease;
+  }
+  .phase-bar.stance { background: linear-gradient(90deg, var(--accent-hs), rgba(255,107,74,0.3)); }
+  .phase-bar.swing  { background: linear-gradient(90deg, var(--accent-to), rgba(74,223,255,0.3)); }
+
+  /* Legend overlay */
+  .legend {
+    position:absolute; bottom:16px; left:16px;
+    display:flex; flex-direction:column; gap:6px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+  }
+  .legend-item {
+    display:flex; align-items:center; gap:8px;
+  }
+  .legend-dot {
+    width:10px; height:10px; border-radius:50%;
+  }
+  .legend-dot.hs { background:var(--accent-hs); box-shadow: 0 0 8px var(--accent-hs); }
+  .legend-dot.to { background:var(--accent-to); box-shadow: 0 0 8px var(--accent-to); }
+
+  /* Gait cycle info */
+  .cycle-info {
+    position:absolute; top:20px; left:20px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px; color:var(--text-dim);
+    line-height:1.6;
+  }
+  .cycle-info .val { color:var(--text); font-weight:500; }
+
+  footer {
+    padding:10px 24px;
+    display:flex; align-items:center; gap:16px;
+    border-top:1px solid var(--border);
+    background:var(--surface);
+  }
+
+  footer button {
+    background:none; border:1px solid var(--border); color:var(--text);
+    padding:6px 16px; border-radius:4px; cursor:pointer;
+    font-family:'JetBrains Mono',monospace; font-size:12px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  footer button:hover { border-color:var(--text-dim); background:rgba(255,255,255,0.03); }
+
+  .speed-control {
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim);
+  }
+  .speed-control input[type=range] {
+    width:100px; accent-color:var(--accent-hs);
+  }
+
+  .frame-display {
+    margin-left:auto;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px; color:var(--text-dim);
+  }
+  .frame-display .val { color:var(--text); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Gait Events</h1>
+    <span class="subtitle">Heel Strike & Toe Off Detection — Synthetic Walking Data</span>
+  </header>
+
+  <div id="canvas-wrap">
+    <canvas id="c"></canvas>
+    <div class="event-toast hs" id="toast-hs">⬇ Heel Strike</div>
+    <div class="event-toast to" id="toast-to">⬆ Toe Off</div>
+    <div class="phase-bar" id="phase-bar"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot hs"></div><span style="color:var(--accent-hs)">Heel Strike</span></div>
+      <div class="legend-item"><div class="legend-dot to"></div><span style="color:var(--accent-to)">Toe Off</span></div>
+    </div>
+    <div class="cycle-info" id="cycle-info"></div>
+  </div>
+
+  <footer>
+    <button id="btn-play">Pause</button>
+    <button id="btn-reset">Reset</button>
+    <div class="speed-control">
+      <span>Speed</span>
+      <input type="range" id="speed" min="0.1" max="2" step="0.1" value="0.6"/>
+      <span id="speed-val">0.6×</span>
+    </div>
+    <div class="frame-display">
+      Frame <span class="val" id="frame-num">0</span> / <span id="frame-total">0</span>
+      &nbsp;|&nbsp; Gait Cycle <span class="val" id="gc-pct">0</span>%
+    </div>
+  </footer>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─── Synthetic Gait Data Generator ───────────────────────────────────
+// Generates a ~2-second walking cycle with realistic joint trajectories.
+// All units in mm, Z-up convention matching FreeMoCap.
+
+function generateWalkingData(fps = 60, numCycles = 3) {
+  const totalFrames = Math.round(fps * numCycles * 1.1); // ~1.1s per gait cycle
+  const cycleDuration = fps * 1.1;
+
+  // Joint hierarchy (indices)
+  const JOINTS = {
+    // Torso
+    pelvis_center: 0,
+    l_hip: 1, r_hip: 2,
+    l_knee: 3, r_knee: 4,
+    l_ankle: 5, r_ankle: 6,
+    l_heel: 7, r_heel: 8,
+    l_toe: 9, r_toe: 10,
+    // Upper body
+    spine_mid: 11,
+    spine_top: 12,
+    l_shoulder: 13, r_shoulder: 14,
+    l_elbow: 15, r_elbow: 16,
+    l_wrist: 17, r_wrist: 18,
+    head: 19,
+  };
+
+  const connections = [
+    [0,1],[0,2],       // pelvis to hips
+    [1,3],[2,4],       // hips to knees
+    [3,5],[4,6],       // knees to ankles
+    [5,7],[6,8],       // ankles to heels
+    [5,9],[6,10],      // ankles to toes
+    [7,9],[8,10],      // heels to toes (foot)
+    [0,11],[11,12],    // spine
+    [12,13],[12,14],   // shoulders
+    [13,15],[14,16],   // elbows
+    [15,17],[16,18],   // wrists
+    [12,19],           // head
+  ];
+
+  const numJoints = 20;
+  const positions = [];
+
+  // Gait event storage
+  const heelStrikes = []; // {frame, side}
+  const toeOffs = [];
+
+  // Walking parameters
+  const strideLength = 600;  // mm
+  const hipWidth = 180;
+  const hipHeight = 900;
+  const kneeHeight = 480;
+  const ankleHeight = 80;
+  const shoulderWidth = 340;
+  const shoulderHeight = 1400;
+  const headHeight = 1550;
+  const elbowDrop = 300;
+  const wristDrop = 550;
+  const footLength = 200;
+
+  // Walking speed (forward progression)
+  const walkSpeed = strideLength / cycleDuration; // mm per frame
+
+  // Track previous heel Z for event detection
+  let prevLHeelZ = ankleHeight;
+  let prevRHeelZ = ankleHeight;
+  let prevLHeelVz = 0;
+  let prevRHeelVz = 0;
+
+  for (let f = 0; f < totalFrames; f++) {
+    const t = f / fps; // time in seconds
+    const phase = (f % cycleDuration) / cycleDuration; // 0..1 within cycle
+    const forwardPos = f * walkSpeed; // progressive forward movement
+
+    const frame = new Array(numJoints);
+
+    // Phase offsets: right leg is 0.5 cycle offset from left
+    const lPhase = phase;
+    const rPhase = (phase + 0.5) % 1.0;
+
+    // Leg swing function: converts phase to joint angles
+    function legKinematics(p) {
+      // p: 0 = heel strike, ~0.6 = toe off, 1 = next heel strike
+      const stanceEnd = 0.62;
+
+      let hipAngle, kneeAngle, ankleAngle, heelZ, toeZ;
+
+      if (p < stanceEnd) {
+        // Stance phase: foot on ground, hip extends
+        const sp = p / stanceEnd;
+        hipAngle = THREE.MathUtils.lerp(0.35, -0.30, sp);
+        kneeAngle = Math.sin(sp * Math.PI) * 0.15; // slight bend mid-stance
+        heelZ = 0;
+        toeZ = 0;
+      } else {
+        // Swing phase: foot lifts, knee flexes, hip flexes forward
+        const sp = (p - stanceEnd) / (1 - stanceEnd);
+        hipAngle = THREE.MathUtils.lerp(-0.30, 0.35, sp);
+        kneeAngle = Math.sin(sp * Math.PI) * 0.9; // big knee flex
+        heelZ = Math.sin(sp * Math.PI) * 120; // foot clearance
+        toeZ = Math.sin(sp * Math.PI) * 80;
+      }
+
+      return { hipAngle, kneeAngle, heelZ, toeZ };
+    }
+
+    const lLeg = legKinematics(lPhase);
+    const rLeg = legKinematics(rPhase);
+
+    // Pelvis: slight vertical oscillation and lateral sway
+    const pelvisZ = hipHeight + Math.sin(phase * Math.PI * 2) * 15;
+    const pelvisX = Math.sin(phase * Math.PI * 2) * 25; // lateral sway
+    const pelvisY = forwardPos;
+
+    frame[JOINTS.pelvis_center] = [pelvisX, pelvisY, pelvisZ];
+
+    // Hips
+    frame[JOINTS.l_hip] = [pelvisX + hipWidth/2, pelvisY, pelvisZ - 10];
+    frame[JOINTS.r_hip] = [pelvisX - hipWidth/2, pelvisY, pelvisZ - 10];
+
+    // Left leg
+    const lHipX = pelvisX + hipWidth/2;
+    const lKneeY = pelvisY + Math.sin(lLeg.hipAngle) * (hipHeight - kneeHeight) * 0.7;
+    const lKneeZ = kneeHeight + Math.cos(lLeg.kneeAngle) * 10;
+    const lAnkleY = lKneeY + Math.sin(lLeg.hipAngle) * (kneeHeight - ankleHeight) * 0.5;
+    const lAnkleZ = ankleHeight + lLeg.heelZ * 0.3;
+
+    frame[JOINTS.l_knee]  = [lHipX, lKneeY, lKneeZ - lLeg.kneeAngle * 80];
+    frame[JOINTS.l_ankle] = [lHipX, lAnkleY, lAnkleZ];
+    frame[JOINTS.l_heel]  = [lHipX, lAnkleY - footLength * 0.3, lLeg.heelZ];
+    frame[JOINTS.l_toe]   = [lHipX, lAnkleY + footLength * 0.7, lLeg.toeZ];
+
+    // Right leg
+    const rHipX = pelvisX - hipWidth/2;
+    const rKneeY = pelvisY + Math.sin(rLeg.hipAngle) * (hipHeight - kneeHeight) * 0.7;
+    const rKneeZ = kneeHeight + Math.cos(rLeg.kneeAngle) * 10;
+    const rAnkleY = rKneeY + Math.sin(rLeg.hipAngle) * (kneeHeight - ankleHeight) * 0.5;
+    const rAnkleZ = ankleHeight + rLeg.heelZ * 0.3;
+
+    frame[JOINTS.r_knee]  = [rHipX, rKneeY, rKneeZ - rLeg.kneeAngle * 80];
+    frame[JOINTS.r_ankle] = [rHipX, rAnkleY, rAnkleZ];
+    frame[JOINTS.r_heel]  = [rHipX, rAnkleY - footLength * 0.3, rLeg.heelZ];
+    frame[JOINTS.r_toe]   = [rHipX, rAnkleY + footLength * 0.7, rLeg.toeZ];
+
+    // Spine
+    const spineX = pelvisX * 0.5;
+    frame[JOINTS.spine_mid] = [spineX, pelvisY, pelvisZ + 250];
+    frame[JOINTS.spine_top] = [spineX * 0.3, pelvisY, shoulderHeight];
+
+    // Shoulders
+    frame[JOINTS.l_shoulder] = [shoulderWidth/2, pelvisY, shoulderHeight];
+    frame[JOINTS.r_shoulder] = [-shoulderWidth/2, pelvisY, shoulderHeight];
+
+    // Arms: counter-swing to legs
+    const lArmSwing = Math.sin((rPhase) * Math.PI * 2) * 0.4; // opposite leg phase
+    const rArmSwing = Math.sin((lPhase) * Math.PI * 2) * 0.4;
+
+    frame[JOINTS.l_elbow] = [shoulderWidth/2 + 10, pelvisY + lArmSwing * 200, shoulderHeight - elbowDrop];
+    frame[JOINTS.r_elbow] = [-shoulderWidth/2 - 10, pelvisY + rArmSwing * 200, shoulderHeight - elbowDrop];
+    frame[JOINTS.l_wrist] = [shoulderWidth/2 + 20, pelvisY + lArmSwing * 300, shoulderHeight - wristDrop];
+    frame[JOINTS.r_wrist] = [-shoulderWidth/2 - 20, pelvisY + rArmSwing * 300, shoulderHeight - wristDrop];
+
+    // Head
+    frame[JOINTS.head] = [spineX * 0.1, pelvisY, headHeight + Math.sin(phase * Math.PI * 2) * 8];
+
+    positions.push(frame);
+
+    // ─── Gait Event Detection (Zeni-inspired: heel vertical velocity) ───
+    const lHeelZ = frame[JOINTS.l_heel][2];
+    const rHeelZ = frame[JOINTS.r_heel][2];
+    const lHeelVz = lHeelZ - prevLHeelZ;
+    const rHeelVz = rHeelZ - prevRHeelZ;
+
+    // Heel strike: heel Z crosses near zero going downward (negative velocity → ~0)
+    if (f > 2) {
+      if (prevLHeelVz < -0.5 && lHeelVz >= -0.5 && lHeelZ < 15) {
+        heelStrikes.push({ frame: f, side: 'left' });
+      }
+      if (prevRHeelVz < -0.5 && rHeelVz >= -0.5 && rHeelZ < 15) {
+        heelStrikes.push({ frame: f, side: 'right' });
+      }
+
+      // Toe off: heel Z starts rising from ground
+      if (prevLHeelVz <= 0.3 && lHeelVz > 0.3 && prevLHeelZ < 20) {
+        toeOffs.push({ frame: f, side: 'left' });
+      }
+      if (prevRHeelVz <= 0.3 && rHeelVz > 0.3 && prevRHeelZ < 20) {
+        toeOffs.push({ frame: f, side: 'right' });
+      }
+    }
+
+    prevLHeelZ = lHeelZ;
+    prevRHeelZ = rHeelZ;
+    prevLHeelVz = lHeelVz;
+    prevRHeelVz = rHeelVz;
+  }
+
+  // If auto-detection missed events, add manually based on phase
+  if (heelStrikes.length < 2) {
+    for (let c = 0; c < numCycles; c++) {
+      const base = Math.round(c * cycleDuration);
+      heelStrikes.push({ frame: base, side: 'right' });
+      heelStrikes.push({ frame: base + Math.round(cycleDuration * 0.5), side: 'left' });
+      toeOffs.push({ frame: base + Math.round(cycleDuration * 0.62), side: 'right' });
+      toeOffs.push({ frame: base + Math.round(cycleDuration * 0.12), side: 'left' });
+    }
+    heelStrikes.sort((a,b) => a.frame - b.frame);
+    toeOffs.sort((a,b) => a.frame - b.frame);
+  }
+
+  return {
+    positions,
+    connections,
+    joints: JOINTS,
+    heelStrikes,
+    toeOffs,
+    fps,
+    cycleDuration,
+    numCycles,
+  };
+}
+
+// ─── Scene Setup ──────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const wrap = document.getElementById('canvas-wrap');
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a0f);
+scene.fog = new THREE.FogExp2(0x0a0a0f, 0.00015);
+
+const camera = new THREE.PerspectiveCamera(40, 1, 1, 50000);
+camera.up.set(0, 0, 1);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 500;
+controls.maxDistance = 8000;
+
+// ─── Lighting ─────────────────────────────────────────────────────
+const ambient = new THREE.AmbientLight(0x303050, 0.8);
+scene.add(ambient);
+
+const keyLight = new THREE.DirectionalLight(0xffeedd, 1.5);
+keyLight.position.set(1000, -2000, 3000);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(1024, 1024);
+keyLight.shadow.camera.near = 100;
+keyLight.shadow.camera.far = 8000;
+keyLight.shadow.camera.left = -2000;
+keyLight.shadow.camera.right = 2000;
+keyLight.shadow.camera.top = 2000;
+keyLight.shadow.camera.bottom = -2000;
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0x6688cc, 0.4);
+fillLight.position.set(-1500, 1000, 1000);
+scene.add(fillLight);
+
+// ─── Ground Plane ─────────────────────────────────────────────────
+const groundGeo = new THREE.PlaneGeometry(10000, 10000);
+const groundMat = new THREE.MeshStandardMaterial({
+  color: 0x0e0e18,
+  roughness: 0.95,
+  metalness: 0.0,
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Grid lines on ground
+const gridHelper = new THREE.GridHelper(6000, 30, 0x1a1a2e, 0x1a1a2e);
+gridHelper.rotation.x = Math.PI / 2;
+gridHelper.position.z = 0.5;
+scene.add(gridHelper);
+
+// ─── Generate Data ────────────────────────────────────────────────
+const data = generateWalkingData(60, 3);
+const { positions, connections, joints, heelStrikes, toeOffs, fps } = data;
+const totalFrames = positions.length;
+const numJoints = positions[0].length;
+
+document.getElementById('frame-total').textContent = totalFrames - 1;
+
+// ─── Skeleton Meshes ──────────────────────────────────────────────
+const jointGeo = new THREE.SphereGeometry(14, 12, 8);
+const jointMat = new THREE.MeshStandardMaterial({
+  color: 0x9090b8,
+  emissive: 0x404060,
+  emissiveIntensity: 0.3,
+  roughness: 0.4,
+  metalness: 0.3,
+});
+
+const jointMesh = new THREE.InstancedMesh(jointGeo, jointMat, numJoints);
+jointMesh.castShadow = true;
+jointMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(jointMesh);
+
+// Bone lines
+const linePositions = new Float32Array(connections.length * 2 * 3);
+const lineGeo = new THREE.BufferGeometry();
+lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+const lineMat = new THREE.LineBasicMaterial({ color: 0xc8c8e0, linewidth: 1, transparent: true, opacity: 0.7 });
+const lineSegments = new THREE.LineSegments(lineGeo, lineMat);
+scene.add(lineSegments);
+
+// ─── Gait Event Indicators ───────────────────────────────────────
+// Ring that expands on the ground at heel strike / toe off location
+class GaitEventRing {
+  constructor(color, maxRadius = 120) {
+    this.maxRadius = maxRadius;
+    this.life = 0;
+    this.maxLife = 45; // frames
+
+    const geo = new THREE.RingGeometry(0.8, 1.0, 32);
+    const mat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.9,
+      side: THREE.DoubleSide,
+    });
+    this.mesh = new THREE.Mesh(geo, mat);
+    this.mesh.rotation.x = 0; // already in XY plane, ground is Z=0
+    this.mesh.visible = false;
+    scene.add(this.mesh);
+
+    // Vertical beam
+    const beamGeo = new THREE.CylinderGeometry(2, 2, 1, 8);
+    const beamMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.4 });
+    this.beam = new THREE.Mesh(beamGeo, beamMat);
+    this.beam.visible = false;
+    scene.add(this.beam);
+
+    this.color = color;
+  }
+
+  trigger(x, y, z) {
+    this.mesh.position.set(x, y, 1);
+    this.mesh.visible = true;
+    this.life = this.maxLife;
+
+    this.beam.position.set(x, y, z / 2);
+    this.beam.scale.set(1, z || 1, 1);
+    this.beam.rotation.x = Math.PI / 2;
+    this.beam.visible = true;
+  }
+
+  update() {
+    if (this.life <= 0) {
+      this.mesh.visible = false;
+      this.beam.visible = false;
+      return;
+    }
+    this.life--;
+    const t = 1 - (this.life / this.maxLife);
+    const ease = 1 - Math.pow(1 - t, 3); // ease out cubic
+
+    const scale = this.maxRadius * ease;
+    this.mesh.scale.set(scale, scale, 1);
+    this.mesh.material.opacity = (1 - t) * 0.9;
+    this.beam.material.opacity = (1 - t) * 0.3;
+  }
+}
+
+// Pool of rings for each type
+const hsRings = Array.from({length: 4}, () => new GaitEventRing(0xff6b4a, 150));
+const toRings = Array.from({length: 4}, () => new GaitEventRing(0x4adfff, 100));
+let hsRingIdx = 0, toRingIdx = 0;
+
+// ─── Highlighted foot markers for active events ──────────────────
+const hlGeo = new THREE.SphereGeometry(22, 16, 12);
+const hsHighlightMat = new THREE.MeshStandardMaterial({ color: 0xff6b4a, emissive: 0xff6b4a, emissiveIntensity: 0.8, roughness: 0.2 });
+const toHighlightMat = new THREE.MeshStandardMaterial({ color: 0x4adfff, emissive: 0x4adfff, emissiveIntensity: 0.8, roughness: 0.2 });
+
+// Persistent heel/toe markers
+const heelMarkers = {
+  left: new THREE.Mesh(hlGeo, jointMat.clone()),
+  right: new THREE.Mesh(hlGeo, jointMat.clone()),
+};
+const toeMarkers = {
+  left: new THREE.Mesh(hlGeo, jointMat.clone()),
+  right: new THREE.Mesh(hlGeo, jointMat.clone()),
+};
+Object.values(heelMarkers).forEach(m => { m.visible = false; scene.add(m); });
+Object.values(toeMarkers).forEach(m => { m.visible = false; scene.add(m); });
+
+
+// ─── State ────────────────────────────────────────────────────────
+let currentFrame = 0;
+let playing = true;
+let speed = 0.6;
+let lastTime = 0;
+let accumulator = 0;
+const frameInterval = 1000 / fps;
+
+const toastHS = document.getElementById('toast-hs');
+const toastTO = document.getElementById('toast-to');
+const phaseBar = document.getElementById('phase-bar');
+const cycleInfo = document.getElementById('cycle-info');
+let toastHSTimer = 0, toastTOTimer = 0;
+
+// Build event lookup sets for fast detection
+const hsFrameSet = new Map();
+heelStrikes.forEach(e => hsFrameSet.set(e.frame, e));
+const toFrameSet = new Map();
+toeOffs.forEach(e => toFrameSet.set(e.frame, e));
+
+// ─── Camera Tracking ─────────────────────────────────────────────
+let cameraOffset = new THREE.Vector3(1800, -1200, 1000);
+let trackTarget = new THREE.Vector3();
+
+function updateCamera(pelvis) {
+  trackTarget.lerp(new THREE.Vector3(pelvis[0], pelvis[1], pelvis[2] * 0.5), 0.03);
+  controls.target.copy(trackTarget);
+
+  // Gently move camera to follow
+  const desiredPos = trackTarget.clone().add(cameraOffset);
+  camera.position.lerp(desiredPos, 0.02);
+}
+
+// ─── Frame Update ─────────────────────────────────────────────────
+const tmpMat = new THREE.Matrix4();
+
+function setFrame(k) {
+  currentFrame = Math.max(0, Math.min(totalFrames - 1, k));
+  const pts = positions[currentFrame];
+
+  // Update joints
+  for (let i = 0; i < numJoints; i++) {
+    const [x, y, z] = pts[i];
+    tmpMat.makeTranslation(x, y, z);
+    jointMesh.setMatrixAt(i, tmpMat);
+  }
+  jointMesh.instanceMatrix.needsUpdate = true;
+
+  // Update bones
+  const arr = lineGeo.attributes.position.array;
+  let off = 0;
+  connections.forEach(([a, b]) => {
+    const pa = pts[a], pb = pts[b];
+    arr[off++] = pa[0]; arr[off++] = pa[1]; arr[off++] = pa[2];
+    arr[off++] = pb[0]; arr[off++] = pb[1]; arr[off++] = pb[2];
+  });
+  lineGeo.attributes.position.needsUpdate = true;
+
+  // Camera tracking
+  updateCamera(pts[joints.pelvis_center]);
+
+  // Light follows
+  keyLight.position.set(
+    pts[joints.pelvis_center][0] + 1000,
+    pts[joints.pelvis_center][1] - 2000,
+    3000
+  );
+  keyLight.target.position.set(...pts[joints.pelvis_center]);
+  keyLight.target.updateMatrixWorld();
+
+  // ─── Check Gait Events ─────────────────────────────────────
+  const hsEvent = hsFrameSet.get(currentFrame);
+  if (hsEvent) {
+    const heelIdx = hsEvent.side === 'left' ? joints.l_heel : joints.r_heel;
+    const pos = pts[heelIdx];
+    const ring = hsRings[hsRingIdx % hsRings.length];
+    ring.trigger(pos[0], pos[1], pos[2]);
+    hsRingIdx++;
+
+    toastHS.textContent = `⬇ Heel Strike (${hsEvent.side})`;
+    toastHS.classList.add('show');
+    clearTimeout(toastHSTimer);
+    toastHSTimer = setTimeout(() => toastHS.classList.remove('show'), 500);
+  }
+
+  const toEvent = toFrameSet.get(currentFrame);
+  if (toEvent) {
+    const toeIdx = toEvent.side === 'left' ? joints.l_toe : joints.r_toe;
+    const pos = pts[toeIdx];
+    const ring = toRings[toRingIdx % toRings.length];
+    ring.trigger(pos[0], pos[1], pos[2]);
+    toRingIdx++;
+
+    toastTO.textContent = `⬆ Toe Off (${toEvent.side})`;
+    toastTO.classList.add('show');
+    clearTimeout(toastTOTimer);
+    toastTOTimer = setTimeout(() => toastTO.classList.remove('show'), 500);
+  }
+
+  // Phase bar: determine if right foot is in stance or swing
+  // Find last HS and TO for right foot before current frame
+  let lastRHS = -1, lastRTO = -1;
+  for (const e of heelStrikes) { if (e.side === 'right' && e.frame <= currentFrame) lastRHS = e.frame; }
+  for (const e of toeOffs) { if (e.side === 'right' && e.frame <= currentFrame) lastRTO = e.frame; }
+
+  if (lastRHS >= 0 && lastRHS >= lastRTO) {
+    phaseBar.className = 'phase-bar stance';
+  } else {
+    phaseBar.className = 'phase-bar swing';
+  }
+
+  // Cycle info
+  const cycleDur = data.cycleDuration;
+  const cyclePos = currentFrame % cycleDur;
+  const gcPct = Math.round((cyclePos / cycleDur) * 100);
+
+  cycleInfo.innerHTML = `
+    <div>Phase: <span class="val">${lastRHS >= lastRTO ? 'Stance' : 'Swing'}</span> (R)</div>
+    <div>Gait Cycle: <span class="val">${gcPct}%</span></div>
+    <div>Events detected: <span class="val">${heelStrikes.length}</span> HS, <span class="val">${toeOffs.length}</span> TO</div>
+  `;
+
+  document.getElementById('frame-num').textContent = currentFrame;
+  document.getElementById('gc-pct').textContent = gcPct;
+
+  // Update event rings
+  hsRings.forEach(r => r.update());
+  toRings.forEach(r => r.update());
+}
+
+// ─── Resize ───────────────────────────────────────────────────────
+function resize() {
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(wrap);
+resize();
+
+// Initial camera
+camera.position.set(1800, -1200, 1200);
+controls.target.set(0, 0, 500);
+
+// ─── Animation Loop ──────────────────────────────────────────────
+function animate(t) {
+  requestAnimationFrame(animate);
+
+  if (playing) {
+    if (!lastTime) lastTime = t;
+    accumulator += (t - lastTime) * speed;
+    lastTime = t;
+
+    while (accumulator >= frameInterval) {
+      accumulator -= frameInterval;
+      let next = currentFrame + 1;
+      if (next >= totalFrames) next = 0;
+      setFrame(next);
+    }
+  } else {
+    lastTime = 0;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+setFrame(0);
+requestAnimationFrame(animate);
+
+// ─── Controls ─────────────────────────────────────────────────────
+document.getElementById('btn-play').addEventListener('click', () => {
+  playing = !playing;
+  document.getElementById('btn-play').textContent = playing ? 'Pause' : 'Play';
+  lastTime = 0;
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  setFrame(0);
+  cameraOffset.set(1800, -1200, 1000);
+  trackTarget.set(0, 0, 500);
+  camera.position.set(1800, -1200, 1200);
+  controls.target.set(0, 0, 500);
+});
+
+const speedSlider = document.getElementById('speed');
+const speedVal = document.getElementById('speed-val');
+speedSlider.addEventListener('input', () => {
+  speed = parseFloat(speedSlider.value);
+  speedVal.textContent = speed.toFixed(1) + '×';
+});
+
+</script>
+</body>
+</html>
