@@ -466,9 +466,20 @@ function initAnglePlots(data) {
 function getComponentsForJoint(joint) {
   if (!angleData) return [];
   // Find which components exist for this joint
-  return angleData.components.filter(comp =>
+  const available = angleData.components.filter(comp =>
     angleData.data[`left_${joint}_${comp}`] || angleData.data[`right_${joint}_${comp}`]
   );
+
+  // Sort so primary movement is always first:
+  // flex_ext first for hip/knee, dorsi_plantar first for ankle
+  const priority = ['flex_ext', 'dorsi_plantar', 'abd_add', 'int_ext', 'inv_ev'];
+  available.sort((a, b) => {
+    const ia = priority.indexOf(a);
+    const ib = priority.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+
+  return available;
 }
 
 function drawAnglePlots() {
@@ -508,7 +519,7 @@ function drawAnglePlots() {
       showlegend: i === 0,
       legend: { orientation: 'h', x: 1, y: 1.15, xanchor: 'right', font: { family: 'IBM Plex Mono', size: 10 } },
       paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-      shapes: [{ type: 'line', xref: 'paper', x0: 0.5, x1: 0.5, y0: 0, y1: 1, line: { color: '#5c4a3a', width: 1.5 } }],
+      shapes: [{ type: 'line', xref: 'paper', yref: 'paper', x0: 0.5, x1: 0.5, y0: 0, y1: 1, line: { color: '#5c4a3a', width: 2, dash: 'solid' } }],
     };
 
     Plotly.newPlot(div, traces, layout, { responsive: true, displaylogo: false, modeBarButtonsToRemove: ['select2d', 'lasso2d'] });
