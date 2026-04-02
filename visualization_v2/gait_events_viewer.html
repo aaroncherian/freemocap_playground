@@ -139,6 +139,79 @@
   .scrubber input[type=range] { flex: 1; accent-color: var(--bone); }
   .frame-display { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
   .frame-display .val { color: var(--text); font-weight: 500; }
+
+  /* ── Gait Cycle Progress Bars (stacked R + L) ── */
+  .gait-cycle-wrap {
+    display: none;
+    position: absolute; bottom: 18px; right: 18px;
+    width: 320px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .gait-cycle-wrap.visible { display: block; }
+  .gcw-title {
+    font-size: 9px; color: var(--text-dim);
+    letter-spacing: 0.05em; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .gcb-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 5px;
+  }
+  .gcb-row:last-child { margin-bottom: 0; }
+  .gcb-side-label {
+    width: 14px; flex-shrink: 0;
+    font-size: 11px; font-weight: 500;
+    color: var(--text);
+    text-align: right;
+  }
+  .gcb-track {
+    position: relative; flex: 1; height: 22px;
+    border-radius: 3px; overflow: visible;
+    background: rgba(212, 203, 191, 0.5);
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .gcb-stance {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    border-radius: 3px 0 0 3px;
+    transition: width 0.1s ease;
+  }
+  .gcb-swing {
+    position: absolute; top: 0; bottom: 0;
+    border-radius: 0 3px 3px 0;
+    transition: left 0.1s ease, width 0.1s ease;
+  }
+  .gcb-stance.hs-color { background: var(--accent-hs); opacity: 0.30; }
+  .gcb-swing.to-color  { background: var(--accent-to); opacity: 0.30; }
+  .gcb-marker {
+    position: absolute; top: -3px; bottom: -3px; width: 2.5px;
+    background: var(--text);
+    border-radius: 1px;
+    transition: left 0.05s linear;
+    z-index: 2;
+  }
+  .gcb-phase-label {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    font-size: 9px; letter-spacing: 0.03em; color: var(--text-dim);
+    pointer-events: none;
+  }
+  .gcb-phase-label.stance-lbl { left: 6px; }
+  .gcb-phase-label.swing-lbl  { right: 6px; }
+  .gcb-event-tick {
+    position: absolute; top: -1px; bottom: -1px; width: 1px;
+    background: var(--text-dim);
+    opacity: 0.5;
+  }
+  .gcb-event-tick-label {
+    position: absolute; top: -13px;
+    font-size: 8px; color: var(--text-dim);
+    transform: translateX(-50%);
+  }
+  .gcb-info {
+    display: flex; justify-content: space-between;
+    font-size: 9px; color: var(--text-dim);
+    margin-top: 4px; padding: 0 22px;
+  }
+  .gcb-info .val { color: var(--text); font-weight: 500; }
 </style>
 </head>
 <body>
@@ -165,6 +238,42 @@
       <div class="legend-item"><div class="legend-dot to"></div><span style="color:var(--accent-to)">Toe Off</span></div>
     </div>
     <div class="cycle-info" id="cycle-info"></div>
+
+    <!-- Gait cycle progress bars — stacked R + L (shown when gait_phases layer active) -->
+    <div class="gait-cycle-wrap" id="gait-cycle-wrap">
+      <div class="gcw-title">Gait Cycle</div>
+
+      <!-- Right leg -->
+      <div class="gcb-row">
+        <div class="gcb-side-label">R</div>
+        <div class="gcb-track" id="gcb-track-r">
+          <div class="gcb-stance hs-color" id="gcb-stance-r"></div>
+          <div class="gcb-swing to-color" id="gcb-swing-r"></div>
+          <div class="gcb-phase-label stance-lbl">Stance</div>
+          <div class="gcb-phase-label swing-lbl">Swing</div>
+          <div class="gcb-event-tick" id="gcb-to-tick-r"><div class="gcb-event-tick-label">TO</div></div>
+          <div class="gcb-marker" id="gcb-marker-r"></div>
+        </div>
+      </div>
+
+      <!-- Left leg -->
+      <div class="gcb-row">
+        <div class="gcb-side-label">L</div>
+        <div class="gcb-track" id="gcb-track-l">
+          <div class="gcb-stance hs-color" id="gcb-stance-l"></div>
+          <div class="gcb-swing to-color" id="gcb-swing-l"></div>
+          <div class="gcb-phase-label stance-lbl">Stance</div>
+          <div class="gcb-phase-label swing-lbl">Swing</div>
+          <div class="gcb-event-tick" id="gcb-to-tick-l"><div class="gcb-event-tick-label">TO</div></div>
+          <div class="gcb-marker" id="gcb-marker-l"></div>
+        </div>
+      </div>
+
+      <div class="gcb-info">
+        <span>R: <span class="val" id="gcb-pct-r">0</span>%</span>
+        <span>L: <span class="val" id="gcb-pct-l">0</span>%</span>
+      </div>
+    </div>
   </div>
 
   <div id="angle-panel">
@@ -210,9 +319,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const PAL = {
   bg: 0xf4efe8, ground: 0xe8e2d8, grid: 0xd6cfc4,
   bone: 0x5c4a3a, joint: 0x6b5847, jointEmit: 0x4a3a2c,
-  hs: 0xc0623a, to: 0x01575a, fog: 0xf4efe8, ink: 0x2a2218,
+  hs: 0xc0623a, to: 0x01575a, fog: 0xf4efe8,
 };
-const INK_SCALE = 1.08;
 
 // ─── Load main data ──────────────────────────────────────────────
 const loadingEl = document.getElementById('loading');
@@ -470,9 +578,6 @@ const bodyHeight=maxZ-minZ;
 
 // Skeleton
 const jointRadius = Math.max(8, bodyHeight * 0.009);
-const outlineGeo = new THREE.SphereGeometry(jointRadius * INK_SCALE, 14, 10);
-const outlineMesh = new THREE.InstancedMesh(outlineGeo, new THREE.MeshBasicMaterial({ color: PAL.ink, side: THREE.BackSide }), numMarkers);
-outlineMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(outlineMesh);
 const jointMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(jointRadius, 14, 10), new THREE.MeshStandardMaterial({ color: PAL.joint, emissive: PAL.jointEmit, emissiveIntensity: 0.15, roughness: 0.6, metalness: 0.1 }), numMarkers);
 jointMesh.castShadow = true; jointMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(jointMesh);
 
@@ -489,37 +594,452 @@ class GaitEventRing {
   constructor(hexColor, maxRadius) {
     this.maxRadius = maxRadius; this.life = 0; this.maxLife = 10;
     const rg = new THREE.RingGeometry(0.85, 1.0, 48);
-    this.ringOutline = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color: PAL.ink, transparent: true, opacity: 0, side: THREE.DoubleSide }));
-    this.ringOutline.visible = false; this.ringOutline.renderOrder = 0; scene.add(this.ringOutline);
     this.mesh = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color: hexColor, transparent: true, opacity: 0, side: THREE.DoubleSide }));
-    this.mesh.visible = false; this.mesh.renderOrder = 1; scene.add(this.mesh);
+    this.mesh.visible = false; scene.add(this.mesh);
     const sg = new THREE.CylinderGeometry(jointRadius*.3, jointRadius*1, 100, 32).rotateX(Math.PI/2);
-    this.spikeOutline = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: PAL.ink, transparent: true, opacity: 0, side: THREE.BackSide }));
-    this.spikeOutline.visible = false; scene.add(this.spikeOutline);
     this.glow = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: hexColor, transparent: true, opacity: 0 }));
     this.glow.visible = false; scene.add(this.glow);
   }
   trigger(x,y,z) {
     this.mesh.position.set(x,y,1); this.mesh.visible=true; this.mesh.scale.set(0.01,0.01,1);
-    this.ringOutline.position.set(x,y,0.5); this.ringOutline.visible=true; this.ringOutline.scale.set(0.01,0.01,1);
     this.life=this.maxLife;
     this.glow.position.set(x,y,z); this.glow.visible=true; this.glow.scale.set(1,1,1);
-    this.spikeOutline.position.set(x,y,z); this.spikeOutline.visible=true; this.spikeOutline.scale.set(INK_SCALE,INK_SCALE,INK_SCALE);
   }
   update() {
-    if(this.life<=0){this.mesh.visible=false;this.ringOutline.visible=false;this.glow.visible=false;this.spikeOutline.visible=false;return;}
+    if(this.life<=0){this.mesh.visible=false;this.glow.visible=false;return;}
     this.life--;const t=1-(this.life/this.maxLife);const ease=1-Math.pow(1-t,2.5);
-    const s=this.maxRadius*ease;this.mesh.scale.set(s,s,1);this.ringOutline.scale.set(s*INK_SCALE,s*INK_SCALE,1);
+    const s=this.maxRadius*ease;this.mesh.scale.set(s,s,1);
     const fi=Math.min(t/0.1,1),fo=Math.pow(1-t,1.5);
-    this.mesh.material.opacity=fi*fo*0.7;this.ringOutline.material.opacity=fi*fo*0.9;
-    this.glow.material.opacity=fo*0.6;this.spikeOutline.material.opacity=fo*0.75;
-    const gs=1+t*0.3;this.glow.scale.set(gs,gs,gs);this.spikeOutline.scale.set(gs*INK_SCALE,gs*INK_SCALE,gs*INK_SCALE);
+    this.mesh.material.opacity=fi*fo*0.7;
+    this.glow.material.opacity=fo*0.6;
+    const gs=1+t*0.3;this.glow.scale.set(gs,gs,gs);
   }
 }
 
 const hsRings=Array.from({length:6},()=>new GaitEventRing(PAL.hs,bodyHeight*0.09));
 const toRings=Array.from({length:6},()=>new GaitEventRing(PAL.to,bodyHeight*0.07));
 let hsRi=0,toRi=0;
+
+// ═══════════════════════════════════════════════════════════════════
+// ANGLE LABELS — sprites that float near joints showing flex/ext °
+// ═══════════════════════════════════════════════════════════════════
+
+// Map joint names to landmark names for positioning
+const ANGLE_JOINT_LANDMARKS = {
+  left_hip:   ['left_hip', 'l_hip'],
+  right_hip:  ['right_hip', 'r_hip'],
+  left_knee:  ['left_knee', 'l_knee'],
+  right_knee: ['right_knee', 'r_knee'],
+  left_ankle: ['left_ankle', 'l_ankle'],
+  right_ankle:['right_ankle', 'r_ankle'],
+};
+
+function findJointIdx(candidates) {
+  for (const c of candidates) if (nameToIdx.has(c)) return nameToIdx.get(c);
+  return null;
+}
+
+const angleLabelOffset = bodyHeight * 0.06; // how far the label floats from the joint
+
+class AngleLabel {
+  constructor(side, joint) {
+    this.side = side;
+    this.joint = joint;
+    this.key = `${side}_${joint}_${joint === 'ankle' ? 'dorsi_plantar' : 'flex_ext'}`;
+    this.markerIdx = findJointIdx(ANGLE_JOINT_LANDMARKS[`${side}_${joint}`] || []);
+
+    // Canvas for text rendering
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = 128;
+    this.canvas.height = 48;
+    this.ctx = this.canvas.getContext('2d');
+
+    this.texture = new THREE.CanvasTexture(this.canvas);
+    this.texture.minFilter = THREE.LinearFilter;
+
+    const mat = new THREE.SpriteMaterial({
+      map: this.texture, transparent: true, depthTest: false, depthWrite: false,
+    });
+    this.sprite = new THREE.Sprite(mat);
+    // Scale so it's readable but not huge
+    const spriteScale = bodyHeight * 0.12;
+    this.sprite.scale.set(spriteScale, spriteScale * 0.375, 1);
+    this.sprite.visible = false;
+    scene.add(this.sprite);
+
+    this._lastText = '';
+  }
+
+  update(frame, pts) {
+    if (this.markerIdx == null || !angleData) { this.sprite.visible = false; return; }
+
+    const arr = angleData.data[this.key];
+    if (!arr) { this.sprite.visible = false; return; }
+
+    const val = arr[frame];
+    if (val == null || isNaN(val)) { this.sprite.visible = false; return; }
+
+    this.sprite.visible = true;
+
+    // Position near the joint, offset to the side
+    const p = pts[this.markerIdx];
+    if (!p || isNaN(p[0])) { this.sprite.visible = false; return; }
+
+    const xOff = this.side === 'left' ? angleLabelOffset : -angleLabelOffset;
+    this.sprite.position.set(p[0] + xOff, p[1], p[2] + angleLabelOffset * 0.5);
+
+    // Render text only if value changed (avoid thrashing)
+    const text = val.toFixed(1) + '°';
+    if (text !== this._lastText) {
+      this._lastText = text;
+      const ctx = this.ctx;
+      ctx.clearRect(0, 0, 128, 48);
+
+      // Subtle background pill
+      ctx.fillStyle = 'rgba(244, 239, 232, 0.85)';
+      ctx.beginPath();
+      ctx.roundRect(4, 4, 120, 40, 6);
+      ctx.fill();
+
+      // Border
+      ctx.strokeStyle = this.side === 'left' ? '#c0623a' : '#01575a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(4, 4, 120, 40, 6);
+      ctx.stroke();
+
+      // Text
+      ctx.fillStyle = '#3a3028';
+      ctx.font = '500 22px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 64, 26);
+
+      this.texture.needsUpdate = true;
+    }
+  }
+}
+
+// Create labels for all 6 joints (will only show when angle layer is active + data loaded)
+const angleLabels = [];
+['hip', 'knee', 'ankle'].forEach(joint => {
+  ['left', 'right'].forEach(side => {
+    angleLabels.push(new AngleLabel(side, joint));
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// ANGLE ARCS — curved lines drawn at each joint showing the angle
+// ═══════════════════════════════════════════════════════════════════
+
+// Each arc needs 3 markers: proximal, center (the joint), distal
+// The arc is drawn in the plane of those 3 points, centered at the joint,
+// sweeping from one limb segment direction to the other.
+const ARC_JOINT_TRIPLETS = {
+  // [proximal_candidates, center_candidates, distal_candidates]
+  left_hip:   [['trunk_center','neck_center','spine_mid','spine_top'], ['left_hip','l_hip'], ['left_knee','l_knee']],
+  right_hip:  [['trunk_center','neck_center','spine_mid','spine_top'], ['right_hip','r_hip'], ['right_knee','r_knee']],
+  left_knee:  [['left_hip','l_hip'], ['left_knee','l_knee'], ['left_ankle','l_ankle']],
+  right_knee: [['right_hip','r_hip'], ['right_knee','r_knee'], ['right_ankle','r_ankle']],
+  left_ankle: [['left_knee','l_knee'], ['left_ankle','l_ankle'], ['left_foot_index','left_toe','l_toe']],
+  right_ankle:[['right_knee','r_knee'], ['right_ankle','r_ankle'], ['right_foot_index','right_toe','r_toe']],
+};
+
+// Joints whose arcs should be projected into the sagittal plane (YZ, normal = X)
+const SAGITTAL_JOINTS = new Set(['left_hip', 'right_hip']);
+
+const ARC_SEGMENTS = 24; // points along the arc curve
+const ARC_RADIUS_FACTOR = 0.06; // fraction of body height
+
+class JointAngleArc {
+  constructor(side, joint) {
+    this.side = side;
+    this.joint = joint;
+    this.key = `${side}_${joint}_${joint === 'ankle' ? 'dorsi_plantar' : 'flex_ext'}`;
+    this.isSagittal = SAGITTAL_JOINTS.has(`${side}_${joint}`);
+
+    const triplet = ARC_JOINT_TRIPLETS[`${side}_${joint}`];
+    this.proxIdx = triplet ? findJointIdx(triplet[0]) : null;
+    this.centIdx = triplet ? findJointIdx(triplet[1]) : null;
+    this.distIdx = triplet ? findJointIdx(triplet[2]) : null;
+
+    this.arcRadius = bodyHeight * ARC_RADIUS_FACTOR;
+
+    // Line geometry for the arc
+    const posArr = new Float32Array((ARC_SEGMENTS + 1) * 3);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+
+    const color = side === 'left' ? 0xc0623a : 0x01575a;
+    const mat = new THREE.LineBasicMaterial({
+      color, transparent: true, opacity: 0.8, depthTest: false,
+    });
+    this.line = new THREE.Line(geo, mat);
+    this.line.frustumCulled = false;
+    this.line.visible = false;
+    this.line.renderOrder = 10;
+    scene.add(this.line);
+  }
+
+  update(frame, pts) {
+    if (this.proxIdx == null || this.centIdx == null || this.distIdx == null || !angleData) {
+      this.line.visible = false;
+      return;
+    }
+
+    const angleArr = angleData.data[this.key];
+    if (!angleArr) { this.line.visible = false; return; }
+    const angleDeg = angleArr[frame];
+    if (angleDeg == null || isNaN(angleDeg)) { this.line.visible = false; return; }
+
+    const pA = pts[this.proxIdx]; // proximal
+    const pB = pts[this.centIdx]; // center (joint)
+    const pC = pts[this.distIdx]; // distal
+
+    if (!pA || !pB || !pC || isNaN(pA[0]) || isNaN(pB[0]) || isNaN(pC[0])) {
+      this.line.visible = false;
+      return;
+    }
+
+    this.line.visible = true;
+
+    // Vectors from center to proximal and distal
+    let vA = new THREE.Vector3(pA[0]-pB[0], pA[1]-pB[1], pA[2]-pB[2]);
+    let vC = new THREE.Vector3(pC[0]-pB[0], pC[1]-pB[1], pC[2]-pB[2]);
+
+    let normal;
+
+    if (this.isSagittal) {
+      // Project both vectors into the sagittal plane (YZ plane, normal = X axis)
+      // This constrains the arc to show rotation around the mediolateral axis
+      vA.x = 0;
+      vC.x = 0;
+
+      if (vA.lengthSq() < 0.001 || vC.lengthSq() < 0.001) { this.line.visible = false; return; }
+
+      vA.normalize();
+      vC.normalize();
+
+      // Fixed normal: both sides use the same direction so arcs both appear in front
+      // +X makes the arc sweep forward (toward viewer from front/sagittal view)
+      normal = new THREE.Vector3(-1, 0, 0);
+    } else {
+      // Standard: arc in the plane of the 3 markers
+      vA.normalize();
+      vC.normalize();
+      normal = new THREE.Vector3().crossVectors(vA, vC).normalize();
+    }
+
+    // Angle between the two (projected) segment vectors
+    const dot = THREE.MathUtils.clamp(vA.dot(vC), -1, 1);
+    const sweepAngle = Math.acos(dot);
+
+    if (normal.lengthSq() < 0.001) { this.line.visible = false; return; }
+
+    // Build the arc: rotate vA toward vC across the full sweep
+    const center = new THREE.Vector3(pB[0], pB[1], pB[2]);
+    const arr = this.line.geometry.attributes.position.array;
+    const steps = ARC_SEGMENTS;
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const theta = sweepAngle * t;
+
+      // Rodrigues rotation of vA around normal by theta
+      const cosT = Math.cos(theta);
+      const sinT = Math.sin(theta);
+      const nDotV = normal.dot(vA);
+      const cross = new THREE.Vector3().crossVectors(normal, vA);
+
+      const rotated = new THREE.Vector3(
+        vA.x * cosT + cross.x * sinT + normal.x * nDotV * (1 - cosT),
+        vA.y * cosT + cross.y * sinT + normal.y * nDotV * (1 - cosT),
+        vA.z * cosT + cross.z * sinT + normal.z * nDotV * (1 - cosT),
+      );
+
+      arr[i*3]   = center.x + rotated.x * this.arcRadius;
+      arr[i*3+1] = center.y + rotated.y * this.arcRadius;
+      arr[i*3+2] = center.z + rotated.z * this.arcRadius;
+    }
+
+    this.line.geometry.attributes.position.needsUpdate = true;
+    this.line.geometry.setDrawRange(0, steps + 1);
+  }
+}
+
+// Create arcs for all 6 joints
+const angleArcs = [];
+['hip', 'knee', 'ankle'].forEach(joint => {
+  ['left', 'right'].forEach(side => {
+    angleArcs.push(new JointAngleArc(side, joint));
+  });
+});
+
+function updateAngleLabels(frame, pts) {
+  const show = isLayerActive('joint_angles') && angleData;
+  angleLabels.forEach(label => {
+    if (show) label.update(frame, pts);
+    else label.sprite.visible = false;
+  });
+  angleArcs.forEach(arc => {
+    if (show) arc.update(frame, pts);
+    else arc.line.visible = false;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GAIT PHASES — stance/swing leg coloring + gait cycle progress bar
+// ═══════════════════════════════════════════════════════════════════
+
+// Identify which connections belong to each leg by landmark name keywords
+const LEG_KW_L = ['left_hip','left_knee','left_ankle','left_heel','left_foot','left_toe','l_hip','l_knee','l_ankle','l_heel','l_foot','l_toe'];
+const LEG_KW_R = LEG_KW_L.map(s => s.replace('left','right').replace('l_','r_'));
+
+function isLegConn(connIdx, side) {
+  const [a,b] = connections[connIdx];
+  const na = (landmarks[a]||'').toLowerCase(), nb = (landmarks[b]||'').toLowerCase();
+  const kws = side === 'left' ? LEG_KW_L : LEG_KW_R;
+  return kws.some(kw => na.includes(kw) || nb.includes(kw));
+}
+
+const legConnL = [], legConnR = [];
+connections.forEach((_,i) => {
+  if (isLegConn(i,'left')) legConnL.push(i);
+  if (isLegConn(i,'right')) legConnR.push(i);
+});
+
+// Create colored line overlays for each leg
+function makeLegLines(count, color) {
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 2 * 3), 3));
+  const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.9, linewidth: 2 });
+  const lines = new THREE.LineSegments(geo, mat);
+  lines.frustumCulled = false;
+  lines.visible = false;
+  scene.add(lines);
+  return lines;
+}
+
+const legLinesL = makeLegLines(Math.max(legConnL.length,1), PAL.hs);
+const legLinesR = makeLegLines(Math.max(legConnR.length,1), PAL.hs);
+
+// Phase detection for both legs: returns 'stance' or 'swing' for a given side at a given frame
+// Stance = between heel strike and next toe off (same side)
+// Swing = between toe off and next heel strike (same side)
+function getPhase(frame, side) {
+  let lastHS = -1, lastTO = -1;
+  for (const e of heelStrikes) if (e.side === side && e.frame <= frame) lastHS = e.frame;
+  for (const e of toeOffs) if (e.side === side && e.frame <= frame) lastTO = e.frame;
+  if (lastHS < 0) return 'unknown';
+  return lastHS >= lastTO ? 'stance' : 'swing';
+}
+
+// Get gait cycle progress for a given side (0-100%)
+// Cycle = HS to next HS; also returns stance/swing boundary
+function getGaitCycleInfo(frame, side) {
+  const sideHS = heelStrikes.filter(e => e.side === side).map(e => e.frame);
+  const sideTO = toeOffs.filter(e => e.side === side).map(e => e.frame);
+
+  let prevHS = -1, nextHS = -1;
+  for (const f of sideHS) { if (f <= frame) prevHS = f; }
+  for (const f of sideHS) { if (f > frame) { nextHS = f; break; } }
+
+  if (prevHS < 0 || nextHS < 0) return null;
+
+  const cycleDur = nextHS - prevHS;
+  const pct = ((frame - prevHS) / cycleDur) * 100;
+
+  // Find toe off within this cycle
+  let toFrame = -1;
+  for (const f of sideTO) { if (f > prevHS && f < nextHS) { toFrame = f; break; } }
+  const toPct = toFrame >= 0 ? ((toFrame - prevHS) / cycleDur) * 100 : 62;
+
+  return { pct, toPct, cycleDur, prevHS, nextHS };
+}
+
+const gcWrap = document.getElementById('gait-cycle-wrap');
+
+// DOM refs for both bars
+const gcbEls = {
+  right: {
+    stance: document.getElementById('gcb-stance-r'),
+    swing:  document.getElementById('gcb-swing-r'),
+    marker: document.getElementById('gcb-marker-r'),
+    toTick: document.getElementById('gcb-to-tick-r'),
+    pct:    document.getElementById('gcb-pct-r'),
+  },
+  left: {
+    stance: document.getElementById('gcb-stance-l'),
+    swing:  document.getElementById('gcb-swing-l'),
+    marker: document.getElementById('gcb-marker-l'),
+    toTick: document.getElementById('gcb-to-tick-l'),
+    pct:    document.getElementById('gcb-pct-l'),
+  },
+};
+
+function updateCycleBar(frame, side) {
+  const els = gcbEls[side];
+  const gc = getGaitCycleInfo(frame, side);
+  if (!gc) {
+    els.marker.style.display = 'none';
+    els.pct.textContent = '—';
+    return;
+  }
+  els.marker.style.display = '';
+  els.stance.style.width = gc.toPct + '%';
+  els.swing.style.left = gc.toPct + '%';
+  els.swing.style.width = (100 - gc.toPct) + '%';
+  els.toTick.style.left = gc.toPct + '%';
+  els.marker.style.left = gc.pct + '%';
+  els.pct.textContent = Math.round(gc.pct);
+}
+
+const STANCE_COLOR_L = new THREE.Color(0xc0623a); // burnt sienna
+const STANCE_COLOR_R = new THREE.Color(0xc0623a);
+const SWING_COLOR_L  = new THREE.Color(0x01575a); // teal
+const SWING_COLOR_R  = new THREE.Color(0x01575a);
+
+function updateGaitPhases(frame, pts) {
+  const active = isLayerActive('gait_phases');
+  legLinesL.visible = active;
+  legLinesR.visible = active;
+  gcWrap.classList.toggle('visible', active);
+
+  if (!active) return;
+
+  // Determine phase for each leg
+  const phaseL = getPhase(frame, 'left');
+  const phaseR = getPhase(frame, 'right');
+
+  // Color the leg overlays
+  legLinesL.material.color.copy(phaseL === 'stance' ? STANCE_COLOR_L : SWING_COLOR_L);
+  legLinesR.material.color.copy(phaseR === 'stance' ? STANCE_COLOR_R : SWING_COLOR_R);
+
+  // Update leg line positions
+  [
+    { lines: legLinesL, indices: legConnL },
+    { lines: legLinesR, indices: legConnR },
+  ].forEach(({ lines, indices }) => {
+    const arr = lines.geometry.attributes.position.array;
+    let o = 0;
+    indices.forEach(ci => {
+      const [a,b] = connections[ci];
+      const pa = pts[a], pb = pts[b];
+      if (pa && pb && !isNaN(pa[0]) && !isNaN(pb[0])) {
+        arr[o++]=pa[0]; arr[o++]=pa[1]; arr[o++]=pa[2];
+        arr[o++]=pb[0]; arr[o++]=pb[1]; arr[o++]=pb[2];
+      } else { for(let n=0;n<6;n++) arr[o++]=NaN; }
+    });
+    lines.geometry.attributes.position.needsUpdate = true;
+  });
+
+  // Update both gait cycle bars
+  updateCycleBar(frame, 'right');
+  updateCycleBar(frame, 'left');
+}
+
+// Register gait_phases as a client-side layer (no server data needed)
+createLayerButton({ id: 'gait_phases', label: 'Gait Phases', dataUrl: null });
 
 const hsMap=new Map();heelStrikes.forEach(e=>hsMap.set(e.frame,e));
 const toMap=new Map();toeOffs.forEach(e=>toMap.set(e.frame,e));
@@ -551,8 +1071,8 @@ function setFrame(k) {
   currentFrame=Math.max(0,Math.min(totalFrames-1,k));
   const pts=positions[currentFrame];
 
-  for(let i=0;i<numMarkers;i++){const[x,y,z]=pts[i];if(isNaN(x)||isNaN(y)||isNaN(z))tmp.makeScale(0,0,0);else tmp.makeTranslation(x,y,z);jointMesh.setMatrixAt(i,tmp);outlineMesh.setMatrixAt(i,tmp);}
-  jointMesh.instanceMatrix.needsUpdate=true;outlineMesh.instanceMatrix.needsUpdate=true;
+  for(let i=0;i<numMarkers;i++){const[x,y,z]=pts[i];if(isNaN(x)||isNaN(y)||isNaN(z))tmp.makeScale(0,0,0);else tmp.makeTranslation(x,y,z);jointMesh.setMatrixAt(i,tmp);}
+  jointMesh.instanceMatrix.needsUpdate=true;
 
   if(lineSegments){const a=lineSegments.geometry.attributes.position.array;let o=0;connections.forEach(([ai,bi])=>{const pa=pts[ai],pb=pts[bi];if(pa&&pb&&!isNaN(pa[0])&&!isNaN(pb[0])){a[o++]=pa[0];a[o++]=pa[1];a[o++]=pa[2];a[o++]=pb[0];a[o++]=pb[1];a[o++]=pb[2];}else{for(let n=0;n<6;n++)a[o++]=NaN;}});lineSegments.geometry.attributes.position.needsUpdate=true;}
 
@@ -580,6 +1100,12 @@ function setFrame(k) {
   document.getElementById('frame-num').textContent=currentFrame;
   scrubber.value=String(currentFrame);
   hsRings.forEach(r=>r.update());toRings.forEach(r=>r.update());
+
+  // Update angle labels in 3D
+  updateAngleLabels(currentFrame, pts);
+
+  // Update gait phase leg coloring + cycle bar
+  updateGaitPhases(currentFrame, pts);
 
   // Update angle plots window
   updateAngleWindow(currentFrame);
