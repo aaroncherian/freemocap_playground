@@ -16,10 +16,15 @@
     --border: #d4cbbf;
     --text: #3a3028;
     --text-dim: #8a7e70;
-    --accent-hs: #c0623a;
-    --accent-hs-soft: rgba(192, 98, 58, 0.12);
-    --accent-to: #01575a;
-    --accent-to-soft: rgba(45, 107, 79, 0.12);
+    --ui-accent: #c0623a;
+    --left: #01575a;
+    --left-soft: rgba(1, 87, 90, 0.12);
+    --right: #c43e4e;
+    --right-soft: rgba(196, 62, 78, 0.12);
+    --accent-hs: #3d4f8a;
+    --accent-hs-soft: rgba(61, 79, 138, 0.15);
+    --accent-to: #4d7a3e;
+    --accent-to-soft: rgba(77, 122, 62, 0.12);
     --bone: #5c4a3a;
     --joint: #6b5847;
   }
@@ -74,20 +79,15 @@
   .layer-btn:hover { border-color: var(--text-dim); background: var(--surface-hover); }
   .layer-btn.active { border-color: var(--bone); color: var(--text); background: rgba(92, 74, 58, 0.08); }
   .layer-btn .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); transition: background 0.15s; }
-  .layer-btn.active .dot { background: var(--accent-hs); }
+  .layer-btn.active .dot { background: var(--ui-accent); }
 
   /* ── Canvas ── */
   #canvas-wrap { position: relative; overflow: hidden; min-height: 0; }
   canvas { display: block; width: 100%; height: 100%; }
 
-  /* ── Toasts, phase bar, legend, cycle info — same as before ── */
-  .event-toast { position: absolute; top: 20px; right: 20px; padding: 8px 18px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; pointer-events: none; opacity: 0; transform: translateY(-6px); transition: opacity 0.15s ease, transform 0.15s ease; }
-  .event-toast.show { opacity: 1; transform: translateY(0); }
-  .event-toast.hs { background: var(--accent-hs-soft); border: 1px solid rgba(192,98,58,0.35); color: var(--accent-hs); }
-  .event-toast.to { background: var(--accent-to-soft); border: 1px solid rgba(1,87,90,0.35); color: var(--accent-to); }
   .phase-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; transition: background 0.3s ease; }
-  .phase-bar.stance { background: linear-gradient(90deg, var(--accent-hs), rgba(192,98,58,0.15)); }
-  .phase-bar.swing { background: linear-gradient(90deg, var(--accent-to), rgba(1,87,90,0.15)); }
+  .phase-bar.stance { background: linear-gradient(90deg, var(--accent-hs), rgba(61,79,138,0.15)); }
+  .phase-bar.swing { background: linear-gradient(90deg, var(--accent-to), rgba(77,122,62,0.15)); }
   .legend { position: absolute; bottom: 16px; left: 18px; display: flex; flex-direction: column; gap: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
   .legend-item { display: flex; align-items: center; gap: 7px; }
   .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
@@ -134,7 +134,7 @@
   footer button { background: none; border: 1px solid var(--border); color: var(--text); padding: 5px 14px; border-radius: 3px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 11px; transition: border-color 0.2s, background 0.2s; }
   footer button:hover { border-color: var(--text-dim); background: var(--surface-hover); }
   .speed-control { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
-  .speed-control input[type=range] { width: 90px; accent-color: var(--accent-hs); }
+  .speed-control input[type=range] { width: 90px; accent-color: var(--bone); }
   .scrubber { flex: 1; min-width: 180px; display: flex; align-items: center; gap: 8px; }
   .scrubber input[type=range] { flex: 1; accent-color: var(--bone); }
   .frame-display { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
@@ -180,8 +180,8 @@
     border-radius: 0 3px 3px 0;
     transition: left 0.1s ease, width 0.1s ease;
   }
-  .gcb-stance.hs-color { background: var(--accent-hs); opacity: 0.30; }
-  .gcb-swing.to-color  { background: var(--accent-to); opacity: 0.30; }
+  .gcb-stance.hs-color { background: var(--accent-hs); opacity: 0.35; }
+  .gcb-swing.to-color  { background: var(--accent-to); opacity: 0.35; }
   .gcb-marker {
     position: absolute; top: -3px; bottom: -3px; width: 2.5px;
     background: var(--text);
@@ -230,8 +230,6 @@
 
   <div id="canvas-wrap">
     <canvas id="c"></canvas>
-    <div class="event-toast hs" id="toast-hs">Heel Strike</div>
-    <div class="event-toast to" id="toast-to">Toe Off</div>
     <div class="phase-bar" id="phase-bar"></div>
     <div class="legend" id="gait-legend" style="display:none">
       <div class="legend-item"><div class="legend-dot hs"></div><span style="color:var(--accent-hs)">Heel Strike</span></div>
@@ -316,10 +314,25 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+// ═══════════════════════════════════════════════════════════════════
+// UNIFIED COLOR PALETTE — change colors here, everything updates
+// ═══════════════════════════════════════════════════════════════════
+const COLORS = {
+  left:  { hex: 0x01575a, css: '#01575a' },  // teal
+  right: { hex: 0xc43e4e, css: '#c43e4e' },  // bright warm red
+  hs:    { hex: 0x3d4f8a, css: '#3d4f8a' },  // indigo (heel strike)
+  to:    { hex: 0x4d7a3e, css: '#4d7a3e' },  // forest sage (toe off)
+  bone:  { hex: 0x5c4a3a, css: '#5c4a3a' },  // walnut
+  joint: { hex: 0x6b5847, css: '#6b5847' },  // warm brown
+};
+
+// Three.js-friendly flat palette (backwards compat)
 const PAL = {
   bg: 0xf4efe8, ground: 0xe8e2d8, grid: 0xd6cfc4,
-  bone: 0x5c4a3a, joint: 0x6b5847, jointEmit: 0x4a3a2c,
-  hs: 0xc0623a, to: 0x01575a, fog: 0xf4efe8,
+  bone: COLORS.bone.hex, joint: COLORS.joint.hex, jointEmit: 0x4a3a2c,
+  left: COLORS.left.hex, right: COLORS.right.hex,
+  hs: COLORS.hs.hex, to: COLORS.to.hex,
+  fog: 0xf4efe8,
 };
 
 // ─── Load main data ──────────────────────────────────────────────
@@ -425,8 +438,8 @@ function isLayerActive(id) { return layerState[id]?.active ?? false; }
 // JOINT ANGLE PLOTS
 // ═══════════════════════════════════════════════════════════════════
 const ANGLE_COLORS = {
-  left: '#c0623a',   // burnt sienna
-  right: '#01575a',  // teal
+  left: COLORS.left.css,
+  right: COLORS.right.css,
 };
 
 // Friendly display names for components
@@ -713,7 +726,7 @@ class AngleLabel {
       ctx.fill();
 
       // Border
-      ctx.strokeStyle = this.side === 'left' ? '#c0623a' : '#01575a';
+      ctx.strokeStyle = this.side === 'left' ? COLORS.left.css : COLORS.right.css;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.roundRect(4, 4, 120, 40, 6);
@@ -757,7 +770,7 @@ const ARC_JOINT_TRIPLETS = {
 };
 
 // Joints whose arcs should be projected into the sagittal plane (YZ, normal = X)
-const SAGITTAL_JOINTS = new Set(['left_hip', 'right_hip']);
+const SAGITTAL_JOINTS = new Set(['left_hip', 'right_hip', 'left_knee', 'right_knee', 'left_ankle', 'right_ankle']);
 
 const ARC_SEGMENTS = 24; // points along the arc curve
 const ARC_RADIUS_FACTOR = 0.06; // fraction of body height
@@ -781,7 +794,7 @@ class JointAngleArc {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
-    const color = side === 'left' ? 0xc0623a : 0x01575a;
+    const color = side === 'left' ? PAL.left : PAL.right;
     const mat = new THREE.LineBasicMaterial({
       color, transparent: true, opacity: 0.8, depthTest: false,
     });
@@ -833,7 +846,9 @@ class JointAngleArc {
 
       // Fixed normal: both sides use the same direction so arcs both appear in front
       // +X makes the arc sweep forward (toward viewer from front/sagittal view)
-      normal = new THREE.Vector3(-1, 0, 0);
+      // Hip/ankle arcs sweep in front (-X), knee arcs sweep behind (+X)
+      const normalDir = this.joint === 'knee' ? 1 : -1;
+      normal = new THREE.Vector3(normalDir, 0, 0);
     } else {
       // Standard: arc in the plane of the 3 markers
       vA.normalize();
@@ -931,8 +946,8 @@ function makeLegLines(count, color) {
   return lines;
 }
 
-const legLinesL = makeLegLines(Math.max(legConnL.length,1), PAL.hs);
-const legLinesR = makeLegLines(Math.max(legConnR.length,1), PAL.hs);
+const legLinesL = makeLegLines(Math.max(legConnL.length,1), PAL.left);
+const legLinesR = makeLegLines(Math.max(legConnR.length,1), PAL.right);
 
 // Phase detection for both legs: returns 'stance' or 'swing' for a given side at a given frame
 // Stance = between heel strike and next toe off (same side)
@@ -1005,10 +1020,8 @@ function updateCycleBar(frame, side) {
   els.pct.textContent = Math.round(gc.pct);
 }
 
-const STANCE_COLOR_L = new THREE.Color(0xc0623a); // burnt sienna
-const STANCE_COLOR_R = new THREE.Color(0xc0623a);
-const SWING_COLOR_L  = new THREE.Color(0x01575a); // teal
-const SWING_COLOR_R  = new THREE.Color(0x01575a);
+const LEG_COLOR_L = new THREE.Color(PAL.left);   // teal
+const LEG_COLOR_R = new THREE.Color(PAL.right);  // plum
 
 function updateGaitPhases(frame, pts) {
   const active = isLayerActive('gait_phases');
@@ -1022,9 +1035,11 @@ function updateGaitPhases(frame, pts) {
   const phaseL = getPhase(frame, 'left');
   const phaseR = getPhase(frame, 'right');
 
-  // Color the leg overlays
-  legLinesL.material.color.copy(phaseL === 'stance' ? STANCE_COLOR_L : SWING_COLOR_L);
-  legLinesR.material.color.copy(phaseR === 'stance' ? STANCE_COLOR_R : SWING_COLOR_R);
+  // Legs stay their side color; stance = full opacity, swing = lighter
+  legLinesL.material.color.copy(LEG_COLOR_L);
+  legLinesR.material.color.copy(LEG_COLOR_R);
+  legLinesL.material.opacity = phaseL === 'stance' ? 0.95 : 0.4;
+  legLinesR.material.opacity = phaseR === 'stance' ? 0.95 : 0.4;
 
   // Update leg line positions
   [
@@ -1065,16 +1080,24 @@ const pelvisIdx=findPelvisIdx();
 
 let currentFrame=0,playing=true,speed=0.6,lastTime=0,accumulator=0;
 const frameInterval=1000/fps;
-const toastHS=document.getElementById('toast-hs'),toastTO=document.getElementById('toast-to');
 const phaseBar=document.getElementById('phase-bar'),cycleInfo=document.getElementById('cycle-info');
-let toastHST=0,toastTOT=0;
 
 const camDist=bodyHeight*2.5;
 const camOff=new THREE.Vector3(camDist*0.8,-camDist*0.6,bodyHeight*0.6);
 const trackTgt=new THREE.Vector3(centroid[0],centroid[1],centroid[2]*0.5);
 camera.position.set(centroid[0]+camOff.x,centroid[1]+camOff.y,centroid[2]*0.5+camOff.z);
 controls.target.copy(trackTgt);
-function updateCam(p){trackTgt.lerp(new THREE.Vector3(p[0],p[1],p[2]*0.5),0.03);controls.target.copy(trackTgt);camera.position.lerp(trackTgt.clone().add(camOff),0.02);}
+
+// Camera tracking: follows skeleton until user interacts, then stays put
+let cameraTracking = true;
+controls.addEventListener('start', () => { cameraTracking = false; });
+
+function updateCam(p) {
+  if (!cameraTracking) return;
+  trackTgt.lerp(new THREE.Vector3(p[0], p[1], p[2]*0.5), 0.03);
+  controls.target.copy(trackTgt);
+  camera.position.lerp(trackTgt.clone().add(camOff), 0.02);
+}
 
 const tmp=new THREE.Matrix4();
 
@@ -1093,9 +1116,9 @@ function setFrame(k) {
   // Gait events (only if layer active)
   if (isLayerActive('gait_events')) {
     const hs=hsMap.get(currentFrame);
-    if(hs){const idx=hs.side==='left'?lHeelIdx:rHeelIdx;if(idx!=null){const p=pts[idx];hsRings[hsRi%6].trigger(p[0],p[1],p[2]);hsRi++;}toastHS.textContent=`Heel Strike · ${hs.side}`;toastHS.classList.add('show');clearTimeout(toastHST);toastHST=setTimeout(()=>toastHS.classList.remove('show'),500);}
+    if(hs){const idx=hs.side==='left'?lHeelIdx:rHeelIdx;if(idx!=null){const p=pts[idx];hsRings[hsRi%6].trigger(p[0],p[1],p[2]);hsRi++;}}
     const to=toMap.get(currentFrame);
-    if(to){const idx=to.side==='left'?lToeIdx:rToeIdx;if(idx!=null){const p=pts[idx];toRings[toRi%6].trigger(p[0],p[1],p[2]);toRi++;}toastTO.textContent=`Toe Off · ${to.side}`;toastTO.classList.add('show');clearTimeout(toastTOT);toastTOT=setTimeout(()=>toastTO.classList.remove('show'),500);}
+    if(to){const idx=to.side==='left'?lToeIdx:rToeIdx;if(idx!=null){const p=pts[idx];toRings[toRi%6].trigger(p[0],p[1],p[2]);toRi++;}}
 
     let lrhs=-1,lrto=-1;
     for(const e of heelStrikes)if(e.side==='right'&&e.frame<=currentFrame)lrhs=e.frame;
@@ -1133,7 +1156,7 @@ function animate(t){
 setFrame(0);requestAnimationFrame(animate);
 
 document.getElementById('btn-play').addEventListener('click',()=>{playing=!playing;document.getElementById('btn-play').textContent=playing?'Pause':'Play';lastTime=0;});
-document.getElementById('btn-reset').addEventListener('click',()=>{setFrame(0);trackTgt.set(centroid[0],centroid[1],centroid[2]*0.5);camera.position.set(centroid[0]+camOff.x,centroid[1]+camOff.y,centroid[2]*0.5+camOff.z);controls.target.copy(trackTgt);});
+document.getElementById('btn-reset').addEventListener('click',()=>{setFrame(0);cameraTracking=true;trackTgt.set(centroid[0],centroid[1],centroid[2]*0.5);camera.position.set(centroid[0]+camOff.x,centroid[1]+camOff.y,centroid[2]*0.5+camOff.z);controls.target.copy(trackTgt);});
 document.getElementById('speed').addEventListener('input',e=>{speed=parseFloat(e.target.value);document.getElementById('speed-val').textContent=speed.toFixed(1)+'×';});
 scrubber.addEventListener('input',()=>setFrame(Number(scrubber.value)));
 window.addEventListener('keydown',e=>{

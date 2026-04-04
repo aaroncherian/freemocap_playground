@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Balance Visualization — CTSIB-M</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root {
+    --bg: #f4efe8; --surface: #ebe5db; --surface-hover: #e2dbd0;
+    --border: #d4cbbf; --text: #3a3028; --text-dim: #8a7e70;
+    --bone: #5c4a3a; --joint: #6b5847;
+    --com-trail: #01575a; --com-dot: #c43e4e; --ellipse: #3d4f8a;
+  }
+
+  html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Crimson Pro',Georgia,serif; }
+  #app { display:grid; grid-template-rows:auto 1fr auto; height:100%; }
+
+  #loading { position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:var(--bg);font-size:15px;color:var(--text-dim); }
+  #loading .spinner { width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--com-trail);border-radius:50%;animation:spin 0.9s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg);} }
+  #loading.hidden { display:none; }
+
+  header { padding:12px 28px 8px;display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--border);background:var(--surface); }
+  header h1 { font-size:18px;font-weight:500;letter-spacing:0.02em; }
+  header .subtitle { font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim); }
+
+  #panels { display:grid;grid-template-columns:repeat(4,1fr);gap:0;min-height:0;overflow:hidden; }
+  .panel { position:relative;border-right:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column; }
+  .panel:last-child { border-right:none; }
+  .panel-header { padding:10px 12px 8px;background:var(--surface);border-bottom:1px solid var(--border);text-align:center; }
+  .panel-title { font-family:'Crimson Pro',Georgia,serif;font-size:15px;font-weight:500;letter-spacing:0.01em;color:var(--text); }
+  .panel-canvas { flex:3;position:relative;min-height:0; }
+  .panel-canvas canvas { display:block;width:100%;height:100%; }
+
+  .panel-stats {
+    padding:8px 14px;display:flex;justify-content:space-around;gap:8px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);
+    background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  }
+  .stat-block { display:flex;flex-direction:column;align-items:center;gap:1px; }
+  .stat-label { font-size:11px;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-dim); }
+  .stat-val { font-size:16px;font-weight:500;color:var(--text); }
+  .stat-unit { font-size:11px;color:var(--text-dim); }
+
+  .com-panel { flex:2;position:relative;min-height:0;background:#faf8f4; }
+  .com-panel canvas { display:block;width:100%;height:100%; }
+
+  footer { padding:10px 28px;display:flex;align-items:center;gap:16px;border-top:1px solid var(--border);background:var(--surface);flex-wrap:wrap; }
+  footer button { background:none;border:1px solid var(--border);color:var(--text);padding:5px 14px;border-radius:3px;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:11px;transition:border-color 0.2s,background 0.2s; }
+  footer button:hover { border-color:var(--text-dim);background:var(--surface-hover); }
+  .speed-control { display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim); }
+  .speed-control input[type=range] { width:90px;accent-color:var(--bone); }
+  .scrubber { flex:1;min-width:180px;display:flex;align-items:center;gap:8px; }
+  .scrubber input[type=range] { flex:1;accent-color:var(--bone); }
+  .frame-display { font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim); }
+  .frame-display .val { color:var(--text);font-weight:500; }
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div><div>Loading balance data …</div></div>
+<div id="app">
+  <header>
+    <h1>Balance — CTSIB-M Conditions</h1>
+    <span class="subtitle" id="subtitle">Loading …</span>
+  </header>
+  <div id="panels"></div>
+  <footer>
+    <button id="btn-play">Pause</button>
+    <button id="btn-reset">Reset</button>
+    <div class="speed-control"><span>Speed</span><input type="range" id="speed" min="0.1" max="3" step="0.1" value="1.0"/><span id="speed-val">1.0×</span></div>
+    <div class="scrubber"><input type="range" id="scrubber" min="0" max="0" step="1" value="0"/></div>
+    <div class="frame-display">Frame <span class="val" id="frame-num">0</span> / <span id="frame-total">0</span></div>
+  </footer>
+</div>
+
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/"
+} }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─── Load Data ───────────────────────────────────────────────────
+const loadingEl = document.getElementById('loading');
+let data;
+try {
+  const r = await fetch('/balance_data.json');
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  data = await r.json();
+} catch (err) {
+  loadingEl.innerHTML = `<div style="color:#c43e4e">${err.message}</div><div style="margin-top:8px;font-size:12px;color:var(--text-dim)">Make sure balance_server.py is running.</div>`;
+  throw err;
+}
+
+const { tracker, fps, skeleton, conditions, condition_order, short_labels, frame_ranges } = data;
+const { positions: allPositions, connections: rawConns, landmarks } = skeleton;
+
+const nameToIdx = new Map();
+landmarks.forEach((n,i) => nameToIdx.set(n,i));
+
+const conns = [];
+rawConns.forEach(c => {
+  let a,b;
+  if(Array.isArray(c)){[a,b]=c;} else if(c?.proximal&&c?.distal){a=c.proximal;b=c.distal;} else return;
+  const ia=typeof a==='number'?a:nameToIdx.get(a), ib=typeof b==='number'?b:nameToIdx.get(b);
+  if(ia!=null&&ib!=null) conns.push([ia,ib]);
+});
+
+const numMarkers = allPositions[0].length;
+
+// Figure out condition keys and frame count
+const conditionKeys = condition_order.filter(c => conditions[c]);
+const comFrames = conditionKeys.length > 0 ? conditions[conditionKeys[0]].num_frames : 0;
+
+document.getElementById('subtitle').textContent = `${tracker} · ${comFrames} frames per condition @ ${fps} Hz`;
+document.getElementById('frame-total').textContent = comFrames - 1;
+const scrubber = document.getElementById('scrubber');
+scrubber.max = String(comFrames - 1);
+loadingEl.classList.add('hidden');
+
+// ─── Create 4 Panels ────────────────────────────────────────────
+const panelsContainer = document.getElementById('panels');
+const panels = [];
+
+conditionKeys.forEach((condKey, idx) => {
+  const cond = conditions[condKey];
+  // Full condition name for title
+  const fullLabel = condKey.replace('/', ' / ');
+
+  // DOM
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'panel-header';
+  hdr.innerHTML = `<div class="panel-title">${fullLabel}</div>`;
+
+  const canvasWrap = document.createElement('div');
+  canvasWrap.className = 'panel-canvas';
+  const canvas3d = document.createElement('canvas');
+  canvasWrap.appendChild(canvas3d);
+
+  // Stats bar between 3D and 2D — bigger, centered blocks
+  const stats = document.createElement('div');
+  stats.className = 'panel-stats';
+  stats.innerHTML = `
+    <div class="stat-block"><span class="stat-label">Path Length</span><span class="stat-val pl-val">0</span><span class="stat-unit">mm</span></div>
+    <div class="stat-block"><span class="stat-label">Ellipse Area</span><span class="stat-val area-val">${cond.ellipse.area.toFixed(0)}</span><span class="stat-unit">mm²</span></div>
+  `;
+
+  // Large COM panel below skeleton
+  const comPanel = document.createElement('div');
+  comPanel.className = 'com-panel';
+  const comCanvas = document.createElement('canvas');
+  comPanel.appendChild(comCanvas);
+
+  panel.appendChild(hdr);
+  panel.appendChild(canvasWrap);
+  panel.appendChild(stats);
+  panel.appendChild(comPanel);
+  panelsContainer.appendChild(panel);
+
+  // ── Three.js Scene ──
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xf4efe8);
+  scene.fog = new THREE.FogExp2(0xf4efe8, 0.00012);
+
+  const camera = new THREE.PerspectiveCamera(35, 1, 1, 50000);
+  camera.up.set(0, 0, 1);
+  const controls = new OrbitControls(camera, canvas3d);
+  controls.enableDamping = true; controls.dampingFactor = 0.08;
+
+  // Lighting
+  scene.add(new THREE.AmbientLight(0xfff8f0, 0.7));
+  const kl = new THREE.DirectionalLight(0xfff0e0, 1.0);
+  kl.position.set(500, -1000, 2000); scene.add(kl);
+  scene.add(new THREE.DirectionalLight(0xe8ddd0, 0.3).translateX(-800).translateY(500).translateZ(600));
+
+  // Ground — visible platform at foot level
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({
+    color: 0xdfd8cc, roughness: 0.88, metalness: 0.0,
+  }));
+  scene.add(ground);
+  const grid = new THREE.GridHelper(2000, 20, 0xc8c0b4, 0xc8c0b4);
+  grid.rotation.x=Math.PI/2; grid.material.opacity=0.5; grid.material.transparent=true;
+  scene.add(grid);
+
+  // Skeleton
+  const jointMesh = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(8, 10, 8),
+    new THREE.MeshStandardMaterial({ color: 0x6b5847, emissive: 0x4a3a2c, emissiveIntensity: 0.15, roughness: 0.6, metalness: 0.1 }),
+    numMarkers
+  );
+  jointMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  scene.add(jointMesh);
+
+  let lineSegs = null;
+  if (conns.length > 0) {
+    const lg = new THREE.BufferGeometry();
+    lg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(conns.length*2*3), 3));
+    lineSegs = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0x5c4a3a, transparent: true, opacity: 0.85 }));
+    scene.add(lineSegs);
+  }
+
+  // COM sphere — bigger so it's clearly distinct from joints
+  const comSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(18, 16, 12),
+    new THREE.MeshStandardMaterial({ color: 0xc43e4e, emissive: 0xc43e4e, emissiveIntensity: 0.4, roughness: 0.3 })
+  );
+  scene.add(comSphere);
+
+  // COM ground projection dot (shows how small the sway is in world space)
+  const comGroundDot = new THREE.Mesh(
+    new THREE.CircleGeometry(8, 16),
+    new THREE.MeshBasicMaterial({ color: 0xc43e4e, transparent: true, opacity: 0.5 })
+  );
+  scene.add(comGroundDot);
+
+  // COM trail on ground in 3D (pre-filled, shows scale)
+  const trailArr = new Float32Array(cond.num_frames * 3);
+  const trailGeo = new THREE.BufferGeometry();
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(trailArr, 3));
+  trailGeo.setDrawRange(0, 0);
+  const trail3d = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({
+    color: 0x01575a, transparent: true, opacity: 0.6
+  }));
+  scene.add(trail3d);
+
+  // Skeleton frame offset from condition_data.json frame ranges
+  const frameRange = frame_ranges[idx]; // [start, end]
+  const frameOffset = frameRange[0];
+
+  // Get body centroid from first skeleton frame of this condition
+  const f0 = allPositions[frameOffset];
+  let sx=0,sy=0,sz=0,mn=0,mxZ=-Infinity,mnZ=Infinity;
+  f0.forEach(([x,y,z]) => { if(!isNaN(x)){sx+=x;sy+=y;sz+=z;mn++;if(z>mxZ)mxZ=z;if(z<mnZ)mnZ=z;} });
+  const centroid = [sx/mn, sy/mn, sz/mn];
+  const bodyHeight = mxZ - mnZ;
+  const footZ = mnZ;
+
+  // Mean of raw COM for world positioning
+  const meanComX = cond.com_x_raw.reduce((a,b)=>a+b,0) / cond.com_x_raw.length;
+  const meanComY = cond.com_y_raw.reduce((a,b)=>a+b,0) / cond.com_y_raw.length;
+
+  // Position ground at foot level
+  ground.position.z = footZ;
+
+  // Pre-fill 3D trail at foot level
+  for (let i = 0; i < cond.num_frames; i++) {
+    trailArr[i*3]   = cond.com_x_raw[i];
+    trailArr[i*3+1] = cond.com_y_raw[i];
+    trailArr[i*3+2] = footZ + 1;
+  }
+  trailGeo.attributes.position.needsUpdate = true;
+  comGroundDot.position.z = footZ + 1.5;
+
+  // Camera
+  const cd = bodyHeight * 2.5;
+  camera.position.set(centroid[0], centroid[1] + cd*0.9, centroid[2]*0.5 + cd*0.3);
+  controls.target.set(centroid[0], centroid[1], centroid[2]*0.5);
+
+  // ── COM Panel (2D canvas below skeleton) ──
+  const comCtx = comCanvas.getContext('2d');
+  // Scale from centered COM data + ellipse extent
+  const allComExtent = [...cond.com_x, ...cond.com_y, ...cond.ellipse.ellipse_x, ...cond.ellipse.ellipse_y];
+  const comExtent = Math.max(...allComExtent.map(Math.abs)) * 1.3 || 50;
+
+  function drawComPanel(fi) {
+    // Resize canvas to match its CSS size (crisp rendering)
+    const rect = comPanel.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.round(rect.width * dpr);
+    const h = Math.round(rect.height * dpr);
+    if (comCanvas.width !== w || comCanvas.height !== h) {
+      comCanvas.width = w;
+      comCanvas.height = h;
+    }
+
+    const ctx = comCtx;
+    ctx.clearRect(0, 0, w, h);
+
+    // Use the smaller dimension to keep aspect ratio square
+    const dim = Math.min(w, h);
+    const cx = w / 2, cy = h / 2;
+    const scale = (dim * 0.42) / comExtent;
+    const dotR = Math.max(3, dim * 0.012);
+
+    // Background
+    ctx.fillStyle = '#faf8f4';
+    ctx.fillRect(0, 0, w, h);
+
+    // Crosshairs
+    ctx.strokeStyle = '#d4cbbf';
+    ctx.lineWidth = 1 * dpr;
+    ctx.beginPath(); ctx.moveTo(cx, cy - dim*0.45); ctx.lineTo(cx, cy + dim*0.45); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - dim*0.45, cy); ctx.lineTo(cx + dim*0.45, cy); ctx.stroke();
+
+    // 95% prediction ellipse
+    ctx.strokeStyle = '#3d4f8a';
+    ctx.lineWidth = 1.5 * dpr;
+    ctx.setLineDash([5*dpr, 4*dpr]);
+    ctx.beginPath();
+    cond.ellipse.ellipse_x.forEach((ex, i) => {
+      const px = cx + ex * scale;
+      const py = cy - cond.ellipse.ellipse_y[i] * scale;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    });
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // COM trail up to current frame
+    if (fi > 0) {
+      ctx.strokeStyle = '#01575a';
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      for (let i = 0; i <= fi; i++) {
+        const tx = cx + cond.com_x[i] * scale;
+        const ty = cy - cond.com_y[i] * scale;
+        i === 0 ? ctx.moveTo(tx, ty) : ctx.lineTo(tx, ty);
+      }
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // Current position dot
+    const dx = cx + cond.com_x[fi] * scale;
+    const dy = cy - cond.com_y[fi] * scale;
+    ctx.fillStyle = '#c43e4e';
+    ctx.beginPath();
+    ctx.arc(dx, dy, dotR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Axis labels
+    ctx.fillStyle = '#8a7e70';
+    const fontSize = Math.max(10, dim * 0.04);
+    ctx.font = `${fontSize}px "IBM Plex Mono", monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText('ML', cx, cy + dim*0.45 + fontSize + 2);
+    ctx.save();
+    ctx.translate(cx - dim*0.45 - fontSize - 2, cy);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('AP', 0, 0);
+    ctx.restore();
+  }
+
+  panels.push({
+    renderer, scene, camera, controls,
+    jointMesh, lineSegs, comSphere, comGroundDot,
+    trail3d, trailGeo,
+    cond, frameOffset, centroid, footZ, meanComX, meanComY,
+    canvasWrap, comPanel, stats, drawComPanel,
+  });
+});
+
+// ─── Sync all cameras — orbit one, they all follow ──────────────
+let syncing = false;
+panels.forEach((srcPanel, srcIdx) => {
+  srcPanel.controls.addEventListener('change', () => {
+    if (syncing) return;
+    syncing = true;
+
+    // Compute the camera's position and target relative to this panel's centroid
+    const srcC = srcPanel.centroid;
+    const relPos = new THREE.Vector3(
+      srcPanel.camera.position.x - srcC[0],
+      srcPanel.camera.position.y - srcC[1],
+      srcPanel.camera.position.z - srcC[2]
+    );
+    const relTgt = new THREE.Vector3(
+      srcPanel.controls.target.x - srcC[0],
+      srcPanel.controls.target.y - srcC[1],
+      srcPanel.controls.target.z - srcC[2]
+    );
+
+    panels.forEach((dstPanel, dstIdx) => {
+      if (dstIdx === srcIdx) return;
+      const dstC = dstPanel.centroid;
+      dstPanel.camera.position.set(dstC[0] + relPos.x, dstC[1] + relPos.y, dstC[2] + relPos.z);
+      dstPanel.controls.target.set(dstC[0] + relTgt.x, dstC[1] + relTgt.y, dstC[2] + relTgt.z);
+      dstPanel.controls.update();
+    });
+
+    syncing = false;
+  });
+});
+
+// ─── State ───────────────────────────────────────────────────────
+let currentFrame=0, playing=true, speed=1.0, lastTime=0, accumulator=0;
+const frameInterval = 1000/fps;
+const tmp = new THREE.Matrix4();
+
+function setFrame(k) {
+  currentFrame = Math.max(0, Math.min(comFrames-1, k));
+
+  panels.forEach(p => {
+    const skelFrame = p.frameOffset + currentFrame;
+    if (skelFrame >= allPositions.length) return;
+    const pts = allPositions[skelFrame];
+
+    // Skeleton
+    for(let i=0;i<numMarkers;i++){const[x,y,z]=pts[i];if(isNaN(x)||isNaN(y)||isNaN(z))tmp.makeScale(0,0,0);else tmp.makeTranslation(x,y,z);p.jointMesh.setMatrixAt(i,tmp);}
+    p.jointMesh.instanceMatrix.needsUpdate=true;
+
+    if(p.lineSegs){const a=p.lineSegs.geometry.attributes.position.array;let o=0;conns.forEach(([ai,bi])=>{const pa=pts[ai],pb=pts[bi];if(pa&&pb&&!isNaN(pa[0])&&!isNaN(pb[0])){a[o++]=pa[0];a[o++]=pa[1];a[o++]=pa[2];a[o++]=pb[0];a[o++]=pb[1];a[o++]=pb[2];}else{for(let n=0;n<6;n++)a[o++]=NaN;}});p.lineSegs.geometry.attributes.position.needsUpdate=true;}
+
+    // COM — use raw positions for 3D sphere
+    const fi = Math.min(currentFrame, p.cond.num_frames - 1);
+    const cx = p.cond.com_x_raw[fi];
+    const cy = p.cond.com_y_raw[fi];
+    const cz = p.cond.com_z ? p.cond.com_z[fi] : p.centroid[2];
+
+    if(cx!=null && cy!=null){
+      p.comSphere.position.set(cx, cy, cz || p.centroid[2]);
+      p.comGroundDot.position.set(cx, cy, p.footZ + 1.5);
+      p.trailGeo.setDrawRange(0, fi + 1);
+    }
+
+    // Stats
+    const pl = p.cond.cumulative_path_length[fi] || 0;
+    p.stats.querySelector('.pl-val').textContent = pl.toFixed(0);
+
+    // 2D COM panel
+    p.drawComPanel(fi);
+  });
+
+  document.getElementById('frame-num').textContent = currentFrame;
+  scrubber.value = String(currentFrame);
+}
+
+// ─── Resize ──────────────────────────────────────────────────────
+function resize(){panels.forEach(p=>{const w=p.canvasWrap.clientWidth,h=p.canvasWrap.clientHeight;p.renderer.setSize(w,h);p.camera.aspect=w/h;p.camera.updateProjectionMatrix();});}
+const ro=new ResizeObserver(resize);panels.forEach(p=>ro.observe(p.canvasWrap));resize();
+
+// ─── Animate ─────────────────────────────────────────────────────
+function animate(t){
+  requestAnimationFrame(animate);
+  if(playing){if(!lastTime)lastTime=t;accumulator+=(t-lastTime)*speed;lastTime=t;while(accumulator>=frameInterval){accumulator-=frameInterval;let n=currentFrame+1;if(n>=comFrames)n=0;setFrame(n);}}else{lastTime=0;}
+  panels.forEach(p=>{p.controls.update();p.renderer.render(p.scene,p.camera);});
+}
+setFrame(0);requestAnimationFrame(animate);
+
+// ─── Controls ────────────────────────────────────────────────────
+document.getElementById('btn-play').addEventListener('click',()=>{playing=!playing;document.getElementById('btn-play').textContent=playing?'Pause':'Play';lastTime=0;});
+document.getElementById('btn-reset').addEventListener('click',()=>{ setFrame(0); });
+document.getElementById('speed').addEventListener('input',e=>{speed=parseFloat(e.target.value);document.getElementById('speed-val').textContent=speed.toFixed(1)+'×';});
+scrubber.addEventListener('input',()=>setFrame(Number(scrubber.value)));
+window.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();playing=!playing;document.getElementById('btn-play').textContent=playing?'Pause':'Play';lastTime=0;}
+  else if(e.code==='ArrowRight'){e.preventDefault();playing=false;document.getElementById('btn-play').textContent='Play';setFrame(currentFrame+1);}
+  else if(e.code==='ArrowLeft'){e.preventDefault();playing=false;document.getElementById('btn-play').textContent='Play';setFrame(currentFrame-1);}
+});
+</script>
+</body>
+</html>

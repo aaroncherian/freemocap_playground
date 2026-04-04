@@ -15,7 +15,7 @@ from skellymodels.managers.human import Human
 # ------------------------
 
 path_to_recording = Path(
-    r"D:\validation\data\2026_01_26_KK\2026-01-16_14-15-39_GMT-5_kk_treadmill_1"
+    r"D:\validation\data\2026_01_26_KK\2026-01-16_14-25-46_GMT-5_kk_treadmill_2"
 )
 
 # Folder that already contains:
@@ -28,7 +28,7 @@ path_to_viewer_folder = Path(
 
 # candidate_trackers = ["qualisys", "mediapipe", "vitpose_wholebody", "vitpose_25", "rtmpose"]
 
-candidate_trackers = ["qualisys", "mediapipe", "vitpose", "rtmpose"]
+candidate_trackers = ["qualisys", "vitpose", ]
 
 
 # Reference-first palette (ints are 0xRRGGBB)

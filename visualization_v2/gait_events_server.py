@@ -27,6 +27,8 @@ from pathlib import Path
 
 from skellymodels.managers.human import Human
 
+#Note - visualization negates knee flexion angles to match visual intuition (flexion = positive) — see line 143 for the negation. This only affects the viewer display, not the underlying data files.
+
 
 # ════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -36,7 +38,7 @@ path_to_recording = Path(
     r"D:\validation\data\2026_01_26_KK\2026-01-16_14-15-39_GMT-5_kk_treadmill_1"
 )
 
-tracker_id = "mediapipe"
+tracker_id = "rtmpose"
 
 path_to_viewer_folder = Path(
     r"C:\Users\aaron\Documents\GitHub\freemocap_playground\visualization_v2"
@@ -132,6 +134,8 @@ def load_joint_angles(tracker_dir: Path) -> dict | None:
             angle = float(row["angle"])
 
             key = f"{side}_{joint}_{component}"
+
+
             raw[key][frame] = angle
 
             joints.add(joint)
@@ -140,7 +144,9 @@ def load_joint_angles(tracker_dir: Path) -> dict | None:
             if frame > max_frame:
                 max_frame = frame
 
-    # Convert to dense arrays (None for missing frames)
+            
+            if joint == "knee" and component == "flex_ext":
+                raw[key][frame] *= -1  
     data = {}
     for key, frame_map in raw.items():
         arr = [None] * (max_frame + 1)
